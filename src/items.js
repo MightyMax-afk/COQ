@@ -2,7 +2,7 @@
 import { G } from './state.js';
 import { ri, log } from './util.js';
 import { COL } from './palette.js';
-import { statusAtkMod } from './game.js';
+import { statusAtkMod } from './combat.js';
 
 // ---------- gear slot data ----------
 export const WEAPONS = [
