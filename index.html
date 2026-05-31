@@ -164,11 +164,12 @@
   }
   .play-btn:active{transform:translateY(1px)}
 
-  /* escape / pause menu */
-  .modal{position:absolute;inset:0;z-index:6;display:flex;flex-direction:column;
+  /* escape / pause menu — a true full-viewport modal so it's always visible,
+     even on mobile where it's opened from the touch controls below the canvas */
+  .modal{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;
     align-items:center;justify-content:center;gap:14px;padding:20px;overflow-y:auto;
-    background:radial-gradient(80% 80% at 50% 40%,rgba(12,9,7,.93),rgba(5,4,6,.98));
-    backdrop-filter:blur(2px)}
+    background:radial-gradient(80% 80% at 50% 40%,rgba(12,9,7,.95),rgba(5,4,6,.99));
+    backdrop-filter:blur(3px)}
   .modal.hidden{display:none}
   .modal .esc-title{font-family:"VT323",monospace;font-size:clamp(28px,5vw,40px);line-height:.95;
     color:var(--amber);text-shadow:0 0 18px rgba(232,183,92,.4);letter-spacing:1px}
@@ -393,6 +394,6 @@
   </footer>
 </div>
 
-<script type="module" src="src/game.js"></script>
+<script type="module" src="src/game.js?v=0.17.1"></script>
 </body>
 </html>
