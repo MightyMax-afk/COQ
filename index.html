@@ -142,6 +142,7 @@
   .dpad .blank{visibility:hidden}
   .acts{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;flex:1;max-width:170px}
   .acts button{padding:9px 4px;font-size:15px}
+  .acts .actspan{grid-column:1 / -1}
 
   /* overlay */
   .overlay{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;
@@ -324,7 +325,8 @@
           <div class="esc-row"><label>Music</label><button id="musicBtn" class="autobtn" type="button" title="Toggle music">♪ music: on</button></div>
           <div class="esc-row"><label>Volume</label><input id="musicVol" type="range" min="0" max="100" value="45" title="Music volume"></div>
         </div>
-        <div class="esc-hint">Esc to resume</div>
+        <button class="play-btn" id="closeEscBtn" style="font-size:19px;padding:7px 24px">CLOSE MENU ▴</button>
+        <div class="esc-hint">or press Esc to resume</div>
       </div>
     </div><!-- /screen-wrap -->
 
@@ -339,6 +341,7 @@
         <button data-act="quaff">quaff</button>
         <button data-act="descend">down (L)</button>
         <button data-act="ascend">up (U)</button>
+        <button data-act="menu" class="actspan">menu</button>
       </div>
     </div>
 

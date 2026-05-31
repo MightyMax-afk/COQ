@@ -723,6 +723,7 @@ document.querySelector(".touch").addEventListener("click",e=>{
     else if(a==="quaff") turn(quaff);
     else if(a==="descend") turn(descend);
     else if(a==="ascend") turn(ascend);
+    else if(a==="menu"){ if(G.started&&G.running) openEscMenu(); }   // mobile: open the pause menu (Esc has no equivalent on touch)
   }
 });
 $("inv").addEventListener("click",e=>{
@@ -811,6 +812,7 @@ $("musicVol").addEventListener("input",e=>{
 $("saveBtn").addEventListener("click", saveGame);
 $("loadBtn").addEventListener("click", loadGame);
 $("menuNewGameBtn").addEventListener("click", menuNewGame);
+$("closeEscBtn").addEventListener("click", closeEscMenu);
 $("sfxBtn").addEventListener("click",()=>{
   MUSIC.setSfxOn(!MUSIC.isSfxOn());
   syncSfxBtn();
