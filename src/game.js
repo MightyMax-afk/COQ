@@ -1,6 +1,7 @@
 "use strict";
 import { MAP_W, MAP_H, FOV_R, ACT1_END, FINAL_DEPTH, MERCHANT_EVERY } from './config.js';
 import { clamp, ri } from './util.js';
+import { G } from './state.js';
 import { PAL, S } from './palette.js';
 import * as Tiles from './art/tiles.js';
 import * as Creatures from './art/creatures.js';
@@ -305,25 +306,25 @@ const GEAR_SLOTS  = ["weapon","armor","helmet","shield"];   // mergeable tiered 
 
 // level-up boons: a weighted-random 3 of these are offered each level (lower weight = rarer)
 const PERKS = [
-  {name:"Vitality",     w:3, desc:"+10 max HP, heal to full", apply(){ player.maxhp+=10; player.hp=player.maxhp; }},
-  {name:"Power",        w:3, desc:"+2 attack",                apply(){ player.baseAtk+=2; }},
-  {name:"Toughness",    w:3, desc:"+2 defense",               apply(){ player.baseDef+=2; }},
-  {name:"Keen Eyes",    w:2, desc:"+1 sight radius",          apply(){ player.sight=Math.min(13,player.sight+1); }},
-  {name:"Regeneration", w:1, desc:"+1 HP healed every 9 turns", apply(){ player.regenAmt+=1; }},
-  {name:"Bloodletter",  w:2, desc:"+2 HP on every kill",      apply(){ player.lifesteal+=2; }},
-  {name:"Alchemy",      w:2, desc:"potions heal +8 more",     apply(){ player.potionBonus+=8; }},
-  {name:"Berserker",    w:2, desc:"+4 attack, -1 defense",    apply(){ player.baseAtk+=4; player.baseDef=Math.max(0,player.baseDef-1); }},
-  {name:"Evasion",      w:2, desc:"+8% chance to dodge",      apply(){ player.evasion+=0.08; }},
-  {name:"Precision",    w:3, desc:"+8% attack accuracy",      apply(){ player.accBonus+=0.08; }},
+  {name:"Vitality",     w:3, desc:"+10 max HP, heal to full", apply(){ G.player.maxhp+=10; G.player.hp=G.player.maxhp; }},
+  {name:"Power",        w:3, desc:"+2 attack",                apply(){ G.player.baseAtk+=2; }},
+  {name:"Toughness",    w:3, desc:"+2 defense",               apply(){ G.player.baseDef+=2; }},
+  {name:"Keen Eyes",    w:2, desc:"+1 sight radius",          apply(){ G.player.sight=Math.min(13,G.player.sight+1); }},
+  {name:"Regeneration", w:1, desc:"+1 HP healed every 9 turns", apply(){ G.player.regenAmt+=1; }},
+  {name:"Bloodletter",  w:2, desc:"+2 HP on every kill",      apply(){ G.player.lifesteal+=2; }},
+  {name:"Alchemy",      w:2, desc:"potions heal +8 more",     apply(){ G.player.potionBonus+=8; }},
+  {name:"Berserker",    w:2, desc:"+4 attack, -1 defense",    apply(){ G.player.baseAtk+=4; G.player.baseDef=Math.max(0,G.player.baseDef-1); }},
+  {name:"Evasion",      w:2, desc:"+8% chance to dodge",      apply(){ G.player.evasion+=0.08; }},
+  {name:"Precision",    w:3, desc:"+8% attack accuracy",      apply(){ G.player.accBonus+=0.08; }},
   // --- Build A additions ---
-  {name:"Deadly Aim",   w:2, desc:"+10% critical-hit chance", apply(){ player.critBonus+=0.10; }},
-  {name:"Sunder",       w:2, desc:"strikes ignore 2 enemy defense", apply(){ player.armorPen+=2; }},
-  {name:"Iron Skin",    w:2, desc:"+3 defense, +5 max HP",    apply(){ player.baseDef+=3; player.maxhp+=5; player.hp+=5; }},
-  {name:"Spiked Hide",  w:2, desc:"reflect damage when hit (stacks +1)", apply(){ player.thornsSelf+=1; }},
-  {name:"Hardy",        w:1, desc:"+20 max HP, heal to full", apply(){ player.maxhp+=20; player.hp=player.maxhp; }},
-  {name:"Executioner",  w:1, desc:"+2 attack and +6% crit",   apply(){ player.baseAtk+=2; player.critBonus+=0.06; }},
-  {name:"Vampire",      w:0.4, desc:"+1 HP on every hit (stacks)", apply(){ player.hitLeech+=1; }},
-  {name:"Adrenaline",   w:2, desc:"+12% accuracy, +6% dodge", apply(){ player.accBonus+=0.12; player.evasion+=0.06; }},
+  {name:"Deadly Aim",   w:2, desc:"+10% critical-hit chance", apply(){ G.player.critBonus+=0.10; }},
+  {name:"Sunder",       w:2, desc:"strikes ignore 2 enemy defense", apply(){ G.player.armorPen+=2; }},
+  {name:"Iron Skin",    w:2, desc:"+3 defense, +5 max HP",    apply(){ G.player.baseDef+=3; G.player.maxhp+=5; G.player.hp+=5; }},
+  {name:"Spiked Hide",  w:2, desc:"reflect damage when hit (stacks +1)", apply(){ G.player.thornsSelf+=1; }},
+  {name:"Hardy",        w:1, desc:"+20 max HP, heal to full", apply(){ G.player.maxhp+=20; G.player.hp=G.player.maxhp; }},
+  {name:"Executioner",  w:1, desc:"+2 attack and +6% crit",   apply(){ G.player.baseAtk+=2; G.player.critBonus+=0.06; }},
+  {name:"Vampire",      w:0.4, desc:"+1 HP on every hit (stacks)", apply(){ G.player.hitLeech+=1; }},
+  {name:"Adrenaline",   w:2, desc:"+12% accuracy, +6% dodge", apply(){ G.player.accBonus+=0.12; G.player.evasion+=0.06; }},
 ];
 
 // one unique boss guards the stairs on each depth; #20 is Varmathrax (end of Act I),
@@ -429,9 +430,9 @@ function tickStatus(ent){
   for(const s of ent.status){
     const def=STATUS[s.type];
     if(def.dot){
-      if(ent===player && godMode){ s.turns--; continue; }   // debug godmode: ignore DoT on the player
+      if(ent===G.player && G.godMode){ s.turns--; continue; }   // debug godmode: ignore DoT on the player
       ent.hp-=s.amount; ent._dotThisTurn=true;
-      if(ent===player) log(`${def.name} hits you for ${s.amount}.`,"bad");
+      if(ent===G.player) log(`${def.name} hits you for ${s.amount}.`,"bad");
       else log(`The ${ent.name} suffers ${s.amount} ${def.name.toLowerCase()}.`,"good");
       if(ent.hp<=0 && !died){ died=true; }
     } else if(s.type==="regen"){
@@ -493,10 +494,9 @@ const LEG_ARMOR_AFFIX=[
   {key:"evade",   txt:"helps you slip blows",          roll:()=>({evadeBonus:0.05+ri(0,8)/100})},
   {key:"ward",    txt:"wrought of impenetrable make",  roll:()=>({})},  // pure-defense flavor
 ];
-let legendPool=null;
 function resetLegendPool(){
-  legendPool=LEG_NAMES.slice();
-  for(let i=legendPool.length-1;i>0;i--){ const j=ri(0,i); [legendPool[i],legendPool[j]]=[legendPool[j],legendPool[i]]; }
+  G.legendPool=LEG_NAMES.slice();
+  for(let i=G.legendPool.length-1;i>0;i--){ const j=ri(0,i); [G.legendPool[i],G.legendPool[j]]=[G.legendPool[j],G.legendPool[i]]; }
 }
 function makeLegendary(d){
   // 60% legendary weapon, 40% legendary armor piece
@@ -504,8 +504,8 @@ function makeLegendary(d){
   return makeLegendaryArmor(d);
 }
 function makeLegendaryWeapon(d){
-  if(!legendPool||!legendPool.length) resetLegendPool();
-  const baseName=legendPool.pop();
+  if(!G.legendPool||!G.legendPool.length) resetLegendPool();
+  const baseName=G.legendPool.pop();
   const title=LEG_TITLE[ri(0,LEG_TITLE.length-1)];
   const affix=LEG_AFFIX[ri(0,LEG_AFFIX.length-1)];
   // Scaling bumped from 1.4/depth to 2.2/depth so legendaries stay the obvious best
@@ -533,16 +533,8 @@ function makeLegendaryArmor(d){
 const MERCH_COL="#ffd866";
 
 // ---------- state ----------
-let map, visible, explored, ents, items, logLines, depth, gold, score, potions;
-let feats;   // decoration layer: feats[y][x] = sprite id of a blocking feature, or null
-let player, equipped, inv, running, started=false;
-let ngPlus=0;   // New Game+ tier: scaling depth = depth + ngPlus*FINAL_DEPTH
-const scaledDepth = () => depth + ngPlus*FINAL_DEPTH;
-let maxDepthReached=1;   // deepest scaledDepth ever reached this run — gates the descend HP reward
-let godMode=false;        // debug: F1 toggles invulnerability (no health loss)
-let choosing=false, pendingLevelUps=0, currentPerks=[], bossEnt=null;
-let levels={}, upX=-1, upY=-1, merchant=null, shopping=false, shots=[], chests=[];
-let autoEquipOn=true, autoEquipWarned=false;
+// All mutable run-state now lives on the shared G object (see src/state.js).
+const scaledDepth = () => G.depth + G.ngPlus*FINAL_DEPTH;
 
 const $ = id => document.getElementById(id);
 const cv = $("game"), ctx = cv.getContext("2d");
@@ -556,7 +548,7 @@ function sizeCanvas(){
   ctx.setTransform(dpr,0,0,dpr,0,0);
 }
 sizeCanvas();
-window.addEventListener("resize", ()=>{ sizeCanvas(); if(started) render(); });
+window.addEventListener("resize", ()=>{ sizeCanvas(); if(G.started) render(); });
 
 // stamp the build version into the UI
 $("verTag").textContent = `build ${BUILD}`;
@@ -566,19 +558,19 @@ $("verTag").textContent = `build ${BUILD}`;
 })();
 
 // ---------- map generation ----------
-function carve(r){ for(let y=r.y1;y<=r.y2;y++) for(let x=r.x1;x<=r.x2;x++) map[y][x]=T_FLOOR; }
-function hTun(x1,x2,y){ for(let x=Math.min(x1,x2);x<=Math.max(x1,x2);x++) map[y][x]=T_FLOOR; }
-function vTun(y1,y2,x){ for(let y=Math.min(y1,y2);y<=Math.max(y1,y2);y++) map[y][x]=T_FLOOR; }
+function carve(r){ for(let y=r.y1;y<=r.y2;y++) for(let x=r.x1;x<=r.x2;x++) G.map[y][x]=T_FLOOR; }
+function hTun(x1,x2,y){ for(let x=Math.min(x1,x2);x<=Math.max(x1,x2);x++) G.map[y][x]=T_FLOOR; }
+function vTun(y1,y2,x){ for(let y=Math.min(y1,y2);y<=Math.max(y1,y2);y++) G.map[y][x]=T_FLOOR; }
 const intersects=(a,b)=>a.x1<=b.x2&&a.x2>=b.x1&&a.y1<=b.y2&&a.y2>=b.y1;
 
 // snapshot the current level so we can return to it exactly as we left it
 function saveLevel(){
-  if(depth==null) return;
-  levels[depth]={
-    map, explored, feats, upX, upY,
-    stairX:player.stairX, stairY:player.stairY,
-    ents: ents.filter(e=>!e.isPlayer),
-    items, bossEnt, merchant, chests,
+  if(G.depth==null) return;
+  G.levels[G.depth]={
+    map:G.map, explored:G.explored, feats:G.feats, upX:G.upX, upY:G.upY,
+    stairX:G.player.stairX, stairY:G.player.stairY,
+    ents: G.ents.filter(e=>!e.isPlayer),
+    items:G.items, bossEnt:G.bossEnt, merchant:G.merchant, chests:G.chests,
   };
 }
 
@@ -586,25 +578,25 @@ function saveLevel(){
 function genLevel(dir){
   if(dir==="down"||dir==="up"){ /* current level already saved by caller */ }
 
-  const cached=levels[depth];
+  const cached=G.levels[G.depth];
   if(cached){
-    map=cached.map; explored=cached.explored; feats=cached.feats;
-    visible=Array.from({length:MAP_H},()=>Array(MAP_W).fill(false));
-    ents=[player]; for(const e of cached.ents) ents.push(e);
-    items=cached.items; bossEnt=cached.bossEnt; merchant=cached.merchant; chests=cached.chests||[];
-    player.stairX=cached.stairX; player.stairY=cached.stairY;
-    upX=cached.upX; upY=cached.upY;
+    G.map=cached.map; G.explored=cached.explored; G.feats=cached.feats;
+    G.visible=Array.from({length:MAP_H},()=>Array(MAP_W).fill(false));
+    G.ents=[G.player]; for(const e of cached.ents) G.ents.push(e);
+    G.items=cached.items; G.bossEnt=cached.bossEnt; G.merchant=cached.merchant; G.chests=cached.chests||[];
+    G.player.stairX=cached.stairX; G.player.stairY=cached.stairY;
+    G.upX=cached.upX; G.upY=cached.upY;
     // drop the player onto the stairway they arrived through
-    if(dir==="up"){ player.x=player.stairX; player.y=player.stairY; }       // came from below → land on down-stairs
-    else if(dir==="down"){ player.x=upX; player.y=upY; }                    // came from above → land on up-stairs
+    if(dir==="up"){ G.player.x=G.player.stairX; G.player.y=G.player.stairY; }       // came from below → land on down-stairs
+    else if(dir==="down"){ G.player.x=G.upX; G.player.y=G.upY; }                    // came from above → land on up-stairs
     return;
   }
 
-  map      = Array.from({length:MAP_H},()=>Array(MAP_W).fill(T_WALL));
-  visible  = Array.from({length:MAP_H},()=>Array(MAP_W).fill(false));
-  explored = Array.from({length:MAP_H},()=>Array(MAP_W).fill(false));
-  feats    = Array.from({length:MAP_H},()=>Array(MAP_W).fill(null));
-  items=[]; ents=[]; merchant=null; bossEnt=null; chests=[];
+  G.map      = Array.from({length:MAP_H},()=>Array(MAP_W).fill(T_WALL));
+  G.visible  = Array.from({length:MAP_H},()=>Array(MAP_W).fill(false));
+  G.explored = Array.from({length:MAP_H},()=>Array(MAP_W).fill(false));
+  G.feats    = Array.from({length:MAP_H},()=>Array(MAP_W).fill(null));
+  G.items=[]; G.ents=[]; G.merchant=null; G.bossEnt=null; G.chests=[];
 
   const rooms=[]; let tries=80;
   while(tries-->0 && rooms.length<15){
@@ -621,39 +613,39 @@ function genLevel(dir){
     rooms.push(r);
   }
 
-  ents.push(player);   // index 0
+  G.ents.push(G.player);   // index 0
 
   const first=rooms[0], last=rooms[rooms.length-1];
 
   // up-stairs only on the *first 10 floors of each act*: depths 2..10 (Act I) and 22..30 (Act II).
   // The bottom half of each act is one-way down; same rule applied symmetrically across both acts.
-  const upAllowed = (depth>1 && depth<=10) || (depth>=22 && depth<=30);
+  const upAllowed = (G.depth>1 && G.depth<=10) || (G.depth>=22 && G.depth<=30);
   if(upAllowed){
-    upX=first.cx(); upY=first.cy(); map[upY][upX]=T_STAIRS_UP;
-  } else { upX=-1; upY=-1; }
+    G.upX=first.cx(); G.upY=first.cy(); G.map[G.upY][G.upX]=T_STAIRS_UP;
+  } else { G.upX=-1; G.upY=-1; }
 
   // down-stairs in the last room (none on the absolute final depth — Zarakhel's floor).
   // Varmathrax's floor (Act I end, depth 20) now spawns stairs: descent continues into Act II.
-  if(depth<FINAL_DEPTH){
-    player.stairX=last.cx(); player.stairY=last.cy(); map[player.stairY][player.stairX]=T_STAIRS;
-  } else { player.stairX=-1; player.stairY=-1; }
+  if(G.depth<FINAL_DEPTH){
+    G.player.stairX=last.cx(); G.player.stairY=last.cy(); G.map[G.player.stairY][G.player.stairX]=T_STAIRS;
+  } else { G.player.stairX=-1; G.player.stairY=-1; }
 
   // where the player stands on arrival
-  if(dir==="up"){ player.x=player.stairX; player.y=player.stairY; }   // arriving from below
-  else { player.x=first.cx(); player.y=first.cy(); }                 // fresh start / arriving from above
+  if(dir==="up"){ G.player.x=G.player.stairX; G.player.y=G.player.stairY; }   // arriving from below
+  else { G.player.x=first.cx(); G.player.y=first.cy(); }                 // fresh start / arriving from above
 
-  const isMerchantFloor = depth%MERCHANT_EVERY===0 && depth<FINAL_DEPTH;
+  const isMerchantFloor = G.depth%MERCHANT_EVERY===0 && G.depth<FINAL_DEPTH;
 
   // monsters — orcs are rare in the first few floors, common deeper.
   // Per-room count rises with depth but is capped so deep floors aren't swarms.
   for(let i=1;i<rooms.length;i++){
     if(isMerchantFloor && i===rooms.length-1) continue;   // keep the shop room safe
-    const n=ri(0, Math.min(5, 2+(depth/6|0)));
+    const n=ri(0, Math.min(5, 2+(G.depth/6|0)));
     for(let k=0;k<n;k++){
       const x=ri(rooms[i].x1,rooms[i].x2), y=ri(rooms[i].y1,rooms[i].y2);
-      if(ents.some(e=>e.x===x&&e.y===y)) continue;
-      if(x===upX&&y===upY) continue;
-      ents.push(makeMonster(scaledDepth(), x, y));
+      if(G.ents.some(e=>e.x===x&&e.y===y)) continue;
+      if(x===G.upX&&y===G.upY) continue;
+      G.ents.push(makeMonster(scaledDepth(), x, y));
     }
   }
 
@@ -662,16 +654,16 @@ function genLevel(dir){
     for(let attempt=0; attempt<20; attempt++){
       const room=rooms[ri(1,rooms.length-1)];
       const x=ri(room.x1,room.x2), y=ri(room.y1,room.y2);
-      if(map[y][x]!==T_FLOOR) continue;
-      if(ents.some(e=>e.x===x&&e.y===y)) continue;
-      if((x===upX&&y===upY)||(x===player.stairX&&y===player.stairY)||(x===player.x&&y===player.y)) continue;
-      ents.push(makeElite(scaledDepth(), x, y));
+      if(G.map[y][x]!==T_FLOOR) continue;
+      if(G.ents.some(e=>e.x===x&&e.y===y)) continue;
+      if((x===G.upX&&y===G.upY)||(x===G.player.stairX&&y===G.player.stairY)||(x===G.player.x&&y===G.player.y)) continue;
+      G.ents.push(makeElite(scaledDepth(), x, y));
       break;
     }
   }
 
   // stage boss guards the down-stairs room (not on the safe merchant floor's final room edge case—still spawns, just away from shop)
-  placeBoss(depth, last);
+  placeBoss(G.depth, last);
 
   // a merchant in a guaranteed-safe room every few floors
   if(isMerchantFloor){
@@ -683,38 +675,38 @@ function genLevel(dir){
   for(let i=1;i<rooms.length;i++){
     if(ri(1,100)>55) continue;        // 45% of rooms have a drop
     const x=ri(rooms[i].x1,rooms[i].x2), y=ri(rooms[i].y1,rooms[i].y2);
-    if(x===upX&&y===upY) continue;
-    items.push(rollLoot(x,y,depth));
+    if(x===G.upX&&y===G.upY) continue;
+    G.items.push(rollLoot(x,y,G.depth));
   }
 
   // chests: 0-1 per floor (occasionally 2 deep), ~12% are mimics.
-  const nChests = ri(0,1) + (depth>8 && ri(0,1) ? 1 : 0);
+  const nChests = ri(0,1) + (G.depth>8 && ri(0,1) ? 1 : 0);
   for(let c=0;c<nChests;c++){
     const room=rooms[ri(1,rooms.length-1)];
     const x=ri(room.x1,room.x2), y=ri(room.y1,room.y2);
-    if((x===upX&&y===upY)||(x===player.stairX&&y===player.stairY)) continue;
-    if(x===player.x&&y===player.y) continue;
-    if(chests.some(ch=>ch.x===x&&ch.y===y)) continue;
-    chests.push({x,y,mimic: ri(1,100)<=12, opened:false});
+    if((x===G.upX&&y===G.upY)||(x===G.player.stairX&&y===G.player.stairY)) continue;
+    if(x===G.player.x&&y===G.player.y) continue;
+    if(G.chests.some(ch=>ch.x===x&&ch.y===y)) continue;
+    G.chests.push({x,y,mimic: ri(1,100)<=12, opened:false});
   }
 
   // scatter blocking decorations for this biome (bones / boulders / braziers)
-  const biome=biomeFor(depth);
+  const biome=biomeFor(G.depth);
   if(biome.features.length){
     const want=ri(6,14);
     for(let n=0;n<want;n++){
       const room=rooms[ri(0,rooms.length-1)];
       const x=ri(room.x1,room.x2), y=ri(room.y1,room.y2);
-      if(map[y][x]!==T_FLOOR) continue;
-      if(feats[y][x]) continue;
-      if(x===player.x&&y===player.y) continue;
-      if(x===player.stairX&&y===player.stairY) continue;
-      if(x===upX&&y===upY) continue;
-      if((merchant&&x===merchant.x&&y===merchant.y)) continue;
-      if(ents.some(e=>e.x===x&&e.y===y)) continue;
-      if(chests.some(c=>c.x===x&&c.y===y)) continue;
-      if(items.some(it=>it.x===x&&it.y===y)) continue;
-      feats[y][x]=biome.features[ri(0,biome.features.length-1)];
+      if(G.map[y][x]!==T_FLOOR) continue;
+      if(G.feats[y][x]) continue;
+      if(x===G.player.x&&y===G.player.y) continue;
+      if(x===G.player.stairX&&y===G.player.stairY) continue;
+      if(x===G.upX&&y===G.upY) continue;
+      if((G.merchant&&x===G.merchant.x&&y===G.merchant.y)) continue;
+      if(G.ents.some(e=>e.x===x&&e.y===y)) continue;
+      if(G.chests.some(c=>c.x===x&&c.y===y)) continue;
+      if(G.items.some(it=>it.x===x&&it.y===y)) continue;
+      G.feats[y][x]=biome.features[ri(0,biome.features.length-1)];
     }
   }
 }
@@ -766,8 +758,8 @@ function makeMonster(d,x,y){
   // The biome is selected by the unscaled floor number (depth), NOT by `d` —
   // because in NG+ the scaled depth climbs into the 40s+ but you're still in the
   // Halls/Crypt/etc. on early floors. This keeps NG+ Act I floors playing like Act I.
-  const biome = biomeFor(depth);
-  const inAct2 = depth > ACT1_END;
+  const biome = biomeFor(G.depth);
+  const inAct2 = G.depth > ACT1_END;
   const inReliquary = biome && biome.id==="reliquary";
   const inAshen     = biome && biome.id==="ashen";
   const inVerdant   = biome && biome.id==="verdant";
@@ -853,9 +845,9 @@ function makeGear(x,y,d){
 }
 
 function placeMerchant(room){
-  merchant={x:room.cx(), y:room.cy(), glyph:"M", col:MERCH_COL};
+  G.merchant={x:room.cx(), y:room.cy(), glyph:"M", col:MERCH_COL};
   // make sure no monster shares the merchant's tile
-  ents=ents.filter(e=>e.isPlayer || !(e.x===merchant.x&&e.y===merchant.y));
+  G.ents=G.ents.filter(e=>e.isPlayer || !(e.x===G.merchant.x&&e.y===G.merchant.y));
   log("A merchant has set up a stall on this floor (M). Step beside them to trade.","gold");
 }
 
@@ -863,16 +855,16 @@ function placeBoss(d,room){
   const boss=makeBoss(d, scaledDepth());
   const spots=[];
   for(let y=room.y1;y<=room.y2;y++) for(let x=room.x1;x<=room.x2;x++){
-    if(map[y][x]!==T_FLOOR) continue;
-    if(x===player.stairX&&y===player.stairY) continue;
-    if(x===upX&&y===upY) continue;
-    if(x===player.x&&y===player.y) continue;
-    if(ents.some(e=>e.x===x&&e.y===y)) continue;
+    if(G.map[y][x]!==T_FLOOR) continue;
+    if(x===G.player.stairX&&y===G.player.stairY) continue;
+    if(x===G.upX&&y===G.upY) continue;
+    if(x===G.player.x&&y===G.player.y) continue;
+    if(G.ents.some(e=>e.x===x&&e.y===y)) continue;
     spots.push([x,y]);
   }
   const s = spots.length ? spots[ri(0,spots.length-1)] : [room.cx(),room.cy()];
   boss.x=s[0]; boss.y=s[1];
-  ents.push(boss); bossEnt=boss;
+  G.ents.push(boss); G.bossEnt=boss;
   log(boss.final  ? `${boss.name} rears up — there is no way down. Slay it.`
    : boss.act1End ? `${boss.name} coils above the descent. The wyrm guards the way down.`
                   : `${boss.name} lurks near the stairs.`, "bad");
@@ -884,19 +876,19 @@ function los(x1,y1,x2,y2){
   let dx=Math.abs(x2-x1),dy=Math.abs(y2-y1),sx=x1<x2?1:-1,sy=y1<y2?1:-1,err=dx-dy,x=x1,y=y1;
   while(true){
     if(x===x2&&y===y2) return true;
-    if(!(x===x1&&y===y1)&&map[y][x]===T_WALL) return false;
+    if(!(x===x1&&y===y1)&&G.map[y][x]===T_WALL) return false;
     const e2=2*err;
     if(e2>-dy){err-=dy;x+=sx;}
     if(e2<dx){err+=dx;y+=sy;}
   }
 }
 function computeFOV(){
-  for(let y=0;y<MAP_H;y++) visible[y].fill(false);
-  const px=player.x,py=player.y, R=player.sight||FOV_R;
+  for(let y=0;y<MAP_H;y++) G.visible[y].fill(false);
+  const px=G.player.x,py=G.player.y, R=G.player.sight||FOV_R;
   for(let y=Math.max(0,py-R);y<=Math.min(MAP_H-1,py+R);y++)
     for(let x=Math.max(0,px-R);x<=Math.min(MAP_W-1,px+R);x++){
       const dx=x-px,dy=y-py; if(dx*dx+dy*dy>R*R) continue;
-      if(los(px,py,x,y)){ visible[y][x]=true; explored[y][x]=true; }
+      if(los(px,py,x,y)){ G.visible[y][x]=true; G.explored[y][x]=true; }
     }
 }
 
@@ -917,22 +909,22 @@ function gearName(it){
 }
 const isGear = it => GEAR_SLOTS.includes(it.kind);          // mergeable tiered gear
 const isEquippable = it => ALL_SLOTS.includes(it.kind);     // gear or charm
-function bestOf(kind){ let b=null; for(const it of inv) if(it.kind===kind && (!b||gearBonus(it)>gearBonus(b))) b=it; return b; }
+function bestOf(kind){ let b=null; for(const it of G.inv) if(it.kind===kind && (!b||gearBonus(it)>gearBonus(b))) b=it; return b; }
 function autoEquip(){
   for(const slot of GEAR_SLOTS){
-    if(autoEquipOn){
+    if(G.autoEquipOn){
       // upgrade to the strongest available in this slot
       const best=bestOf(slot);
-      if(best && (!equipped[slot] || gearBonus(best)>gearBonus(equipped[slot]))) equipped[slot]=best;
+      if(best && (!G.equipped[slot] || gearBonus(best)>gearBonus(G.equipped[slot]))) G.equipped[slot]=best;
     } else {
       // toggle off: only fill an empty slot, never override a manual choice
-      if(!equipped[slot]){ const best=bestOf(slot); if(best) equipped[slot]=best; }
+      if(!G.equipped[slot]){ const best=bestOf(slot); if(best) G.equipped[slot]=best; }
     }
     // if the equipped item left the pack (sold/merged away), fall back to best available
-    if(equipped[slot] && !inv.includes(equipped[slot])) equipped[slot]=bestOf(slot)||null;
+    if(G.equipped[slot] && !G.inv.includes(G.equipped[slot])) G.equipped[slot]=bestOf(slot)||null;
   }
-  if(!equipped.charm){ const c=inv.find(it=>it.kind==="charm"); if(c) equipped.charm=c; }
-  if(equipped.charm && !inv.includes(equipped.charm)) equipped.charm=inv.find(it=>it.kind==="charm")||null;
+  if(!G.equipped.charm){ const c=G.inv.find(it=>it.kind==="charm"); if(c) G.equipped.charm=c; }
+  if(G.equipped.charm && !G.inv.includes(G.equipped.charm)) G.equipped.charm=G.inv.find(it=>it.kind==="charm")||null;
   reconcileCharmHp();
 }
 function tryMerge(){
@@ -942,7 +934,7 @@ function tryMerge(){
     // (it counts toward the 3-of-a-kind threshold), but we never delete a worn
     // piece — we swap-upgrade it instead. This fixes the old behaviour where
     // 1 equipped + 2 in pack would never fuse and one would always be "left over".
-    for(const it of inv){
+    for(const it of G.inv){
       if(it.legendary||!isGear(it)) continue;
       const k=it.kind+":"+it.tier+":"+it.ench;
       (groups[k]=groups[k]||[]).push(it);
@@ -956,7 +948,7 @@ function tryMerge(){
       if(atMax) continue;   // can't fuse further; leave the spares in the pack
       // Split into worn vs spare. Always consume spares first; only touch the
       // worn copy if we still don't have 3 victims (i.e. swap-upgrade).
-      const worn  = g.filter(it => ALL_SLOTS.some(s=>equipped[s]===it));
+      const worn  = g.filter(it => ALL_SLOTS.some(s=>G.equipped[s]===it));
       const spare = g.filter(it => !worn.includes(it));
       const up = g[0].tier<maxTier
         ? {kind:g[0].kind,glyph:g[0].glyph,col:g[0].col,tier:g[0].tier+1,ench:g[0].ench}
@@ -964,17 +956,17 @@ function tryMerge(){
       let logVerb = `Three ${gearName(g[0])} fuse into a ${gearName(up)}!`;
       if(spare.length >= 3){
         // classic path: 3 spares fuse into one new item
-        for(let n=0;n<3;n++) inv.splice(inv.indexOf(spare[n]),1);
-        inv.push(up);
+        for(let n=0;n<3;n++) G.inv.splice(G.inv.indexOf(spare[n]),1);
+        G.inv.push(up);
       } else {
         // swap-upgrade path: consume all spares + the worn copy, drop the upgrade
         // straight into the slot the worn piece was in. Net: no leftovers, no naked slot.
         const wornPiece = worn[0];
-        const wornSlot = ALL_SLOTS.find(s=>equipped[s]===wornPiece);
-        for(const sp of spare) inv.splice(inv.indexOf(sp),1);
-        inv.splice(inv.indexOf(wornPiece),1);
-        inv.push(up);
-        equipped[wornSlot] = up;
+        const wornSlot = ALL_SLOTS.find(s=>G.equipped[s]===wornPiece);
+        for(const sp of spare) G.inv.splice(G.inv.indexOf(sp),1);
+        G.inv.splice(G.inv.indexOf(wornPiece),1);
+        G.inv.push(up);
+        G.equipped[wornSlot] = up;
         logVerb = `Your ${gearName(g[0])} fuses with ${spare.length} duplicate${spare.length>1?'s':''} — now wearing ${gearName(up)}!`;
       }
       log(logVerb,"gold");
@@ -986,40 +978,40 @@ function tryMerge(){
 
 // total defense from all worn armor pieces + any legendary evade bonus
 // value of a charm's stat field (0 if none/charm not equipped)
-function charmStat(key){ const c=equipped.charm; const d=c&&charmDef(c); return (d&&d.stat&&d.stat[key])||0; }
-function effAtk(){ const w=equipped.weapon; return player.baseAtk+(w?gearBonus(w):0)+charmStat("atk")-statusAtkMod(player); }
+function charmStat(key){ const c=G.equipped.charm; const d=c&&charmDef(c); return (d&&d.stat&&d.stat[key])||0; }
+function effAtk(){ const w=G.equipped.weapon; return G.player.baseAtk+(w?gearBonus(w):0)+charmStat("atk")-statusAtkMod(G.player); }
 function effDef(){
-  let d=player.baseDef+charmStat("def");
-  for(const slot of ARMOR_KINDS){ const it=equipped[slot]; if(it) d+=gearBonus(it); }
+  let d=G.player.baseDef+charmStat("def");
+  for(const slot of ARMOR_KINDS){ const it=G.equipped[slot]; if(it) d+=gearBonus(it); }
   // diminishing returns past 20: each point beyond counts for half, so you can't wall to immunity
   if(d>20) d=20+(d-20)*0.5;
   return Math.round(d);
 }
-function gearEvade(){ let e=charmStat("evasion"); for(const slot of ARMOR_KINDS){ const it=equipped[slot]; if(it&&it.evadeBonus) e+=it.evadeBonus; } return e; }
-function gearThorns(){ let t=0; for(const slot of ARMOR_KINDS){ const it=equipped[slot]; if(it&&it.thorns) t+=it.thorns; } return t; }
-function gearRegen(){ let r=charmStat("regenAmt"); for(const slot of ARMOR_KINDS){ const it=equipped[slot]; if(it&&it.regen) r+=it.regen; } return r; }
+function gearEvade(){ let e=charmStat("evasion"); for(const slot of ARMOR_KINDS){ const it=G.equipped[slot]; if(it&&it.evadeBonus) e+=it.evadeBonus; } return e; }
+function gearThorns(){ let t=0; for(const slot of ARMOR_KINDS){ const it=G.equipped[slot]; if(it&&it.thorns) t+=it.thorns; } return t; }
+function gearRegen(){ let r=charmStat("regenAmt"); for(const slot of ARMOR_KINDS){ const it=G.equipped[slot]; if(it&&it.regen) r+=it.regen; } return r; }
 // charm-granted extras read elsewhere
 function totalMaxHpBonus(){ return charmStat("maxhp"); }
 function totalAcc(){ return charmStat("acc"); }
 function totalCrit(){ return charmStat("critBonus"); }
 function totalHitLeech(){ return charmStat("hitLeech"); }
 
-function log(text,cls){ logLines.push({text,cls}); while(logLines.length>200) logLines.shift(); }
+function log(text,cls){ G.logLines.push({text,cls}); while(G.logLines.length>200) G.logLines.shift(); }
 
 // ---------- combat ----------
-function monsterAt(x,y){ for(let i=1;i<ents.length;i++){const e=ents[i]; if(e.alive&&e.x===x&&e.y===y) return e;} return null; }
+function monsterAt(x,y){ for(let i=1;i<G.ents.length;i++){const e=G.ents[i]; if(e.alive&&e.x===x&&e.y===y) return e;} return null; }
 
 function rollHit(att,def){
-  const w=equipped.weapon;
-  let acc = att.isPlayer ? 0.90+player.accBonus+totalAcc() : (0.85+(att.acc||0));
+  const w=G.equipped.weapon;
+  let acc = att.isPlayer ? 0.90+G.player.accBonus+totalAcc() : (0.85+(att.acc||0));
   if(att.isPlayer && w && w.acc) acc+=w.acc;
-  const eva = def.isPlayer ? player.evasion+gearEvade() : (def.evade||0);
+  const eva = def.isPlayer ? G.player.evasion+gearEvade() : (def.evade||0);
   return Math.random() < clamp(acc - eva, 0.35, 0.99);
 }
 
 // melee or ranged strike. `ranged` true skips the adjacency assumption.
 function attack(att,def,ranged){
-  const w=equipped.weapon;
+  const w=G.equipped.weapon;
   if(!rollHit(att,def)){
     if(att.isPlayer)      log(`You ${ranged?"shoot at":"swing at"} the ${def.name} and miss.`);
     else if(def.isPlayer) log(`The ${att.name} ${att.ranged?"shoots":"lunges"} but misses.`);
@@ -1027,7 +1019,7 @@ function attack(att,def,ranged){
   }
   const a = att.isPlayer ? effAtk() : att.atk;
   let d = def.isPlayer ? effDef() : def.def;
-  if(att.isPlayer && player.armorPen) d=Math.max(0, d-player.armorPen);   // Sunder ignores some defense
+  if(att.isPlayer && G.player.armorPen) d=Math.max(0, d-G.player.armorPen);   // Sunder ignores some defense
   let dmg = Math.max(1, a - d + ri(-1,2));
   // Player anti-stonewall: even against very high armor, a hit always lands a meaningful
   // chunk (~3% of the target's max HP). Stops armored elites/bosses from being un-killable
@@ -1037,12 +1029,12 @@ function attack(att,def,ranged){
     if(dmg < floorDmg) dmg = floorDmg;
   }
   let crit=false;
-  const critChance = Math.min(0.50, (att.isPlayer ? player.critBonus+totalCrit() : 0) + (w && w.crit ? w.crit : 0));
+  const critChance = Math.min(0.50, (att.isPlayer ? G.player.critBonus+totalCrit() : 0) + (w && w.crit ? w.crit : 0));
   if(att.isPlayer && critChance>0 && Math.random()<critChance){ dmg*=2; crit=true; }
   // elite "Brutal": chance to strike twice
   if(!att.isPlayer && att.eliteCrit && Math.random()<att.eliteCrit){ dmg*=2; crit=true; }
   // debug godmode: the player simply takes no damage
-  if(def.isPlayer && godMode) dmg = 0;
+  if(def.isPlayer && G.godMode) dmg = 0;
   def.hp -= dmg;
   if(att.isPlayer) log(`You ${ranged?"hit":"hit"} the ${def.name} for ${dmg}${crit?" (crit!)":""}.`, crit?"gold":"good");
   else if(def.isPlayer){
@@ -1050,46 +1042,46 @@ function attack(att,def,ranged){
     // elite "Vampiric": heals itself off the damage it deals
     if(att.eliteLeech){ att.hp=Math.min(att.maxhp, att.hp+att.eliteLeech); }
     // elite "Venomous": applies its status to the player
-    if(att.eliteStatus){ const s=att.eliteStatus; addStatus(player,s.type,s.turns,s.amount);
+    if(att.eliteStatus){ const s=att.eliteStatus; addStatus(G.player,s.type,s.turns,s.amount);
       log(`The ${att.name}'s strike leaves you ${STATUS[s.type].name.toLowerCase()}ed.`,"bad"); }
     // thorns from armor + the Spiked Hide perk reflect onto a melee attacker (not ranged)
-    const th=gearThorns()+player.thornsSelf;
+    const th=gearThorns()+G.player.thornsSelf;
     if(th>0 && !att.ranged && att.alive){
       att.hp-=th; log(`You lash back for ${th}.`,"good");
-      if(att.hp<=0){ att.alive=false; log(`The ${att.name} dies on your spikes.`,"good"); score+=att.maxhp*2; gainXp(att.xp); }
+      if(att.hp<=0){ att.alive=false; log(`The ${att.name} dies on your spikes.`,"good"); G.score+=att.maxhp*2; gainXp(att.xp); }
     }
   }
   // on-hit status from an equipped charm (player only), e.g. poison/burn/bleed/weaken
   if(att.isPlayer && def.alive!==false && def.hp>0){
-    const c=equipped.charm, cd=c&&charmDef(c);
+    const c=G.equipped.charm, cd=c&&charmDef(c);
     if(cd && cd.onHit){ const o=cd.onHit; addStatus(def,o.type,o.turns,o.amount);
       log(`The ${def.name} is afflicted: ${STATUS[o.type].name}.`,"good"); }
   }
   // healing on a successful hit: weapon lifesteal + Vampire perk + Leeching charm, capped
   if(att.isPlayer){
-    let heal=0; if(w && w.lifesteal) heal+=w.lifesteal; heal+=player.hitLeech;
+    let heal=0; if(w && w.lifesteal) heal+=w.lifesteal; heal+=G.player.hitLeech;
     // Leeching charm only fires every other hit (was every-hit +2, broken-tier).
-    player.leechCounter = (player.leechCounter||0) + 1;
-    if(player.leechCounter % 2 === 0) heal += totalHitLeech();
+    G.player.leechCounter = (G.player.leechCounter||0) + 1;
+    if(G.player.leechCounter % 2 === 0) heal += totalHitLeech();
     heal=Math.min(heal,4);   // hard cap so sustain can't outrun all incoming damage
-    if(heal>0) player.hp=Math.min(player.maxhp,player.hp+heal);
+    if(heal>0) G.player.hp=Math.min(G.player.maxhp,G.player.hp+heal);
   }
   if(def.hp<=0 && def.alive!==false){
     def.alive=false;
     if(def.isPlayer){ log("You collapse. The dark takes you.","bad"); }
     else {
-      score+=def.maxhp*2; gainXp(def.xp);
-      if(att.isPlayer && player.lifesteal>0) player.hp=Math.min(player.maxhp,player.hp+player.lifesteal);
+      G.score+=def.maxhp*2; gainXp(def.xp);
+      if(att.isPlayer && G.player.lifesteal>0) G.player.hp=Math.min(G.player.maxhp,G.player.hp+G.player.lifesteal);
       if(def.boss){
         log(`${def.name} is slain!`,"gold");
         // Both act-enders (Varmathrax + Zarakhel) always drop a legendary; other bosses 5%.
         if(def.final || def.act1End || Math.random()<0.05){
-          const leg=makeLegendary(depth); leg.x=def.x; leg.y=def.y; items.push(leg);
+          const leg=makeLegendary(G.depth); leg.x=def.x; leg.y=def.y; G.items.push(leg);
           log(`It drops the ${leg.fixedName}!`,"gold");
         } else {
           // most bosses drop a strong (but normal) gear piece + a charm chance
-          const g=makeGear(def.x,def.y,depth+2); items.push(g);
-          if(Math.random()<0.12){ const ch=makeCharm(); ch.x=def.x; ch.y=def.y; items.push(ch); }
+          const g=makeGear(def.x,def.y,G.depth+2); G.items.push(g);
+          if(Math.random()<0.12){ const ch=makeCharm(); ch.x=def.x; ch.y=def.y; G.items.push(ch); }
           log(`It drops some loot.`,"gold");
         }
         if(def.act1End){
@@ -1098,21 +1090,21 @@ function attack(att,def,ranged){
       } else if(def.mimic){
         log(`The mimic dies, spilling its hoard.`,"gold");
         // mimics drop solid loot: gear (rare legendary), gold, and SOMETIMES a charm
-        if(Math.random()<0.12){ const leg=makeLegendary(depth); leg.x=def.x; leg.y=def.y; items.push(leg); log(`It held the ${leg.fixedName}!`,"gold"); }
-        else { const g=makeGear(def.x,def.y,depth+1); items.push(g); }
-        if(Math.random()<0.25){ const ch=makeCharm(); ch.x=def.x; ch.y=def.y; items.push(ch); }
-        const gld={kind:"gold",glyph:"$",col:COL.gold,name:"gold",value:ri(20,40)*depth,x:def.x,y:def.y}; items.push(gld);
+        if(Math.random()<0.12){ const leg=makeLegendary(G.depth); leg.x=def.x; leg.y=def.y; G.items.push(leg); log(`It held the ${leg.fixedName}!`,"gold"); }
+        else { const g=makeGear(def.x,def.y,G.depth+1); G.items.push(g); }
+        if(Math.random()<0.25){ const ch=makeCharm(); ch.x=def.x; ch.y=def.y; G.items.push(ch); }
+        const gld={kind:"gold",glyph:"$",col:COL.gold,name:"gold",value:ri(20,40)*G.depth,x:def.x,y:def.y}; G.items.push(gld);
       } else if(def.elite){
         log(`The ${def.name} falls — it was carrying something.`,"gold");
         // elites always drop: a strong gear piece, gold, sometimes a charm, rare legendary
-        if(Math.random()<0.06){ const leg=makeLegendary(depth); leg.x=def.x; leg.y=def.y; items.push(leg); log(`It held the ${leg.fixedName}!`,"gold"); }
-        else { const g=makeGear(def.x,def.y,depth+2); items.push(g); }
-        if(Math.random()<0.15){ const ch=makeCharm(); ch.x=def.x; ch.y=def.y; items.push(ch); }
-        const gld={kind:"gold",glyph:"$",col:COL.gold,name:"gold",value:ri(15,30)*Math.max(1,depth),x:def.x,y:def.y}; items.push(gld);
+        if(Math.random()<0.06){ const leg=makeLegendary(G.depth); leg.x=def.x; leg.y=def.y; G.items.push(leg); log(`It held the ${leg.fixedName}!`,"gold"); }
+        else { const g=makeGear(def.x,def.y,G.depth+2); G.items.push(g); }
+        if(Math.random()<0.15){ const ch=makeCharm(); ch.x=def.x; ch.y=def.y; G.items.push(ch); }
+        const gld={kind:"gold",glyph:"$",col:COL.gold,name:"gold",value:ri(15,30)*Math.max(1,G.depth),x:def.x,y:def.y}; G.items.push(gld);
       } else {
         log(`The ${def.name} dies.`,"good");
         if(att.isPlayer && Math.random()<0.30){            // ordinary enemies sometimes drop loot
-          const drop=rollLoot(def.x,def.y,depth); if(drop){ drop.x=def.x; drop.y=def.y; items.push(drop); }
+          const drop=rollLoot(def.x,def.y,G.depth); if(drop){ drop.x=def.x; drop.y=def.y; G.items.push(drop); }
         }
       }
       if(def.final){ endGame(true); }
@@ -1120,27 +1112,27 @@ function attack(att,def,ranged){
   }
 }
 function gainXp(n){
-  player.xp+=n;
-  while(player.xp>=player.xpNext){
-    player.xp-=player.xpNext; player.level++;
-    player.xpNext=Math.round(player.xpNext*1.6);   // steeper: each level costs much more
-    pendingLevelUps++;                              // resolved via the perk picker
-    log(`You reach level ${player.level}!`,"good");
+  G.player.xp+=n;
+  while(G.player.xp>=G.player.xpNext){
+    G.player.xp-=G.player.xpNext; G.player.level++;
+    G.player.xpNext=Math.round(G.player.xpNext*1.6);   // steeper: each level costs much more
+    G.pendingLevelUps++;                              // resolved via the perk picker
+    log(`You reach level ${G.player.level}!`,"good");
   }
 }
 
 // ---------- player actions ----------
-const blocked=(x,y)=>!inB(x,y)||map[y][x]===T_WALL||(feats&&feats[y][x]);
+const blocked=(x,y)=>!inB(x,y)||G.map[y][x]===T_WALL||(G.feats&&G.feats[y][x]);
 
 function playerMove(dx,dy){
-  const nx=player.x+dx, ny=player.y+dy;
-  if(merchant && nx===merchant.x && ny===merchant.y){ openShop(); return false; }
-  const ch=chests.find(c=>!c.opened && c.x===nx && c.y===ny);
+  const nx=G.player.x+dx, ny=G.player.y+dy;
+  if(G.merchant && nx===G.merchant.x && ny===G.merchant.y){ openShop(); return false; }
+  const ch=G.chests.find(c=>!c.opened && c.x===nx && c.y===ny);
   if(ch){ return openChest(ch); }
   if(blocked(nx,ny)) return false;
   const m=monsterAt(nx,ny);
-  if(m){ attack(player,m); return true; }
-  player.x=nx; player.y=ny; return true;
+  if(m){ attack(G.player,m); return true; }
+  G.player.x=nx; G.player.y=ny; return true;
 }
 
 // open a chest: either loot spills out, or a mimic springs and attacks
@@ -1151,33 +1143,33 @@ function openChest(ch){
     m.name="mimic"; m.glyph="M"; m.col=COL.mimic;
     m.maxhp=Math.round(m.maxhp*2.4); m.hp=m.maxhp; m.atk=Math.round(m.atk*1.6); m.def+=2;
     m.mimic=true;
-    chests=chests.filter(c=>c!==ch);
-    ents.push(m);
+    G.chests=G.chests.filter(c=>c!==ch);
+    G.ents.push(m);
     log("The chest lunges — it's a mimic!","bad");
-    attack(m,player,false);   // ambush: a free bite the instant it springs
+    attack(m,G.player,false);   // ambush: a free bite the instant it springs
     return true;              // springing the trap costs a turn (monster acts too)
   }
-  const loot=chestLoot(depth);
-  for(const it of loot){ it.x=ch.x; it.y=ch.y; items.push(it); }
-  chests=chests.filter(c=>c!==ch);
+  const loot=chestLoot(G.depth);
+  for(const it of loot){ it.x=ch.x; it.y=ch.y; G.items.push(it); }
+  G.chests=G.chests.filter(c=>c!==ch);
   log(`You pry open the chest — ${loot.length} item${loot.length>1?"s":""} inside! Step on them to grab.`,"gold");
   return false;  // opening a real chest is free
 }
 
 function pickup(){
-  for(const it of items){
-    if(it.x!==player.x||it.y!==player.y) continue;
-    if(it.kind==="potion"){ potions++; log("You pocket a potion.","gold"); }
-    else if(it.kind==="gold"){ gold+=it.value; score+=it.value; log(`You scoop up ${it.value} gold.`,"gold"); }
+  for(const it of G.items){
+    if(it.x!==G.player.x||it.y!==G.player.y) continue;
+    if(it.kind==="potion"){ G.potions++; log("You pocket a potion.","gold"); }
+    else if(it.kind==="gold"){ G.gold+=it.value; G.score+=it.value; log(`You scoop up ${it.value} gold.`,"gold"); }
     else {                                   // gear or charm
       const copy=Object.assign({},it); delete copy.x; delete copy.y;
-      inv.push(copy);
+      G.inv.push(copy);
       log(`You pick up a ${gearName(it)}.`,it.legendary?"gold":undefined);
       autoEquip();    // fill any empty slot (won't override your choices)
       tryMerge();     // fuse spare duplicates (never equipped/legendary)
       autoEquip();    // backfill if a merge emptied a slot
     }
-    items.splice(items.indexOf(it),1);
+    G.items.splice(G.items.indexOf(it),1);
     return true;
   }
   log("Nothing on the ground here.");
@@ -1185,26 +1177,26 @@ function pickup(){
 }
 
 function quaff(){
-  if(potions<=0){ log("You have no potions."); return false; }
-  const heal=12+(player.potionBonus||0);
-  player.hp=Math.min(player.maxhp,player.hp+heal);
-  potions--; log(`You drink a potion. (+${heal} HP)`,"good");
+  if(G.potions<=0){ log("You have no potions."); return false; }
+  const heal=12+(G.player.potionBonus||0);
+  G.player.hp=Math.min(G.player.maxhp,G.player.hp+heal);
+  G.potions--; log(`You drink a potion. (+${heal} HP)`,"good");
   return true;
 }
 
 function equipIndex(i){
-  if(i<0||i>=inv.length) return false;
-  const it=inv[i];
+  if(i<0||i>=G.inv.length) return false;
+  const it=G.inv[i];
   if(!isEquippable(it)) return false;
-  equipped[it.kind]=it;     // 'charm' is a valid slot
+  G.equipped[it.kind]=it;     // 'charm' is a valid slot
   reconcileCharmHp();
   log(`You equip the ${gearName(it)}.`,"good");
   // first manual equip turns OFF auto-equip so it stops overriding your choices
-  if(autoEquipOn){
-    autoEquipOn=false;
-    if(!autoEquipWarned){
+  if(G.autoEquipOn){
+    G.autoEquipOn=false;
+    if(!G.autoEquipWarned){
       autoEquializeWarn();
-      autoEquipWarned=true;
+      G.autoEquipWarned=true;
     } else log("Auto-equip disabled.","bad");
   }
   return false; // equipping is free
@@ -1216,63 +1208,63 @@ function autoEquializeWarn(){
 // keep player.maxhp in sync with the equipped charm's maxhp bonus
 function reconcileCharmHp(){
   const want=totalMaxHpBonus();
-  const have=player.charmHp||0;
+  const have=G.player.charmHp||0;
   if(want!==have){
-    player.maxhp += (want-have);
-    player.charmHp = want;
-    if(player.hp>player.maxhp) player.hp=player.maxhp;
-    if(want>have) player.hp=Math.min(player.maxhp, player.hp+(want-have)); // gain the new HP too
+    G.player.maxhp += (want-have);
+    G.player.charmHp = want;
+    if(G.player.hp>G.player.maxhp) G.player.hp=G.player.maxhp;
+    if(want>have) G.player.hp=Math.min(G.player.maxhp, G.player.hp+(want-have)); // gain the new HP too
   }
 }
 
 function descend(){
-  if(map[player.y][player.x]!==T_STAIRS){ log("No stairs down beneath your feet."); return false; }
+  if(G.map[G.player.y][G.player.x]!==T_STAIRS){ log("No stairs down beneath your feet."); return false; }
   saveLevel();
-  depth++;
+  G.depth++;
   // Reaching a brand-new depth rewards +2 max HP and a small heal. Re-descending a floor
   // you've already been to (after climbing back up) gives nothing — no HP farming.
-  if(scaledDepth() > maxDepthReached){
-    maxDepthReached = scaledDepth();
-    player.maxhp+=2; player.hp=Math.min(player.maxhp,player.hp+6);
+  if(scaledDepth() > G.maxDepthReached){
+    G.maxDepthReached = scaledDepth();
+    G.player.maxhp+=2; G.player.hp=Math.min(G.player.maxhp,G.player.hp+6);
   }
   // Once you cross into Act II the hero sprite gains its scars + gear permanently
   // (carries through NG+ because the hero is the same character).
-  if(depth > ACT1_END) player.everAct2 = true;
-  score+=25;
-  log(`You climb down into depth ${depth}.`,"gold");
+  if(G.depth > ACT1_END) G.player.everAct2 = true;
+  G.score+=25;
+  log(`You climb down into depth ${G.depth}.`,"gold");
   genLevel("down"); computeFOV();
-  MUSIC.play(musicTrackForDepth(depth));   // switches if the biome changed; otherwise no-op
+  MUSIC.play(musicTrackForDepth(G.depth));   // switches if the biome changed; otherwise no-op
   return false;
 }
 
 function ascend(){
-  if(map[player.y][player.x]!==T_STAIRS_UP){ log("No stairs up beneath your feet."); return false; }
-  if(depth<=1){ log("This is the top floor — only the surface lies above."); return false; }
+  if(G.map[G.player.y][G.player.x]!==T_STAIRS_UP){ log("No stairs up beneath your feet."); return false; }
+  if(G.depth<=1){ log("This is the top floor — only the surface lies above."); return false; }
   saveLevel();
-  depth--;
-  log(`You climb back up to depth ${depth}.`,"gold");
+  G.depth--;
+  log(`You climb back up to depth ${G.depth}.`,"gold");
   genLevel("up"); computeFOV();
-  MUSIC.play(musicTrackForDepth(depth));
+  MUSIC.play(musicTrackForDepth(G.depth));
   return false;
 }
 
 // ---------- monster AI ----------
 function monstersTurn(){
-  shots=[];
-  for(let i=1;i<ents.length;i++){
-    const m=ents[i]; if(!m.alive) continue;
+  G.shots=[];
+  for(let i=1;i<G.ents.length;i++){
+    const m=G.ents[i]; if(!m.alive) continue;
     // status effects tick first; damage-over-time can finish a monster off
     if(tickStatus(m) || m.hp<=0){
       m.alive=false;
       log(`The ${m.name} succumbs.`,"good");
-      score+=m.maxhp*2; gainXp(m.xp);
-      if(Math.random()<0.30){ const drop=rollLoot(m.x,m.y,depth); if(drop){ drop.x=m.x; drop.y=m.y; items.push(drop);} }
+      G.score+=m.maxhp*2; gainXp(m.xp);
+      if(Math.random()<0.30){ const drop=rollLoot(m.x,m.y,G.depth); if(drop){ drop.x=m.x; drop.y=m.y; G.items.push(drop);} }
       continue;
     }
-    const dx=player.x-m.x, dy=player.y-m.y;
+    const dx=G.player.x-m.x, dy=G.player.y-m.y;
     const adj=Math.abs(dx)<=1&&Math.abs(dy)<=1;
     const dist=Math.max(Math.abs(dx),Math.abs(dy));
-    const sees=visible[m.y][m.x];
+    const sees=G.visible[m.y][m.x];
 
     // self-healing foes mend a little each turn — but NOT while burning/bleeding/poisoned.
     // Bosses are different: they only regenerate once they've lost sight of you (de-aggroed),
@@ -1283,22 +1275,22 @@ function monstersTurn(){
 
     // ranged attacker: it can see you and you're in range (not adjacent).
     // Fires only one turn in two — the off-turn is spent reloading (it may reposition below).
-    if(m.ranged && sees && !adj && dist<=m.range && los(m.x,m.y,player.x,player.y)){
+    if(m.ranged && sees && !adj && dist<=m.range && los(m.x,m.y,G.player.x,G.player.y)){
       if(m._reloading){
         m._reloading=false;            // finished reloading; will be free to shoot next turn
         // fall through to the repositioning logic so it isn't a totally wasted turn
       } else {
-        traceShot(m.x,m.y,player.x,player.y,COL.shot);
-        attack(m,player,true);
+        traceShot(m.x,m.y,G.player.x,G.player.y,COL.shot);
+        attack(m,G.player,true);
         m._reloading=true;             // must reload before the next shot
         continue;
       }
     }
-    if(adj){ attack(m,player); continue; }
+    if(adj){ attack(m,G.player); continue; }
     if(!sees){
       if(ri(0,2)===0){
         const wx=m.x+ri(-1,1), wy=m.y+ri(-1,1);
-        if(!blocked(wx,wy)&&!monsterAt(wx,wy)&&!occupied(wx,wy)&&!(wx===player.x&&wy===player.y)){ m.x=wx; m.y=wy; }
+        if(!blocked(wx,wy)&&!monsterAt(wx,wy)&&!occupied(wx,wy)&&!(wx===G.player.x&&wy===G.player.y)){ m.x=wx; m.y=wy; }
       }
       continue;
     }
@@ -1311,18 +1303,18 @@ function monstersTurn(){
   }
 }
 // don't let monsters stand on the merchant
-function occupied(x,y){ return merchant && merchant.x===x && merchant.y===y; }
+function occupied(x,y){ return G.merchant && G.merchant.x===x && G.merchant.y===y; }
 // record the tiles a projectile crosses, for a one-frame visual
 function traceShot(x1,y1,x2,y2,col){
   let dx=Math.abs(x2-x1),dy=Math.abs(y2-y1),sx=x1<x2?1:-1,sy=y1<y2?1:-1,err=dx-dy,x=x1,y=y1;
   while(!(x===x2&&y===y2)){
     const e2=2*err; if(e2>-dy){err-=dy;x+=sx;} if(e2<dx){err+=dx;y+=sy;}
-    if(!(x===x2&&y===y2)) shots.push({x,y,col});
+    if(!(x===x2&&y===y2)) G.shots.push({x,y,col});
   }
 }
 
 // ---------- render ----------
-let camX=0, camY=0;
+// camX/camY now live on G (see src/state.js).
 // resolve an item to a sprite id
 function itemSpriteId(it){
   if(it.kind==="potion") return "potion";
@@ -1400,13 +1392,13 @@ function entSpriteId(m){
   const base = m.elite ? m.name.replace(/^elite /,"") : m.name;   // strip elite prefix
   // On Act II floors, swap Act I commons to their v2 art (scars, war-paint, etc).
   // The base monster object is unchanged — purely a render swap.
-  if(depth > ACT1_END && MONSTER_V2_SPRITE[base]) return MONSTER_V2_SPRITE[base];
+  if(G.depth > ACT1_END && MONSTER_V2_SPRITE[base]) return MONSTER_V2_SPRITE[base];
   return MONSTER_SPRITE[base]||null;
 }
 // float a small status icon above an afflicted entity (graphics mode only)
 function drawStatusIcon(ent){
   if(!ent.status||!ent.status.length) return;
-  const sx=ent.x-camX, sy=ent.y-camY;
+  const sx=ent.x-G.camX, sy=ent.y-G.camY;
   if(sx<0||sx>=VIEW_W||sy<0||sy>=VIEW_H) return;
   const s=ent.status[GFX.frame % ent.status.length];   // cycle through if several
   if(!SPRITE_LINES[s.type]) return;
@@ -1415,7 +1407,7 @@ function drawStatusIcon(ent){
   if(cnv){ ctx.imageSmoothingEnabled=false; ctx.drawImage(cnv, sx*CELL+CELL-half, sy*CELL, half, half); }
 }
 function glyph(wx,wy,ch,color,glow,spriteId,dim){
-  const sx=wx-camX, sy=wy-camY;
+  const sx=wx-G.camX, sy=wy-G.camY;
   if(sx<0||sx>=VIEW_W||sy<0||sy>=VIEW_H) return;   // outside the camera window
   // graphics mode: draw the pixel sprite if one exists for this id
   if(GFX.on && spriteId && SPRITE_LINES[spriteId]){
@@ -1440,45 +1432,45 @@ function glyph(wx,wy,ch,color,glow,spriteId,dim){
 }
 function render(){
   // camera follows the player, clamped so it never shows past the map edges
-  camX = Math.max(0, Math.min(MAP_W-VIEW_W, player.x - (VIEW_W>>1)));
-  camY = Math.max(0, Math.min(MAP_H-VIEW_H, player.y - (VIEW_H>>1)));
+  G.camX = Math.max(0, Math.min(MAP_W-VIEW_W, G.player.x - (VIEW_W>>1)));
+  G.camY = Math.max(0, Math.min(MAP_H-VIEW_H, G.player.y - (VIEW_H>>1)));
 
   ctx.fillStyle="#050406";
   ctx.fillRect(0,0,VIEW_W*CELL,VIEW_H*CELL);
   ctx.font=`${FONT}px "JetBrains Mono", monospace`;
   ctx.textAlign="center"; ctx.textBaseline="middle";
 
-  const bm=biomeFor(depth);
+  const bm=biomeFor(G.depth);
   for(let sy=0;sy<VIEW_H;sy++) for(let sx=0;sx<VIEW_W;sx++){
-    const x=camX+sx, y=camY+sy;
-    const vis=visible[y][x], exp=explored[y][x];
+    const x=G.camX+sx, y=G.camY+sy;
+    const vis=G.visible[y][x], exp=G.explored[y][x];
     if(!vis&&!exp) continue;
     const dim=!vis;
-    const t=map[y][x];
+    const t=G.map[y][x];
     if(t===T_WALL)            glyph(x,y,"#", vis?COL.wall:COL.wallDim, false, bm.wall, dim);
     else if(t===T_STAIRS)     glyph(x,y,">", vis?COL.stairs:COL.wallDim, vis, bm.stairsDown, dim);
     else if(t===T_STAIRS_UP)  glyph(x,y,"<", vis?COL.stairsUp:COL.wallDim, vis, bm.stairsUp, dim);
     else                      glyph(x,y,"·", vis?COL.floor:COL.floorDim, false, bm.floor, dim);
     // blocking decoration on top of a floor tile
-    if(feats && feats[y][x]){
-      const fid=feats[y][x];
+    if(G.feats && G.feats[y][x]){
+      const fid=G.feats[y][x];
       const fch = fid==="c_bones"?"%": fid==="k_rocks"?"*": fid==="k_shroom"?"♣": fid==="h_brazier"?"¡":"#";
       glyph(x,y,fch, vis?"#a89878":"#3a352e", false, fid, dim);
     }
   }
-  if(merchant && visible[merchant.y][merchant.x]) glyph(merchant.x,merchant.y,"M",COL.merchant,true,"merchant");
-  for(const ch of chests){ if(!ch.opened && visible[ch.y][ch.x]) glyph(ch.x,ch.y,"=",COL.chest,true,"chest"); }
-  for(const it of items){ if(visible[it.y][it.x]) glyph(it.x,it.y,it.glyph,it.col,true,itemSpriteId(it)); }
-  for(let i=1;i<ents.length;i++){ const m=ents[i]; if(m.alive&&visible[m.y][m.x]){
+  if(G.merchant && G.visible[G.merchant.y][G.merchant.x]) glyph(G.merchant.x,G.merchant.y,"M",COL.merchant,true,"merchant");
+  for(const ch of G.chests){ if(!ch.opened && G.visible[ch.y][ch.x]) glyph(ch.x,ch.y,"=",COL.chest,true,"chest"); }
+  for(const it of G.items){ if(G.visible[it.y][it.x]) glyph(it.x,it.y,it.glyph,it.col,true,itemSpriteId(it)); }
+  for(let i=1;i<G.ents.length;i++){ const m=G.ents[i]; if(m.alive&&G.visible[m.y][m.x]){
     glyph(m.x,m.y,m.glyph,m.col,true,entSpriteId(m));
     if(GFX.on) drawStatusIcon(m);
   } }
-  for(const s of shots){ if(visible[s.y]&&visible[s.y][s.x]) glyph(s.x,s.y,"•",s.col,true,"arrow"); }
+  for(const s of G.shots){ if(G.visible[s.y]&&G.visible[s.y][s.x]) glyph(s.x,s.y,"•",s.col,true,"arrow"); }
   // Player art: v2 (geared) once you've ever set foot in Act II; original cyan @ otherwise.
   // Once swapped, stays swapped — even after NG+ resets you back to Act I.
-  const playerSpr = (player && player.everAct2) ? "player_v2" : "player";
-  glyph(player.x,player.y,"@",COL.player,true,playerSpr);
-  if(GFX.on) drawStatusIcon(player);
+  const playerSpr = (G.player && G.player.everAct2) ? "player_v2" : "player";
+  glyph(G.player.x,G.player.y,"@",COL.player,true,playerSpr);
+  if(GFX.on) drawStatusIcon(G.player);
 
   drawMinimap();
   updateBossBar();
@@ -1496,8 +1488,8 @@ function drawMinimap(){
   ctx.globalAlpha=1; ctx.strokeStyle="rgba(232,183,92,.35)"; ctx.lineWidth=1;
   ctx.strokeRect(ox-3.5,oy-3.5,w+7,h+7);
   for(let y=0;y<MAP_H;y++) for(let x=0;x<MAP_W;x++){
-    if(!explored[y][x]) continue;
-    const t=map[y][x]; let c=null;
+    if(!G.explored[y][x]) continue;
+    const t=G.map[y][x]; let c=null;
     if(t===T_WALL)            c="#3a352e";
     else if(t===T_STAIRS)     c="#f0e6c0";
     else if(t===T_STAIRS_UP)  c="#8fd6a0";
@@ -1506,53 +1498,53 @@ function drawMinimap(){
     ctx.fillStyle=c; ctx.fillRect(ox+x*cell, oy+y*cell, cell, cell);
   }
   // merchant + chests (only if discovered) as small markers
-  if(merchant && explored[merchant.y][merchant.x]){ ctx.fillStyle=COL.merchant; ctx.fillRect(ox+merchant.x*cell, oy+merchant.y*cell, cell, cell); }
-  for(const ch of chests){ if(!ch.opened && explored[ch.y][ch.x]){ ctx.fillStyle=COL.chest; ctx.fillRect(ox+ch.x*cell, oy+ch.y*cell, cell, cell); } }
+  if(G.merchant && G.explored[G.merchant.y][G.merchant.x]){ ctx.fillStyle=COL.merchant; ctx.fillRect(ox+G.merchant.x*cell, oy+G.merchant.y*cell, cell, cell); }
+  for(const ch of G.chests){ if(!ch.opened && G.explored[ch.y][ch.x]){ ctx.fillStyle=COL.chest; ctx.fillRect(ox+ch.x*cell, oy+ch.y*cell, cell, cell); } }
   // boss marker if seen
-  if(bossEnt && bossEnt.alive && explored[bossEnt.y][bossEnt.x]){ ctx.fillStyle="#c0413a"; ctx.fillRect(ox+bossEnt.x*cell-1, oy+bossEnt.y*cell-1, cell+2, cell+2); }
+  if(G.bossEnt && G.bossEnt.alive && G.explored[G.bossEnt.y][G.bossEnt.x]){ ctx.fillStyle="#c0413a"; ctx.fillRect(ox+G.bossEnt.x*cell-1, oy+G.bossEnt.y*cell-1, cell+2, cell+2); }
   // player — bright, slightly larger
   ctx.fillStyle=COL.player;
-  ctx.fillRect(ox+player.x*cell-1, oy+player.y*cell-1, cell+2, cell+2);
+  ctx.fillRect(ox+G.player.x*cell-1, oy+G.player.y*cell-1, cell+2, cell+2);
   ctx.restore();
 }
 
 function updateBossBar(){
   const bb=$("bossBar");
-  if(bossEnt && bossEnt.alive && visible[bossEnt.y] && visible[bossEnt.y][bossEnt.x]){
+  if(G.bossEnt && G.bossEnt.alive && G.visible[G.bossEnt.y] && G.visible[G.bossEnt.y][G.bossEnt.x]){
     bb.classList.remove("hidden");
-    $("bossName").textContent=bossEnt.name;
-    $("bossHpFill").style.width=Math.max(0,100*bossEnt.hp/bossEnt.maxhp)+"%";
+    $("bossName").textContent=G.bossEnt.name;
+    $("bossHpFill").style.width=Math.max(0,100*G.bossEnt.hp/G.bossEnt.maxhp)+"%";
   } else bb.classList.add("hidden");
 }
 
 function updateUI(){
-  $("hpTxt").textContent=`${Math.max(0,player.hp)}/${player.maxhp}`;
-  $("hpFill").style.width=Math.max(0,100*player.hp/player.maxhp)+"%";
-  $("lvlTxt").textContent=player.level;
-  $("xpFill").style.width=(100*player.xp/player.xpNext)+"%";
-  const dlabel = ngPlus>0 ? `Extra Depth ${ngPlus}-${depth}` : `${depth}`;
-  $("depthTxt").textContent=dlabel+(depth>=FINAL_DEPTH?" (final)":"");
+  $("hpTxt").textContent=`${Math.max(0,G.player.hp)}/${G.player.maxhp}`;
+  $("hpFill").style.width=Math.max(0,100*G.player.hp/G.player.maxhp)+"%";
+  $("lvlTxt").textContent=G.player.level;
+  $("xpFill").style.width=(100*G.player.xp/G.player.xpNext)+"%";
+  const dlabel = G.ngPlus>0 ? `Extra Depth ${G.ngPlus}-${G.depth}` : `${G.depth}`;
+  $("depthTxt").textContent=dlabel+(G.depth>=FINAL_DEPTH?" (final)":"");
   $("depthTag").textContent = (function(){
-    const act = depth<=ACT1_END ? "I" : "II";
-    const b = biomeFor(depth);
-    const ngLabel = ngPlus>0 ? ` · NG+${ngPlus}` : "";
-    return `— ACT ${act} · ${b.name} · depth ${depth}${ngLabel} —`;
+    const act = G.depth<=ACT1_END ? "I" : "II";
+    const b = biomeFor(G.depth);
+    const ngLabel = G.ngPlus>0 ? ` · NG+${G.ngPlus}` : "";
+    return `— ACT ${act} · ${b.name} · depth ${G.depth}${ngLabel} —`;
   })();
-  $("atkTxt").textContent=effAtk()+(equipped.weapon?` (${player.baseAtk}+${gearBonus(equipped.weapon)})`:"");
+  $("atkTxt").textContent=effAtk()+(G.equipped.weapon?` (${G.player.baseAtk}+${gearBonus(G.equipped.weapon)})`:"");
   $("defTxt").textContent=effDef();
-  $("goldTxt").textContent=gold;
-  $("scoreTxt").textContent=score;
-  $("wepTxt").textContent=equipped.weapon?gearName(equipped.weapon):"bare fists";
-  $("armTxt").textContent=equipped.armor?gearName(equipped.armor):"none";
-  $("helmTxt").textContent=equipped.helmet?gearName(equipped.helmet):"none";
-  $("shldTxt").textContent=equipped.shield?gearName(equipped.shield):"none";
-  $("charmTxt").textContent=equipped.charm?equipped.charm.name:"none";
-  $("potTxt").textContent=potions+(potions===1?" potion":" potions");
+  $("goldTxt").textContent=G.gold;
+  $("scoreTxt").textContent=G.score;
+  $("wepTxt").textContent=G.equipped.weapon?gearName(G.equipped.weapon):"bare fists";
+  $("armTxt").textContent=G.equipped.armor?gearName(G.equipped.armor):"none";
+  $("helmTxt").textContent=G.equipped.helmet?gearName(G.equipped.helmet):"none";
+  $("shldTxt").textContent=G.equipped.shield?gearName(G.equipped.shield):"none";
+  $("charmTxt").textContent=G.equipped.charm?G.equipped.charm.name:"none";
+  $("potTxt").textContent=G.potions+(G.potions===1?" potion":" potions");
 
-  const isEq = it => ALL_SLOTS.some(s=>equipped[s]===it);
+  const isEq = it => ALL_SLOTS.some(s=>G.equipped[s]===it);
   const ul=$("inv");
-  if(inv.length===0){ ul.innerHTML='<li class="empty">empty</li>'; }
-  else ul.innerHTML=inv.map((it,i)=>{
+  if(G.inv.length===0){ ul.innerHTML='<li class="empty">empty</li>'; }
+  else ul.innerHTML=G.inv.map((it,i)=>{
     const eq=isEq(it)?' <span class="eq">[equipped]</span>':"";
     const b=it.kind==="charm" ? "charm" : (it.kind==="weapon"?`+${gearBonus(it)} atk`:`+${gearBonus(it)} def`);
     const cls=it.legendary?"leg":(it.kind==="charm"?"chm":"");
@@ -1560,36 +1552,36 @@ function updateUI(){
     return `<li data-i="${i}"><span class="key">${i+1}</span> ${nm} <span style="color:#5f5849">${b}</span>${eq}</li>`;
   }).join("");
 
-  const ab=$("autoBtn"); if(ab){ ab.textContent="auto: "+(autoEquipOn?"on":"off"); ab.className="autobtn"+(autoEquipOn?"":" off"); }
+  const ab=$("autoBtn"); if(ab){ ab.textContent="auto: "+(G.autoEquipOn?"on":"off"); ab.className="autobtn"+(G.autoEquipOn?"":" off"); }
   const lg=$("log");
-  lg.innerHTML=logLines.map(l=>`<div class="${l.cls||""}">${l.text}</div>`).join("");
+  lg.innerHTML=G.logLines.map(l=>`<div class="${l.cls||""}">${l.text}</div>`).join("");
   lg.scrollTop = lg.scrollHeight;   // stick to the latest line
 
   // player status conditions banner
   const stEl=$("statusLine");
   if(stEl){
-    if(player.status&&player.status.length){
-      stEl.innerHTML=player.status.map(s=>`<span style="color:${STATUS[s.type].col}">${STATUS[s.type].name} ${s.turns}</span>`).join(" · ");
+    if(G.player.status&&G.player.status.length){
+      stEl.innerHTML=G.player.status.map(s=>`<span style="color:${STATUS[s.type].col}">${STATUS[s.type].name} ${s.turns}</span>`).join(" · ");
       stEl.style.display="block";
     } else stEl.style.display="none";
   }
 
   const sk=[];
-  if(player.sight>FOV_R)   sk.push(`Sight ${player.sight}`);
-  if(player.regenAmt>0)    sk.push(`Regen +${player.regenAmt}/9 turns`);
-  if(player.lifesteal>0)   sk.push(`Lifesteal +${player.lifesteal}/kill`);
-  if(player.potionBonus>0) sk.push(`Potions +${player.potionBonus} heal`);
-  if(player.evasion>0)     sk.push(`Dodge +${Math.round(player.evasion*100)}%`);
-  if(player.accBonus>0)    sk.push(`Accuracy +${Math.round(player.accBonus*100)}%`);
-  if(player.critBonus>0)   sk.push(`Crit +${Math.round(player.critBonus*100)}%`);
-  if(player.armorPen>0)    sk.push(`Armor pierce ${player.armorPen}`);
-  if(player.thornsSelf>0)  sk.push(`Spikes ${player.thornsSelf}`);
-  if(player.hitLeech>0)    sk.push(`Lifesteal +${player.hitLeech}/hit`);
+  if(G.player.sight>FOV_R)   sk.push(`Sight ${G.player.sight}`);
+  if(G.player.regenAmt>0)    sk.push(`Regen +${G.player.regenAmt}/9 turns`);
+  if(G.player.lifesteal>0)   sk.push(`Lifesteal +${G.player.lifesteal}/kill`);
+  if(G.player.potionBonus>0) sk.push(`Potions +${G.player.potionBonus} heal`);
+  if(G.player.evasion>0)     sk.push(`Dodge +${Math.round(G.player.evasion*100)}%`);
+  if(G.player.accBonus>0)    sk.push(`Accuracy +${Math.round(G.player.accBonus*100)}%`);
+  if(G.player.critBonus>0)   sk.push(`Crit +${Math.round(G.player.critBonus*100)}%`);
+  if(G.player.armorPen>0)    sk.push(`Armor pierce ${G.player.armorPen}`);
+  if(G.player.thornsSelf>0)  sk.push(`Spikes ${G.player.thornsSelf}`);
+  if(G.player.hitLeech>0)    sk.push(`Lifesteal +${G.player.hitLeech}/hit`);
   // equipped charm effect
-  const cd=equipped.charm&&charmDef(equipped.charm);
+  const cd=G.equipped.charm&&charmDef(G.equipped.charm);
   if(cd) sk.push(`<span class="chm">Charm: ${cd.desc}</span>`);
   // gear-granted affixes
-  const w=equipped.weapon;
+  const w=G.equipped.weapon;
   if(w&&w.crit)      sk.push(`<span class="leg">Crit ${Math.round(w.crit*100)}%</span>`);
   if(w&&w.lifesteal) sk.push(`<span class="leg">Weapon lifesteal +${w.lifesteal}</span>`);
   if(w&&w.acc)       sk.push(`<span class="leg">Weapon accuracy +${Math.round(w.acc*100)}%</span>`);
@@ -1603,42 +1595,42 @@ function updateUI(){
 
 // ---------- turn driver ----------
 function turn(actionFn){
-  if(!running||!started||choosing||shopping) return;   // ignore input while a modal is open
+  if(!G.running||!G.started||G.choosing||G.shopping) return;   // ignore input while a modal is open
   const tookTurn=actionFn();
-  if(!running){ render(); return; }              // victory (dragon slain) ended the game
-  if(!player.alive){ render(); endGame(false); return; }
+  if(!G.running){ render(); return; }              // victory (dragon slain) ended the game
+  if(!G.player.alive){ render(); endGame(false); return; }
   if(tookTurn){
     monstersTurn();
     // player status conditions tick (poison/burn/bleed can be lethal)
-    if(player.alive){
-      const died=tickStatus(player);
-      if(died||player.hp<=0){ player.alive=false; }
+    if(G.player.alive){
+      const died=tickStatus(G.player);
+      if(died||G.player.hp<=0){ G.player.alive=false; }
     }
-    const totalRegen=player.regenAmt+gearRegen();
-    if(player.alive && totalRegen>0 && !player._dotThisTurn && ++player.regenTick>=9){
-      player.regenTick=0;
-      if(player.hp<player.maxhp) player.hp=Math.min(player.maxhp,player.hp+totalRegen);
+    const totalRegen=G.player.regenAmt+gearRegen();
+    if(G.player.alive && totalRegen>0 && !G.player._dotThisTurn && ++G.player.regenTick>=9){
+      G.player.regenTick=0;
+      if(G.player.hp<G.player.maxhp) G.player.hp=Math.min(G.player.maxhp,G.player.hp+totalRegen);
     }
     computeFOV();
   }
   render();
-  if(!player.alive){ endGame(false); return; }
-  if(pendingLevelUps>0) presentLevelUp();          // resolve any earned levels
+  if(!G.player.alive){ endGame(false); return; }
+  if(G.pendingLevelUps>0) presentLevelUp();          // resolve any earned levels
 }
 
 // ---------- level-up perk picker ----------
 function presentLevelUp(){
-  choosing=true;
-  const pool=PERKS.slice(); currentPerks=[];
-  while(currentPerks.length<3 && pool.length){
+  G.choosing=true;
+  const pool=PERKS.slice(); G.currentPerks=[];
+  while(G.currentPerks.length<3 && pool.length){
     const tot=pool.reduce((s,p)=>s+(p.w||1),0);
     let r=Math.random()*tot, idx=0;
     for(let j=0;j<pool.length;j++){ r-=(pool[j].w||1); if(r<=0){ idx=j; break; } }
-    currentPerks.push(pool.splice(idx,1)[0]);
+    G.currentPerks.push(pool.splice(idx,1)[0]);
   }
-  $("lvlSub").textContent=`Level ${player.level} — choose a boon`;
+  $("lvlSub").textContent=`Level ${G.player.level} — choose a boon`;
   const box=$("perkBtns"); box.innerHTML="";
-  currentPerks.forEach((p,i)=>{
+  G.currentPerks.forEach((p,i)=>{
     const b=document.createElement("button");
     b.className="perk";
     b.innerHTML=`<span class="pk-key">${i+1}</span><span class="pk-name">${p.name}</span>`+
@@ -1649,33 +1641,33 @@ function presentLevelUp(){
   $("levelup").classList.remove("hidden");
 }
 function choosePerk(i){
-  if(!choosing) return;
-  const p=currentPerks[i]; if(!p) return;
+  if(!G.choosing) return;
+  const p=G.currentPerks[i]; if(!p) return;
   p.apply();
   log(`You gain ${p.name}.`,"good");
-  pendingLevelUps--;
-  choosing=false;
+  G.pendingLevelUps--;
+  G.choosing=false;
   $("levelup").classList.add("hidden");
   computeFOV(); render();
-  if(pendingLevelUps>0) presentLevelUp();           // chain if several levels at once
+  if(G.pendingLevelUps>0) presentLevelUp();           // chain if several levels at once
 }
 
 // ---------- overlays ----------
 function endGame(won){
-  running=false;
+  G.running=false;
   $("bossBar").classList.add("hidden");
   const o=$("overlay"); o.classList.remove("hidden");
   const t=$("overTitle"); t.textContent=won?"THE SUN GOES OUT":"YOU DIED";
   t.className="big"+(won?" lvl":" dead");
-  const where = ngPlus>0 ? `extra depth ${ngPlus}-${depth}` : `depth ${depth}`;
+  const where = G.ngPlus>0 ? `extra depth ${G.ngPlus}-${G.depth}` : `depth ${G.depth}`;
   $("overText").innerHTML = won
-    ? `You stand over <b style="color:#c77dff">Zarakhel</b> at ${where}, score <b style="color:#e8b75c">${score}</b>, ${gold} gold.<br>The eclipse breaks. Both acts are conquered — but the dungeon always wakes hungrier.`
-    : `You reached <b style="color:#e8b75c">${where}</b> with a score of <b style="color:#e8b75c">${score}</b> and ${gold} gold.<br>The dungeon resets for the next fool.`;
+    ? `You stand over <b style="color:#c77dff">Zarakhel</b> at ${where}, score <b style="color:#e8b75c">${G.score}</b>, ${G.gold} gold.<br>The eclipse breaks. Both acts are conquered — but the dungeon always wakes hungrier.`
+    : `You reached <b style="color:#e8b75c">${where}</b> with a score of <b style="color:#e8b75c">${G.score}</b> and ${G.gold} gold.<br>The dungeon resets for the next fool.`;
   $("playBtn").textContent = won ? "START OVER ▾" : "DESCEND AGAIN ▾";
   // show the New Game+ button only on victory
   const ng=$("ngBtn");
   if(ng){
-    if(won){ ng.style.display=""; ng.textContent = `ENTER EXTRA DEPTH ${ngPlus+1} ▾`; }
+    if(won){ ng.style.display=""; ng.textContent = `ENTER EXTRA DEPTH ${G.ngPlus+1} ▾`; }
     else ng.style.display="none";
   }
   document.querySelector(".legend").style.display="none";
@@ -1685,22 +1677,22 @@ function endGame(won){
 
 // New Game+: keep your character, drop to floor 1, but scaling continues climbing
 function startNgPlus(){
-  ngPlus++;
-  depth=1; potions=Math.max(potions,1);
-  maxDepthReached=Math.max(maxDepthReached, scaledDepth());  // keep the descend reward honest across tiers
-  levels={}; upX=-1; upY=-1; merchant=null; shopping=false; chests=[];
-  bossEnt=null; choosing=false; pendingLevelUps=0; currentPerks=[];
-  player.stairX=-1; player.stairY=-1; player.status=[];
-  player.hp=player.maxhp;                 // a fresh-floor heal as a small mercy
+  G.ngPlus++;
+  G.depth=1; G.potions=Math.max(G.potions,1);
+  G.maxDepthReached=Math.max(G.maxDepthReached, scaledDepth());  // keep the descend reward honest across tiers
+  G.levels={}; G.upX=-1; G.upY=-1; G.merchant=null; G.shopping=false; G.chests=[];
+  G.bossEnt=null; G.choosing=false; G.pendingLevelUps=0; G.currentPerks=[];
+  G.player.stairX=-1; G.player.stairY=-1; G.player.status=[];
+  G.player.hp=G.player.maxhp;                 // a fresh-floor heal as a small mercy
   resetLegendPool();
   $("levelup").classList.add("hidden");
   $("bossBar").classList.add("hidden");
   $("shop").classList.add("hidden");
   $("overlay").classList.add("hidden");
   genLevel("new"); computeFOV();
-  log(`You descend anew into Extra Depth ${ngPlus}-1. The dark is far deeper now.`,"gold");
-  running=true; started=true;
-  MUSIC.play(musicTrackForDepth(depth));   // back to floor 1 music
+  log(`You descend anew into Extra Depth ${G.ngPlus}-1. The dark is far deeper now.`,"gold");
+  G.running=true; G.started=true;
+  MUSIC.play(musicTrackForDepth(G.depth));   // back to floor 1 music
   render();
 }
 
@@ -2199,13 +2191,13 @@ function musicTrackForDepth(d){
 }
 
 function newGame(){
-  depth=1; gold=0; score=0; potions=2; ngPlus=0; maxDepthReached=1; godMode=false;
-  equipped={weapon:null,armor:null,helmet:null,shield:null,charm:null}; inv=[]; logLines=[];
-  choosing=false; pendingLevelUps=0; currentPerks=[]; bossEnt=null;
-  levels={}; upX=-1; upY=-1; merchant=null; shopping=false; chests=[];
-  autoEquipOn=true; autoEquipWarned=false;
+  G.depth=1; G.gold=0; G.score=0; G.potions=2; G.ngPlus=0; G.maxDepthReached=1; G.godMode=false;
+  G.equipped={weapon:null,armor:null,helmet:null,shield:null,charm:null}; G.inv=[]; G.logLines=[];
+  G.choosing=false; G.pendingLevelUps=0; G.currentPerks=[]; G.bossEnt=null;
+  G.levels={}; G.upX=-1; G.upY=-1; G.merchant=null; G.shopping=false; G.chests=[];
+  G.autoEquipOn=true; G.autoEquipWarned=false;
   resetLegendPool();
-  player={glyph:"@",baseAtk:4,baseDef:1,maxhp:32,hp:32,level:1,xp:0,xpNext:30,
+  G.player={glyph:"@",baseAtk:4,baseDef:1,maxhp:32,hp:32,level:1,xp:0,xpNext:30,
           sight:FOV_R,regenAmt:0,regenTick:0,lifesteal:0,potionBonus:0,
           evasion:0,accBonus:0,critBonus:0,armorPen:0,thornsSelf:0,hitLeech:0,charmHp:0,
           leechCounter:0,everAct2:false,
@@ -2216,9 +2208,9 @@ function newGame(){
   const ng=$("ngBtn"); if(ng) ng.style.display="none";
   genLevel("new"); computeFOV();
   log("You enter the Caves of Qlud. A draft of cold rot greets you.");
-  running=true; started=true;
+  G.running=true; G.started=true;
   $("overlay").classList.add("hidden");
-  MUSIC.play(musicTrackForDepth(depth));   // floor 1 = Halls
+  MUSIC.play(musicTrackForDepth(G.depth));   // floor 1 = Halls
   render();
 }
 
@@ -2230,12 +2222,12 @@ function sellPrice(it){
   return 8+gearBonus(it)*4;
 }
 function buyPrice(it){
-  if(it.kind==="potion") return 14+depth*2;
-  if(it.kind==="charm") return 70+depth*4;
-  if(it.legendary) return 1000+depth*60+gearBonus(it)*15;   // legendaries are a huge investment (1000+)
+  if(it.kind==="potion") return 14+G.depth*2;
+  if(it.kind==="charm") return 70+G.depth*4;
+  if(it.legendary) return 1000+G.depth*60+gearBonus(it)*15;   // legendaries are a huge investment (1000+)
   return 18+gearBonus(it)*7;       // gear costs more than its resale value
 }
-const POTION_PRICE = ()=> 14 + depth*2;
+const POTION_PRICE = ()=> 14 + G.depth*2;
 
 // stock is rolled once per merchant (stored on the merchant object so it persists)
 function rollShopStock(d){
@@ -2254,11 +2246,11 @@ function rollShopStock(d){
   return stock;
 }
 function openShop(){
-  shopping=true;
-  if(!merchant.stock) merchant.stock=rollShopStock(depth);
+  G.shopping=true;
+  if(!G.merchant.stock) G.merchant.stock=rollShopStock(G.depth);
   renderShop(); $("shop").classList.remove("hidden");
 }
-function closeShop(){ shopping=false; $("shop").classList.add("hidden"); render(); }
+function closeShop(){ G.shopping=false; $("shop").classList.add("hidden"); render(); }
 function shopLabel(it){
   if(it.kind==="potion") return "⚗ healing potion";
   if(it.kind==="charm")  return `¤ ${it.name}`;
@@ -2266,37 +2258,37 @@ function shopLabel(it){
   return `${gearName(it)} (+${gearBonus(it)})`;
 }
 function renderShop(){
-  $("shopGold").textContent=`Gold: ${gold}`;
-  $("buyList").innerHTML = merchant.stock.map((it,i)=>{
-    const pr=buyPrice(it), can=gold>=pr;
+  $("shopGold").textContent=`Gold: ${G.gold}`;
+  $("buyList").innerHTML = G.merchant.stock.map((it,i)=>{
+    const pr=buyPrice(it), can=G.gold>=pr;
     return `<div class="shopitem ${can?"":"dis"}" data-buy="${i}">
        <span>${shopLabel(it)}</span><span class="pr">${pr}g</span></div>`;
   }).join("") || '<div class="shopempty">sold out</div>';
-  if(inv.length===0) $("sellList").innerHTML='<div class="shopempty">pack is empty</div>';
-  else $("sellList").innerHTML=inv.map((it,i)=>
+  if(G.inv.length===0) $("sellList").innerHTML='<div class="shopempty">pack is empty</div>';
+  else $("sellList").innerHTML=G.inv.map((it,i)=>
     `<div class="shopitem" data-sell="${i}">
        <span>${gearName(it)}</span><span class="pr">+${sellPrice(it)}g</span></div>`).join("");
 }
 function buyItem(i){
-  const it=merchant.stock[i]; if(!it) return;
+  const it=G.merchant.stock[i]; if(!it) return;
   const pr=buyPrice(it);
-  if(gold<pr) return;
-  gold-=pr;
-  if(it.kind==="potion"){ potions++; merchant.stock.splice(i,1); log(`You buy a potion for ${pr}g.`,"gold"); }
+  if(G.gold<pr) return;
+  G.gold-=pr;
+  if(it.kind==="potion"){ G.potions++; G.merchant.stock.splice(i,1); log(`You buy a potion for ${pr}g.`,"gold"); }
   else {
     const copy=Object.assign({},it); delete copy.x; delete copy.y;
-    inv.push(copy); merchant.stock.splice(i,1);
+    G.inv.push(copy); G.merchant.stock.splice(i,1);
     log(`You buy the ${gearName(copy)} for ${pr}g.`,"gold");
     autoEquip(); tryMerge(); autoEquip();
   }
   renderShop(); updateUI();
 }
 function sellItem(i){
-  if(i<0||i>=inv.length) return;
-  const it=inv[i], price=sellPrice(it);
-  for(const slot of ALL_SLOTS) if(equipped[slot]===it) equipped[slot]=null;
-  inv.splice(i,1);
-  gold+=price; score+=Math.round(price/2);
+  if(i<0||i>=G.inv.length) return;
+  const it=G.inv[i], price=sellPrice(it);
+  for(const slot of ALL_SLOTS) if(G.equipped[slot]===it) G.equipped[slot]=null;
+  G.inv.splice(i,1);
+  G.gold+=price; G.score+=Math.round(price/2);
   log(`You sell the ${gearName(it)} for ${price}g.`,"gold");
   autoEquip(); reconcileCharmHp();
   renderShop(); updateUI();
@@ -2312,21 +2304,21 @@ window.addEventListener("keydown",e=>{
   // debug: F1 toggles godmode (no health loss). Works any time.
   if(e.key==="F1"){
     e.preventDefault();
-    godMode=!godMode;
-    if(typeof log==="function" && started) log(godMode?"[debug] godmode ON — you take no damage.":"[debug] godmode OFF.","gold");
-    const dt=$("godTag"); if(dt) dt.style.display = godMode ? "" : "none";
-    if(started&&running) updateUI();
+    G.godMode=!G.godMode;
+    if(typeof log==="function" && G.started) log(G.godMode?"[debug] godmode ON — you take no damage.":"[debug] godmode OFF.","gold");
+    const dt=$("godTag"); if(dt) dt.style.display = G.godMode ? "" : "none";
+    if(G.started&&G.running) updateUI();
     return;
   }
-  if(shopping){
+  if(G.shopping){
     if(e.key==="Escape"||e.key==="Enter"||e.key==="<"){ e.preventDefault(); closeShop(); }
     return;
   }
-  if(choosing){                                     // perk picker is open
+  if(G.choosing){                                     // perk picker is open
     if(e.key>="1"&&e.key<="3"){ e.preventDefault(); choosePerk(+e.key-1); }
     return;
   }
-  if(!started||!running){
+  if(!G.started||!G.running){
     if(e.key==="Enter"||e.key===" ") { e.preventDefault(); newGame(); }
     return;
   }
@@ -2342,7 +2334,7 @@ window.addEventListener("keydown",e=>{
 
 // touch / click controls
 document.querySelector(".touch").addEventListener("click",e=>{
-  if(shopping||choosing) return;
+  if(G.shopping||G.choosing) return;
   const b=e.target.closest("button"); if(!b) return;
   if(b.dataset.mv){ const[dx,dy]=b.dataset.mv.split(",").map(Number); turn(()=>playerMove(dx,dy)); }
   else if(b.dataset.act){
@@ -2359,8 +2351,8 @@ $("inv").addEventListener("click",e=>{
   turn(()=>equipIndex(parseInt(li.dataset.i)));
 });
 $("autoBtn").addEventListener("click",()=>{
-  autoEquipOn=!autoEquipOn;
-  if(autoEquipOn){ log("Auto-equip ON — will equip your strongest gear.","good"); autoEquip(); }
+  G.autoEquipOn=!G.autoEquipOn;
+  if(G.autoEquipOn){ log("Auto-equip ON — will equip your strongest gear.","good"); autoEquip(); }
   else log("Auto-equip OFF — equip manually.","bad");
   render();
 });
@@ -2368,7 +2360,7 @@ $("gfxBtn").addEventListener("click",()=>{
   GFX.on=!GFX.on;
   const b=$("gfxBtn"); b.textContent="gfx: "+(GFX.on?"on":"off"); b.className="autobtn"+(GFX.on?"":" off");
   updateLegendSprites();
-  if(started) render();
+  if(G.started) render();
 });
 // swap the start-screen legend between ASCII letters and tiny sprite tiles
 function updateLegendSprites(){
@@ -2393,7 +2385,7 @@ function updateLegendSprites(){
   }
 }
 // idle-bob + status-icon animation: flip frame ~2/sec while in graphics mode
-setInterval(()=>{ if(GFX.on && started && running){ GFX.frame=1-GFX.frame; render(); } }, 520);
+setInterval(()=>{ if(GFX.on && G.started && G.running){ GFX.frame=1-GFX.frame; render(); } }, 520);
 $("playBtn").addEventListener("click",newGame);
 $("ngBtn").addEventListener("click",startNgPlus);
 $("overlay").addEventListener("click",e=>{ if(e.target.id==="overlay") newGame(); });
@@ -2415,7 +2407,7 @@ MUSIC.play('title');
 function _musicUnlock(){
   MUSIC.unlock();
   // If user hasn't started a game yet, make sure the title track is queued.
-  if(!started && MUSIC.isMusicOn() && !MUSIC.current()) MUSIC.play('title');
+  if(!G.started && MUSIC.isMusicOn() && !MUSIC.current()) MUSIC.play('title');
 }
 window.addEventListener('click',     _musicUnlock, {once:false, passive:true});
 window.addEventListener('keydown',   _musicUnlock, {once:false, passive:true});
@@ -2430,8 +2422,8 @@ $("musicBtn").addEventListener("click",()=>{
   b.textContent = "♪ music: "+(on?"on":"off");
   if(on){
     // resume the track for the current context (title if not playing, biome if in-run)
-    if(!started) MUSIC.play('title');
-    else if(running) MUSIC.play(musicTrackForDepth(depth));
+    if(!G.started) MUSIC.play('title');
+    else if(G.running) MUSIC.play(musicTrackForDepth(G.depth));
   }
 });
 // initial visual state for the toggle (default ON)
