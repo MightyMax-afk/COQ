@@ -84,7 +84,7 @@ const SPRITE_ANIM = {
 };
 
 // ---------- sprite runtime ----------
-export const GFX = { on:false, frame:0 };          // graphics mode off by default
+export const GFX = { on:true, frame:0 };           // graphics mode on by default
 const _spriteCache = {};                    // key:`id|bob|px` -> canvas
 
 // render a 16x16 sprite into an offscreen canvas sized px×px (nearest-neighbor)

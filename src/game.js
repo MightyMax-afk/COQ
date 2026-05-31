@@ -14,9 +14,18 @@ import { render, updateUI, sizeCanvas, spriteCanvas, GFX, SPRITE_LINES } from '.
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
 // ============================================================
-const BUILD = "v0.18.0";
+const BUILD = "v0.18.1";
 const BUILD_DATE = "2026-05-31";
 /* CHANGELOG
+   v0.18.1 Fix: the menu's config toggles (graphics/auto-equip/sound fx/music)
+           did nothing. The ?v= cache-bust query added in v0.18.0 made the
+           <script> load "game.js?v=..." while every internal `import './game.js'`
+           (audio, render, worlds, combat, bosses, monsters) loaded the
+           unqueried URL — two separate module instances, so every
+           addEventListener ran twice and each toggle fired twice per click,
+           cancelling itself out. Dropped the ?v= query (the import graph can't
+           be versioned this way). Also: Graphics now defaults ON, so all four
+           toggles start ON.
    v0.18.0 ESCAPE / PAUSE MENU + persistence. New #escMenu overlay opened with
            Esc (desktop) or a "menu" button in the touch controls (mobile), a
            full-viewport modal with a Close Menu button. It houses Save Game
@@ -25,9 +34,7 @@ const BUILD_DATE = "2026-05-31";
            music/volume) and a new Sound FX toggle that gates combat strike
            SFX. While the menu is open, movement and turn-taking are blocked.
            Permadeath: dying wipes the save so an old file can't be reloaded;
-           victory keeps it (NG+ continues). Note: keep the ?v= query on the
-           game.js <script> in index.html in sync with this BUILD so returning
-           players fetch fresh code instead of a cached build.
+           victory keeps it (NG+ continues).
    v0.17.0 Ten-item pass.
            (1) Header now shows "— ACT I/II · <biome name> · depth N · NG+n —".
            (2) Merge fix: equipped gear counts toward the 3-of-a-kind threshold.
