@@ -50,16 +50,9 @@
   }
   h1 b{color:var(--blood);text-shadow:0 0 16px rgba(192,65,58,.4)}
   .tag{font-family:"VT323",monospace;font-size:18px;color:var(--dim);letter-spacing:1px}
-  .musicCtl{display:inline-flex;align-items:center;gap:8px;margin-left:auto}
-  .musicCtl button{
-    font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--dim);
-    background:rgba(232,183,92,.08);border:1px solid var(--line,rgba(232,183,92,.22));
-    border-radius:4px;padding:3px 8px;cursor:pointer;letter-spacing:.5px;white-space:nowrap;
-  }
-  .musicCtl button.on{color:var(--amber,#e8b75c);background:rgba(232,183,92,.2)}
-  .musicCtl input[type=range]{
-    width:80px;accent-color:var(--amber,#e8b75c);cursor:pointer;
-  }
+  .esc-cue{font-family:"JetBrains Mono",monospace;font-size:10px;color:#5f5849;letter-spacing:.5px;white-space:nowrap}
+  .esc-cue kbd{font-family:"JetBrains Mono",monospace;color:var(--amber);background:rgba(232,183,92,.08);
+    border:1px solid var(--line);border-radius:4px;padding:0 5px;font-size:10px}
 
   .stage{display:grid;grid-template-columns:1fr 250px;gap:14px;align-items:stretch}
   @media(max-width:760px){ .stage{grid-template-columns:1fr} }
@@ -170,6 +163,27 @@
   }
   .play-btn:active{transform:translateY(1px)}
 
+  /* escape / pause menu */
+  .modal{position:absolute;inset:0;z-index:6;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:14px;padding:20px;overflow-y:auto;
+    background:radial-gradient(80% 80% at 50% 40%,rgba(12,9,7,.93),rgba(5,4,6,.98));
+    backdrop-filter:blur(2px)}
+  .modal.hidden{display:none}
+  .modal .esc-title{font-family:"VT323",monospace;font-size:clamp(28px,5vw,40px);line-height:.95;
+    color:var(--amber);text-shadow:0 0 18px rgba(232,183,92,.4);letter-spacing:1px}
+  .esc-group{display:flex;flex-direction:column;gap:9px;width:min(280px,82%)}
+  .esc-group .autobtn{width:100%;text-align:center;font-size:13px;padding:9px 12px;letter-spacing:1px}
+  .esc-divider{width:min(280px,82%);border-top:1px dashed var(--line);
+    padding-top:12px;margin-top:2px;display:flex;flex-direction:column;gap:9px}
+  .esc-row{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%}
+  .esc-row label{font-size:12px;color:var(--dim);letter-spacing:.5px}
+  .esc-row .autobtn{min-width:108px;text-align:center}
+  .esc-row input[type=range]{width:120px;accent-color:var(--amber);cursor:pointer}
+  .autobtn.on{color:var(--amber);background:rgba(232,183,92,.2)}
+  .autobtn.dead{color:var(--blood);border-color:rgba(192,65,58,.4);background:rgba(192,65,58,.1)}
+  .autobtn.dead:hover{background:rgba(192,65,58,.2)}
+  .esc-hint{font-size:11px;color:#5f5849;letter-spacing:.5px}
+
   /* level-up perk picker */
   .overlay .big.lvl{color:#86d166;text-shadow:0 0 20px rgba(134,209,102,.4)}
   .perks{display:flex;flex-direction:column;gap:9px;width:100%;max-width:340px}
@@ -237,10 +251,6 @@
     <h1>CAVES OF&nbsp;<b>QLUD</b></h1>
     <span class="tag" id="depthTag">— descend, or die trying —</span>
     <span class="tag" id="godTag" style="display:none;color:#ffd866">[GODMODE · F1]</span>
-    <span class="musicCtl" id="musicCtl">
-      <button id="musicBtn" type="button" title="Toggle music">♪ music: on</button>
-      <input id="musicVol" type="range" min="0" max="100" value="45" title="Music volume">
-    </span>
   </header>
 
   <div class="stage">
@@ -299,6 +309,23 @@
         </div>
         <button class="play-btn" id="closeShop" style="font-size:19px;padding:7px 24px">LEAVE ▴</button>
       </div>
+
+      <div class="modal hidden" id="escMenu">
+        <div class="esc-title">PAUSED</div>
+        <div class="esc-group">
+          <button id="saveBtn" class="autobtn">Save Game</button>
+          <button id="loadBtn" class="autobtn">Load Game</button>
+          <button id="menuNewGameBtn" class="autobtn dead">New Game</button>
+        </div>
+        <div class="esc-divider">
+          <div class="esc-row"><label>Graphics</label><button id="gfxBtn" class="autobtn off">gfx: off</button></div>
+          <div class="esc-row"><label>Auto-Equip</label><button id="autoBtn" class="autobtn">auto: on</button></div>
+          <div class="esc-row"><label>Sound FX</label><button id="sfxBtn" class="autobtn">⚡ sfx: on</button></div>
+          <div class="esc-row"><label>Music</label><button id="musicBtn" class="autobtn" type="button" title="Toggle music">♪ music: on</button></div>
+          <div class="esc-row"><label>Volume</label><input id="musicVol" type="range" min="0" max="100" value="45" title="Music volume"></div>
+        </div>
+        <div class="esc-hint">Esc to resume</div>
+      </div>
     </div><!-- /screen-wrap -->
 
     <div class="touch">
@@ -350,7 +377,7 @@
 
       <div class="card">
         <h2 class="packhead"><span>Pack <span style="color:#5f5849;font-size:11px">(num key = equip)</span></span>
-          <span class="togglegroup"><button id="autoBtn" class="autobtn">auto: on</button><button id="gfxBtn" class="autobtn off">gfx: off</button></span></h2>
+          <span class="esc-cue"><kbd>Esc</kbd> menu</span></h2>
         <ul id="inv"><li class="empty">empty</li></ul>
       </div>
     </div>
@@ -358,7 +385,7 @@
 
   <footer>
     move <kbd>WASD</kbd> · diagonals <kbd>Q E Z C</kbd> · wait <kbd>.</kbd> ·
-    grab <kbd>G</kbd> · quaff <kbd>P</kbd> · down <kbd>L</kbd> · up <kbd>U</kbd> · equip <kbd>1</kbd>–<kbd>9</kbd>
+    grab <kbd>G</kbd> · quaff <kbd>P</kbd> · down <kbd>L</kbd> · up <kbd>U</kbd> · equip <kbd>1</kbd>–<kbd>9</kbd> · menu <kbd>Esc</kbd>
     <span class="ver" id="verTag"></span>
   </footer>
 </div>

@@ -6,7 +6,8 @@ export const MUSIC = (function(){
   let actx=null, masterGain=null;
   let currentTrack=null, currentNodes=[];
   let currentScheduler=null;
-  let isOn=true;            // user toggle; default ON
+  let isOn=true;            // music toggle; default ON
+  let sfxOn=true;           // combat sound-effects toggle; default ON
   let volume=0.45;          // 0..1, master
   let pendingTrackId=null;  // queued track to play once audio is unlocked
   let unlocked=false;
@@ -106,11 +107,13 @@ export const MUSIC = (function(){
 
   // ── Combat SFX ───────────────────────────────────────────────
   // One-shot strike sounds, fired from combat.js when a blow lands.
-  // These bypass the music toggle on purpose (they're feedback, not music),
-  // but still route through masterGain so the volume slider applies.
+  // These bypass the MUSIC toggle on purpose (they're feedback, not music), but
+  // obey their own sfxOn flag and still route through masterGain so the volume
+  // slider applies.
 
   // Player hits enemy: sharp, fast blade-like impact.
   function playPlayerHit(){
+    if(!sfxOn) return;
     if(!ensureCtx()) return;
     const t = actx.currentTime;
 
@@ -142,6 +145,7 @@ export const MUSIC = (function(){
 
   // Enemy hits player: heavy, low, painful "crunch" impact.
   function playEnemyHit(){
+    if(!sfxOn) return;
     if(!ensureCtx()) return;
     const t = actx.currentTime;
 
@@ -257,6 +261,8 @@ export const MUSIC = (function(){
     startTrack(id);
   }
   function stop(){ stopTrack(); }
+  function setSfxOn(on){ sfxOn = !!on; }
+  function isSfxOn(){ return sfxOn; }
   function isMusicOn(){ return isOn; }
   function getVolume(){ return volume; }
   function current(){ return currentTrack; }
@@ -545,6 +551,7 @@ export const MUSIC = (function(){
   };
 
   return { play, stop, unlock, setOn, setVolume, isMusicOn, getVolume, current,
+           setSfxOn, isSfxOn,
            playPlayerHit, playEnemyHit,
            // debug tap (audio-rendering verification only; harmless in production)
            _ctx:()=>actx, _master:()=>masterGain };

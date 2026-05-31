@@ -450,6 +450,10 @@ function choosePerk(i){
 // ---------- overlays ----------
 export function endGame(won){
   G.running=false;
+  closeEscMenu();
+  // Permadeath: a death wipes the save so the player can't reload an old file
+  // to escape it. A victory leaves any save intact (NG+ carries on).
+  if(!won){ try{ localStorage.removeItem(SAVE_KEY); }catch(err){} }
   $("bossBar").classList.add("hidden");
   const o=$("overlay"); o.classList.remove("hidden");
   const t=$("overTitle"); t.textContent=won?"THE SUN GOES OUT":"YOU DIED";
@@ -503,6 +507,7 @@ function newGame(){
   $("levelup").classList.add("hidden");
   $("bossBar").classList.add("hidden");
   $("shop").classList.add("hidden");
+  closeEscMenu();
   const ng=$("ngBtn"); if(ng) ng.style.display="none";
   genLevel("new"); computeFOV();
   log("You enter the Caves of Qlud. A draft of cold rot greets you.");
@@ -592,6 +597,72 @@ function sellItem(i){
   renderShop(); updateUI();
 }
 
+// ---------- escape / pause menu ----------
+// One overlay (#escMenu) holds Save / Load / New Game plus all the config
+// toggles. It can only be opened during live gameplay (not over the level-up
+// or shop modals), and while it's open every gameplay key is swallowed so the
+// player can't move or burn a turn while browsing it.
+const SAVE_KEY = "caves_of_qlud_save";
+const escMenuOpen   = () => { const m=$("escMenu"); return !!m && !m.classList.contains("hidden"); };
+const openEscMenu   = () => $("escMenu").classList.remove("hidden");
+const closeEscMenu  = () => $("escMenu").classList.add("hidden");
+const toggleEscMenu = () => escMenuOpen() ? closeEscMenu() : openEscMenu();
+
+function saveGame(){
+  G.shots = [];                                  // transient projectile trails — never persist them
+  try{
+    localStorage.setItem(SAVE_KEY, JSON.stringify(G));
+    log("Game saved successfully.","gold");
+  }catch(err){
+    log("Save failed — storage is unavailable.","bad");
+  }
+  updateUI();        // paint the save confirmation into the log immediately
+  closeEscMenu();
+}
+
+function loadGame(){
+  let raw=null;
+  try{ raw = localStorage.getItem(SAVE_KEY); }catch(err){ raw=null; }
+  if(!raw){ log("No saved game found.","bad"); updateUI(); return; }
+  let data;
+  try{ data = JSON.parse(raw); }catch(err){ log("Saved game is corrupt.","bad"); updateUI(); return; }
+
+  // Deep re-assign the saved fields back onto the LIVE G object. Every module
+  // imported G by reference, so we mutate it in place rather than swap the
+  // pointer — clear its own keys, then copy the parsed snapshot over.
+  for(const k of Object.keys(G)) delete G[k];
+  Object.assign(G, data);
+
+  // JSON.parse hands back fresh objects, which splits two aliases the engine
+  // relies on. Re-link them so the loaded state isn't fragmented:
+  //   • the player is always ents[0] (movement/render read G.player directly)
+  //   • the boss bar reads G.bossEnt, which must be the live entity in G.ents
+  if(Array.isArray(G.ents) && G.ents.length) G.ents[0] = G.player;
+  G.bossEnt = (Array.isArray(G.ents) ? G.ents.find(e=>e && e.boss) : null) || null;
+  G.shots = [];
+
+  // Rebuild derived/engine state from the restored data.
+  computeFOV();                                  // visibility from the loaded position
+  MUSIC.play(musicTrackForDepth(G.depth));       // biome track matching the loaded depth
+  log(`Game loaded — depth ${G.depth}.`,"gold"); // logged before the redraw so it paints into the log
+  render();                                      // recomputes the camera window, redraws, refreshes boss bar
+  updateUI();
+  closeEscMenu();
+}
+
+function menuNewGame(){
+  if(!window.confirm("Are you sure? You will lose your current character and all run progression!")) return;
+  closeEscMenu();
+  newGame();
+}
+
+function syncSfxBtn(){
+  const b=$("sfxBtn"); if(!b) return;
+  const on=MUSIC.isSfxOn();
+  b.textContent="⚡ sfx: "+(on?"on":"off");
+  b.className="autobtn"+(on?"":" off");
+}
+
 // ---------- input ----------
 const MOVES={
   ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],
@@ -608,6 +679,16 @@ window.addEventListener("keydown",e=>{
     if(G.started&&G.running) updateUI();
     return;
   }
+  // Escape: toggle the pause menu — only during live gameplay, never over the
+  // perk picker or the shop (those own the key themselves below).
+  if(e.key==="Escape" && G.started && G.running && !G.choosing && !G.shopping){
+    e.preventDefault();
+    toggleEscMenu();
+    return;
+  }
+  // While the pause menu is open, swallow every other key so the player can't
+  // move or take a turn behind it.
+  if(escMenuOpen()){ e.preventDefault(); return; }
   if(G.shopping){
     if(e.key==="Escape"||e.key==="Enter"||e.key==="<"){ e.preventDefault(); closeShop(); }
     return;
@@ -632,7 +713,7 @@ window.addEventListener("keydown",e=>{
 
 // touch / click controls
 document.querySelector(".touch").addEventListener("click",e=>{
-  if(G.shopping||G.choosing) return;
+  if(G.shopping||G.choosing||escMenuOpen()) return;
   const b=e.target.closest("button"); if(!b) return;
   if(b.dataset.mv){ const[dx,dy]=b.dataset.mv.split(",").map(Number); turn(()=>playerMove(dx,dy)); }
   else if(b.dataset.act){
@@ -645,6 +726,7 @@ document.querySelector(".touch").addEventListener("click",e=>{
   }
 });
 $("inv").addEventListener("click",e=>{
+  if(escMenuOpen()) return;
   const li=e.target.closest("li[data-i]"); if(!li) return;
   turn(()=>equipIndex(parseInt(li.dataset.i)));
 });
@@ -724,3 +806,14 @@ $("musicBtn").classList.add("on");
 $("musicVol").addEventListener("input",e=>{
   MUSIC.setVolume(parseInt(e.target.value,10)/100);
 });
+
+// ---------- escape-menu button wiring ----------
+$("saveBtn").addEventListener("click", saveGame);
+$("loadBtn").addEventListener("click", loadGame);
+$("menuNewGameBtn").addEventListener("click", menuNewGame);
+$("sfxBtn").addEventListener("click",()=>{
+  MUSIC.setSfxOn(!MUSIC.isSfxOn());
+  syncSfxBtn();
+  log(MUSIC.isSfxOn()?"Sound effects ON.":"Sound effects OFF.", MUSIC.isSfxOn()?"good":"bad");
+});
+syncSfxBtn();   // initial label/state (default ON)
