@@ -131,6 +131,7 @@ function itemSpriteId(it){
   if(it.kind==="armor")  return "armor";
   if(it.kind==="helmet") return "helm";
   if(it.kind==="shield") return "shield";
+  if(it.kind==="boots")  return "armor";   // reuse armor sprite until a dedicated boot sprite exists
   if(it.kind==="charm")  return "charm";
   return null;
 }
@@ -346,6 +347,7 @@ export function updateUI(){
   $("armTxt").textContent=G.equipped.armor?gearName(G.equipped.armor):"none";
   $("helmTxt").textContent=G.equipped.helmet?gearName(G.equipped.helmet):"none";
   $("shldTxt").textContent=G.equipped.shield?gearName(G.equipped.shield):"none";
+  $("bootsTxt").textContent=G.equipped.boots?gearName(G.equipped.boots):"none";
   $("charmTxt").textContent=G.equipped.charm?G.equipped.charm.name:"none";
   $("potTxt").textContent=G.potions+(G.potions===1?" potion":" potions");
 

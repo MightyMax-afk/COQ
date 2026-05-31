@@ -14,12 +14,13 @@ export const ARMOR_TIERS = {
   armor:  [{name:"leather armor", def:1}, {name:"chain mail", def:3}, {name:"plate armor", def:6}],
   helmet: [{name:"leather cap",   def:1}, {name:"iron helm",  def:2}, {name:"great helm",  def:4}],
   shield: [{name:"wooden shield", def:1}, {name:"kite shield",def:3}, {name:"tower shield",def:5}],
+  boots:  [{name:"leather boots", def:1}, {name:"chain sabatons", def:2}, {name:"plate greaves", def:3}],
 };
-export const GEAR_GLYPH = { weapon:")", armor:"[", helmet:"^", shield:"0" };
-export const GEAR_COL   = { weapon:"#9ad0ff", armor:"#c0a060", helmet:"#d0b48a", shield:"#a8b0c0" };
-export const ARMOR_KINDS = ["armor","helmet","shield"];
-export const ALL_SLOTS   = ["weapon","armor","helmet","shield","charm"];
-export const GEAR_SLOTS  = ["weapon","armor","helmet","shield"];   // mergeable tiered gear (excludes charms)
+export const GEAR_GLYPH = { weapon:")", armor:"[", helmet:"^", shield:"0", boots:"L" };
+export const GEAR_COL   = { weapon:"#9ad0ff", armor:"#c0a060", helmet:"#d0b48a", shield:"#a8b0c0", boots:"#8a6020" };
+export const ARMOR_KINDS = ["armor","helmet","shield","boots"];
+export const ALL_SLOTS   = ["weapon","armor","helmet","shield","boots","charm"];
+export const GEAR_SLOTS  = ["weapon","armor","helmet","shield","boots"];   // mergeable tiered gear (excludes charms)
 
 // ---------- charms (5th equipment slot: passive trinkets) ----------
 // found in chests / dropped by bosses / sold by merchants. Each grants a passive.
@@ -53,6 +54,7 @@ const LEG_ARMOR_NAMES={
   armor:  ["Aegis of the Fallen","Carapace of Night","Bulwark Eternal","Scales of the Wyrm","Shroud of Ash"],
   helmet: ["Crown of Dread","Visage of the Void","Helm of the Damned","Skull of Kings","Gaze of Ruin"],
   shield: ["Wall of Souls","Bastion of Embers","Ward of the Deep","Bulwark of Bone","Mirror of Gloom"],
+  boots:  ["Treads of the Abyss","Steps of the Void","Windwalker Greaves","Ember Striders","Sabatons of Ruin"],
 };
 const LEG_TITLE=["of the Abyss","of Ruin","the Unbroken","of Embers","of the Pale Moon","the Devourer",
                  "of Lost Kings","the Merciless","of the Deep","of Nine Sorrows","the Kingslayer","of Cinders"];
@@ -66,6 +68,7 @@ const LEG_ARMOR_AFFIX=[
   {key:"thorns",  txt:"reflects damage to attackers", roll:()=>({thorns:ri(2,5)})},
   {key:"evade",   txt:"helps you slip blows",          roll:()=>({evadeBonus:0.05+ri(0,8)/100})},
   {key:"ward",    txt:"wrought of impenetrable make",  roll:()=>({})},  // pure-defense flavor
+  {key:"fleet",   txt:"grants unearthly swiftness",    roll:()=>({evadeBonus:0.10+ri(0,5)/100, regen:1})},
 ];
 export function resetLegendPool(){
   G.legendPool=LEG_NAMES.slice();

@@ -14,9 +14,15 @@ import { render, updateUI, sizeCanvas, spriteCanvas, GFX, SPRITE_LINES } from '.
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
 // ============================================================
-const BUILD = "v0.19.0";
+const BUILD = "v0.20.0";
 const BUILD_DATE = "2026-05-31";
 /* CHANGELOG
+   v0.20.0 Sixth equipment slot: BOOTS. New tier ladder (leather boots →
+           chain sabatons → plate greaves), glyph "L", added to ARMOR_KINDS/
+           ALL_SLOTS/GEAR_SLOTS so loot gen, auto-equip and merging handle it
+           for free; legendary boot names + a new "fleet" armor affix
+           (evade + regen). Equipped panel shows a Boots row; boots reuse the
+           armor sprite in graphics mode until a dedicated one is drawn.
    v0.19.0 Ten new Act II level-up perks for build variety:
            Giant Slayer (atk +4% of target max HP), Second Wind (+5 atk/+15%
            dodge under 25% HP), Searing Blades (20% melee burn), Antidote
@@ -530,7 +536,7 @@ function startNgPlus(){
 
 function newGame(){
   G.depth=1; G.gold=0; G.score=0; G.potions=2; G.ngPlus=0; G.maxDepthReached=1; G.godMode=false;
-  G.equipped={weapon:null,armor:null,helmet:null,shield:null,charm:null}; G.inv=[]; G.logLines=[];
+  G.equipped={weapon:null,armor:null,helmet:null,shield:null,boots:null,charm:null}; G.inv=[]; G.logLines=[];
   G.choosing=false; G.pendingLevelUps=0; G.currentPerks=[]; G.bossEnt=null;
   G.levels={}; G.upX=-1; G.upY=-1; G.merchant=null; G.shopping=false; G.chests=[];
   G.autoEquipOn=true; G.autoEquipWarned=false;
