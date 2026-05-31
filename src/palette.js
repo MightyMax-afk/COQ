@@ -61,6 +61,14 @@ export const PAL = {
   '1': '#ff5a3a',
 };
 
+export const COL = {
+  wall:"#5a5048", wallDim:"#262320", floor:"#3a352e", floorDim:"#1c1a17",
+  stairs:"#f0e6c0", stairsUp:"#8fd6a0", merchant:"#ffd866", player:"#6fd3ff",
+  rat:"#d98a5a", goblin:"#7bc96f", orc:"#d97a3a", troll:"#e0524a",
+  archer:"#b6d36f", mage:"#c77dff", shot:"#ffe08a", mimic:"#e09a4a", chest:"#caa45a",
+  potion:"#c77dff", gold:"#ffd866", weapon:"#9ad0ff", armor:"#c0a060",
+};
+
 // helper: a sprite is just a 16-line array, all rows must be 16 chars.
 export function S(lines){
   const arr = lines.trim().split('\n').map(s => s.replace(/^\s+/, ''));

@@ -2,7 +2,7 @@
 import { MAP_W, MAP_H, FOV_R, ACT1_END, FINAL_DEPTH, MERCHANT_EVERY } from './config.js';
 import { clamp, ri, log } from './util.js';
 import { G } from './state.js';
-import { PAL, S } from './palette.js';
+import { PAL, S, COL } from './palette.js';
 import * as Tiles from './art/tiles.js';
 import * as Creatures from './art/creatures.js';
 import * as BossArt from './art/bosses.js';
@@ -280,13 +280,6 @@ function spriteCanvas(id, px, bob){
 // ===== end sprite graphics =====
 const T_WALL = 0, T_FLOOR = 1, T_STAIRS = 2, T_STAIRS_UP = 3;
 
-const COL = {
-  wall:"#5a5048", wallDim:"#262320", floor:"#3a352e", floorDim:"#1c1a17",
-  stairs:"#f0e6c0", stairsUp:"#8fd6a0", merchant:"#ffd866", player:"#6fd3ff",
-  rat:"#d98a5a", goblin:"#7bc96f", orc:"#d97a3a", troll:"#e0524a",
-  archer:"#b6d36f", mage:"#c77dff", shot:"#ffe08a", mimic:"#e09a4a", chest:"#caa45a",
-  potion:"#c77dff", gold:"#ffd866", weapon:"#9ad0ff", armor:"#c0a060",
-};
 
 const WEAPONS = [
   {name:"dagger",      atk:2}, {name:"short sword", atk:4},
