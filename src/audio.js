@@ -104,6 +104,73 @@ export const MUSIC = (function(){
     src.start(t); src.stop(t+dur+0.02);
   }
 
+  // ── Combat SFX ───────────────────────────────────────────────
+  // One-shot strike sounds, fired from combat.js when a blow lands.
+  // These bypass the music toggle on purpose (they're feedback, not music),
+  // but still route through masterGain so the volume slider applies.
+
+  // Player hits enemy: sharp, fast blade-like impact.
+  function playPlayerHit(){
+    if(!ensureCtx()) return;
+    const t = actx.currentTime;
+
+    // Filtered white noise (the "shhh" of the blade)
+    const buf = actx.createBuffer(1, Math.floor(actx.sampleRate*0.1), actx.sampleRate);
+    const data = buf.getChannelData(0);
+    for(let i=0;i<data.length;i++) data[i] = Math.random()*2-1;
+    const n = actx.createBufferSource();
+    n.buffer = buf;
+    const bp = actx.createBiquadFilter();
+    bp.type='bandpass'; bp.frequency.value=2500; bp.Q.value=1.0;
+    const ng = actx.createGain();
+    ng.gain.setValueAtTime(0.3, t);
+    ng.gain.exponentialRampToValueAtTime(0.0001, t+0.1);
+    n.connect(bp); bp.connect(ng); ng.connect(masterGain);
+    n.start(t); n.stop(t+0.12);
+
+    // Square wave (metallic impact)
+    const o = actx.createOscillator();
+    o.type='square';
+    o.frequency.setValueAtTime(800, t);
+    o.frequency.exponentialRampToValueAtTime(200, t+0.1);
+    const og = actx.createGain();
+    og.gain.setValueAtTime(0.1, t);
+    og.gain.exponentialRampToValueAtTime(0.0001, t+0.1);
+    o.connect(og); og.connect(masterGain);
+    o.start(t); o.stop(t+0.12);
+  }
+
+  // Enemy hits player: heavy, low, painful "crunch" impact.
+  function playEnemyHit(){
+    if(!ensureCtx()) return;
+    const t = actx.currentTime;
+
+    // Low-frequency white noise (impact on armor/flesh)
+    const buf = actx.createBuffer(1, Math.floor(actx.sampleRate*0.2), actx.sampleRate);
+    const data = buf.getChannelData(0);
+    for(let i=0;i<data.length;i++) data[i] = Math.random()*2-1;
+    const n = actx.createBufferSource();
+    n.buffer = buf;
+    const lp = actx.createBiquadFilter();
+    lp.type='lowpass'; lp.frequency.value=500;
+    const ng = actx.createGain();
+    ng.gain.setValueAtTime(0.4, t);
+    ng.gain.exponentialRampToValueAtTime(0.0001, t+0.2);
+    n.connect(lp); lp.connect(ng); ng.connect(masterGain);
+    n.start(t); n.stop(t+0.22);
+
+    // Sawtooth wave (the weight of the physical blow)
+    const o = actx.createOscillator();
+    o.type='sawtooth';
+    o.frequency.setValueAtTime(150, t);
+    o.frequency.exponentialRampToValueAtTime(40, t+0.2);
+    const og = actx.createGain();
+    og.gain.setValueAtTime(0.25, t);
+    og.gain.exponentialRampToValueAtTime(0.0001, t+0.2);
+    o.connect(og); og.connect(masterGain);
+    o.start(t); o.stop(t+0.22);
+  }
+
   // ── Track scheduler ──────────────────────────────────────────
   // A track is a function (ctxTime, trackGain, beat0, beatsPerSec) => void
   // It schedules ONE loop's worth of notes. We re-invoke it every loop with a
@@ -478,6 +545,7 @@ export const MUSIC = (function(){
   };
 
   return { play, stop, unlock, setOn, setVolume, isMusicOn, getVolume, current,
+           playPlayerHit, playEnemyHit,
            // debug tap (audio-rendering verification only; harmless in production)
            _ctx:()=>actx, _master:()=>masterGain };
 })();

@@ -5,6 +5,7 @@ import { COL } from './palette.js';
 import { effAtk, effDef, gearEvade, gearThorns, totalAcc, totalCrit, totalHitLeech, charmDef, makeGear, makeCharm, makeLegendary, rollLoot } from './items.js';
 import { gainXp } from './player.js';
 import { endGame } from './game.js';
+import { MUSIC } from './audio.js';
 
 // ---------- status conditions ----------
 // each entity may carry .status = [{type, turns, amount}]; ticked once per turn.
@@ -87,6 +88,9 @@ export function attack(att,def,ranged){
   // debug godmode: the player simply takes no damage
   if(def.isPlayer && G.godMode) dmg = 0;
   def.hp -= dmg;
+  // strike SFX — player landing a blow vs. the player taking one
+  if(att.isPlayer) MUSIC.playPlayerHit();
+  else if(def.isPlayer) MUSIC.playEnemyHit();
   if(att.isPlayer) log(`You ${ranged?"hit":"hit"} the ${def.name} for ${dmg}${crit?" (crit!)":""}.`, crit?"gold":"good");
   else if(def.isPlayer){
     log(`The ${att.name} ${att.ranged?"shoots":"hits"} you for ${dmg}${crit?" (crit!)":""}.`,"bad");
