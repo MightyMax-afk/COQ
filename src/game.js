@@ -1,5 +1,6 @@
 "use strict";
 import { MAP_W, MAP_H, FOV_R, ACT1_END, FINAL_DEPTH, MERCHANT_EVERY } from './config.js';
+import { clamp, ri } from './util.js';
 
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
@@ -2594,8 +2595,6 @@ function makeBoss(floor, sd){
   return b;
 }
 
-const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
-
 // ---------- status conditions ----------
 // each entity may carry .status = [{type, turns, amount}]; ticked once per turn.
 const STATUS = {
@@ -2726,9 +2725,6 @@ function makeLegendaryArmor(d){
 
 // ---------- merchant ----------
 const MERCH_COL="#ffd866";
-
-// ---------- rng ----------
-const ri = (lo,hi)=>Math.floor(Math.random()*(hi-lo+1))+lo;
 
 // ---------- state ----------
 let map, visible, explored, ents, items, logLines, depth, gold, score, potions;
