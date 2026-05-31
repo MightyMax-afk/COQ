@@ -137,6 +137,8 @@ export function makeGear(x,y,d){
     const baked = Math.floor((d-6)/3);
     ench = Math.max(0, baked + ri(-1,1));
   }
+  // Scavenger: a chance for any found gear to arrive pre-enchanted by +1.
+  if(G.player && G.player.scavenger && Math.random()<0.20) ench+=1;
   return {x,y,kind,glyph:GEAR_GLYPH[kind],col:GEAR_COL[kind],tier,ench};
 }
 
@@ -226,16 +228,28 @@ export function tryMerge(){
 
 // total defense from all worn armor pieces + any legendary evade bonus
 // value of a charm's stat field (0 if none/charm not equipped)
-export function charmStat(key){ const c=G.equipped.charm; const d=c&&charmDef(c); return (d&&d.stat&&d.stat[key])||0; }
-export function effAtk(){ const w=G.equipped.weapon; return G.player.baseAtk+(w?gearBonus(w):0)+charmStat("atk")-statusAtkMod(G.player); }
+export function charmStat(key){ const c=G.equipped.charm; const d=c&&charmDef(c); let v=(d&&d.stat&&d.stat[key])||0;
+  if(G.player&&G.player.catalyst) v*=2;   // Catalyst: doubles the equipped charm's stat value
+  return v; }
+export function effAtk(){ const w=G.equipped.weapon; let a=G.player.baseAtk+(w?gearBonus(w):0)+charmStat("atk")-statusAtkMod(G.player);
+  if(G.player.secondWind && G.player.hp < G.player.maxhp*0.25) a+=5;   // Second Wind: desperate strength
+  return a; }
 export function effDef(){
   let d=G.player.baseDef+charmStat("def");
   for(const slot of ARMOR_KINDS){ const it=G.equipped[slot]; if(it) d+=gearBonus(it); }
+  // Close Quarters: surrounded by 2+ adjacent foes grants +3 defense (before the cap).
+  if(G.player.closeQuarters){
+    let adj=0;
+    for(const e of G.ents){ if(e&&e.alive&&!e.isPlayer&&Math.abs(e.x-G.player.x)<=1&&Math.abs(e.y-G.player.y)<=1) adj++; }
+    if(adj>=2) d+=3;
+  }
   // diminishing returns past 20: each point beyond counts for half, so you can't wall to immunity
   if(d>20) d=20+(d-20)*0.5;
   return Math.round(d);
 }
-export function gearEvade(){ let e=charmStat("evasion"); for(const slot of ARMOR_KINDS){ const it=G.equipped[slot]; if(it&&it.evadeBonus) e+=it.evadeBonus; } return e; }
+export function gearEvade(){ let e=charmStat("evasion"); for(const slot of ARMOR_KINDS){ const it=G.equipped[slot]; if(it&&it.evadeBonus) e+=it.evadeBonus; }
+  if(G.player.secondWind && G.player.hp < G.player.maxhp*0.25) e+=0.15;   // Second Wind: desperate footwork
+  return e; }
 export function gearThorns(){ let t=0; for(const slot of ARMOR_KINDS){ const it=G.equipped[slot]; if(it&&it.thorns) t+=it.thorns; } return t; }
 export function gearRegen(){ let r=charmStat("regenAmt"); for(const slot of ARMOR_KINDS){ const it=G.equipped[slot]; if(it&&it.regen) r+=it.regen; } return r; }
 // charm-granted extras read elsewhere

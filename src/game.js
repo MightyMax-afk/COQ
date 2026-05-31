@@ -14,9 +14,19 @@ import { render, updateUI, sizeCanvas, spriteCanvas, GFX, SPRITE_LINES } from '.
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
 // ============================================================
-const BUILD = "v0.18.1";
+const BUILD = "v0.19.0";
 const BUILD_DATE = "2026-05-31";
 /* CHANGELOG
+   v0.19.0 Ten new Act II level-up perks for build variety:
+           Giant Slayer (atk +4% of target max HP), Second Wind (+5 atk/+15%
+           dodge under 25% HP), Searing Blades (20% melee burn), Antidote
+           (incoming DoT −2 turns), Deflect (+20% dodge vs ranged), Close
+           Quarters (+3 def when 2+ foes adjacent), Scavenger (+25% gold,
+           20% chance found gear comes +1 enchanted), Lucky Find (monster
+           drop chance 30%→40%), Catalyst (doubles equipped charm stats),
+           Retribution (a dodged melee blow deals your Defense back). New
+           perks are boolean flags on the player; effects wired through
+           combat (damage/hit/status/death), items (stats/gear), and pickup.
    v0.18.1 Fix: the menu's config toggles (graphics/auto-equip/sound fx/music)
            did nothing. The ?v= cache-bust query added in v0.18.0 made the
            <script> load "game.js?v=..." while every internal `import './game.js'`
@@ -262,7 +272,11 @@ function pickup(){
   for(const it of G.items){
     if(it.x!==G.player.x||it.y!==G.player.y) continue;
     if(it.kind==="potion"){ G.potions++; log("You pocket a potion.","gold"); }
-    else if(it.kind==="gold"){ G.gold+=it.value; G.score+=it.value; log(`You scoop up ${it.value} gold.`,"gold"); }
+    else if(it.kind==="gold"){
+      // Scavenger: +25% on all gold you pick up (every gold source becomes a ground item collected here).
+      const val = (G.player && G.player.scavenger) ? Math.floor(it.value*1.25) : it.value;
+      G.gold+=val; G.score+=val; log(`You scoop up ${val} gold.`,"gold");
+    }
     else {                                   // gear or charm
       const copy=Object.assign({},it); delete copy.x; delete copy.y;
       G.inv.push(copy);
@@ -348,7 +362,7 @@ function monstersTurn(){
       m.alive=false;
       log(`The ${m.name} succumbs.`,"good");
       G.score+=m.maxhp*2; gainXp(m.xp);
-      if(Math.random()<0.30){ const drop=rollLoot(m.x,m.y,G.depth); if(drop){ drop.x=m.x; drop.y=m.y; G.items.push(drop);} }
+      if(Math.random() < (G.player.luckyFind?0.40:0.30)){ const drop=rollLoot(m.x,m.y,G.depth); if(drop){ drop.x=m.x; drop.y=m.y; G.items.push(drop);} }
       continue;
     }
     const dx=G.player.x-m.x, dy=G.player.y-m.y;

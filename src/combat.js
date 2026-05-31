@@ -17,6 +17,10 @@ export const STATUS = {
   weaken: {name:"Weak",   col:"#b6a0ff"},             // -attack while active
 };
 export function addStatus(ent,type,turns,amount){
+  // Antidote perk: incoming damage-over-time on the player lasts 2 fewer turns (min 1).
+  if(ent===G.player && G.player.antidote && STATUS[type] && STATUS[type].dot){
+    turns = Math.max(1, turns - 2);
+  }
   if(!ent.status) ent.status=[];
   const ex=ent.status.find(s=>s.type===type);
   if(ex){ ex.turns=Math.max(ex.turns,turns); ex.amount=Math.max(ex.amount,amount); }
@@ -57,7 +61,8 @@ export function rollHit(att,def){
   const w=G.equipped.weapon;
   let acc = att.isPlayer ? 0.90+G.player.accBonus+totalAcc() : (0.85+(att.acc||0));
   if(att.isPlayer && w && w.acc) acc+=w.acc;
-  const eva = def.isPlayer ? G.player.evasion+gearEvade() : (def.evade||0);
+  let eva = def.isPlayer ? G.player.evasion+gearEvade() : (def.evade||0);
+  if(def.isPlayer && G.player.deflect && att.ranged) eva += 0.20;   // Deflect: dodge ranged shots
   return Math.random() < clamp(acc - eva, 0.35, 0.99);
 }
 
@@ -66,13 +71,31 @@ export function attack(att,def,ranged){
   const w=G.equipped.weapon;
   if(!rollHit(att,def)){
     if(att.isPlayer)      log(`You ${ranged?"shoot at":"swing at"} the ${def.name} and miss.`);
-    else if(def.isPlayer) log(`The ${att.name} ${att.ranged?"shoots":"lunges"} but misses.`);
+    else if(def.isPlayer){
+      log(`The ${att.name} ${att.ranged?"shoots":"lunges"} but misses.`);
+      // Retribution: a dodged MELEE blow is answered with your Defense as damage.
+      if(G.player.retribution && !att.ranged && att.alive){
+        const rdmg = effDef();
+        att.hp -= rdmg;
+        log(`You counter-strike the ${att.name} for ${rdmg}!`,"good");
+        if(att.hp<=0){
+          att.alive=false;
+          log(`The ${att.name} dies to your riposte.`,"good");
+          G.score+=att.maxhp*2; gainXp(att.xp);
+          if(Math.random() < (G.player.luckyFind?0.40:0.30)){
+            const drop=rollLoot(att.x,att.y,G.depth); if(drop){ drop.x=att.x; drop.y=att.y; G.items.push(drop); }
+          }
+        }
+      }
+    }
     return;
   }
   const a = att.isPlayer ? effAtk() : att.atk;
   let d = def.isPlayer ? effDef() : def.def;
   if(att.isPlayer && G.player.armorPen) d=Math.max(0, d-G.player.armorPen);   // Sunder ignores some defense
   let dmg = Math.max(1, a - d + ri(-1,2));
+  // Giant Slayer: bonus damage scaling with the target's max HP (great vs tanks/bosses).
+  if(att.isPlayer && G.player.giantSlayer) dmg += Math.floor(def.maxhp*0.04);
   // Player anti-stonewall: even against very high armor, a hit always lands a meaningful
   // chunk (~3% of the target's max HP). Stops armored elites/bosses from being un-killable
   // when your attack hasn't out-scaled their defense.
@@ -111,6 +134,11 @@ export function attack(att,def,ranged){
     const c=G.equipped.charm, cd=c&&charmDef(c);
     if(cd && cd.onHit){ const o=cd.onHit; addStatus(def,o.type,o.turns,o.amount);
       log(`The ${def.name} is afflicted: ${STATUS[o.type].name}.`,"good"); }
+  }
+  // Searing Blades: a melee strike may set the target alight.
+  if(att.isPlayer && !ranged && G.player.searingBlades && def.alive!==false && def.hp>0 && Math.random()<0.20){
+    addStatus(def,"burn",3,3);
+    log(`Your blade sears the ${def.name}.`,"good");
   }
   // healing on a successful hit: weapon lifesteal + Vampire perk + Leeching charm, capped
   if(att.isPlayer){
@@ -158,7 +186,7 @@ export function attack(att,def,ranged){
         const gld={kind:"gold",glyph:"$",col:COL.gold,name:"gold",value:ri(15,30)*Math.max(1,G.depth),x:def.x,y:def.y}; G.items.push(gld);
       } else {
         log(`The ${def.name} dies.`,"good");
-        if(att.isPlayer && Math.random()<0.30){            // ordinary enemies sometimes drop loot
+        if(att.isPlayer && Math.random() < (G.player.luckyFind?0.40:0.30)){   // ordinary enemies sometimes drop loot (Lucky Find: +10%)
           const drop=rollLoot(def.x,def.y,G.depth); if(drop){ drop.x=def.x; drop.y=def.y; G.items.push(drop); }
         }
       }
