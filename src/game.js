@@ -1,4 +1,5 @@
 "use strict";
+import { MAP_W, MAP_H, FOV_R, ACT1_END, FINAL_DEPTH, MERCHANT_EVERY } from './config.js';
 
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
@@ -152,7 +153,6 @@ const BUILD_DATE = "2026-05-29";
 */
 
 // ---------- config ----------
-const MAP_W = 50, MAP_H = 30, FOV_R = 8;
 const VIEW_W = 28, VIEW_H = 18;   // visible window in tiles; the camera follows the player
 const CELL = 22, FONT = 19;       // logical pixels per cell (canvas is scaled to fit)
 
@@ -2521,8 +2521,6 @@ const PERKS = [
 
 // one unique boss guards the stairs on each depth; #20 is Varmathrax (end of Act I),
 // #40 is Zarakhel (end of Act II = the final win). FINAL_DEPTH is the run's end.
-const ACT1_END = 20;     // Varmathrax's floor — Act I closes here, descent continues to Act II
-const FINAL_DEPTH = 40;  // Zarakhel's floor — the win
 const BOSS_DEFS = [
   // ── Act I ── floors 1-20
   {name:"Gnarltooth, the Rat King",  glyph:"R", col:"#d98a5a"},
@@ -2727,7 +2725,6 @@ function makeLegendaryArmor(d){
 }
 
 // ---------- merchant ----------
-const MERCHANT_EVERY=4;   // a merchant appears on depths 4, 8, 12, 16 in a safe room
 const MERCH_COL="#ffd866";
 
 // ---------- rng ----------
