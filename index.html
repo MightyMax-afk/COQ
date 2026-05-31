@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Caves of Qlud · a roguelike</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0c; --stone:#18161a; --ink:#e9e0cf; --dim:#8c8270;
+    --amber:#e8b75c; --amber-deep:#9a6b1f; --blood:#c0413a;
+    --panel:rgba(20,17,15,.72); --line:rgba(232,183,92,.22);
+    --cyan:#6fd3ff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:
+      radial-gradient(120% 90% at 50% 8%, #1a1510 0%, #0b0a0c 55%, #060507 100%);
+    color:var(--ink);
+    font-family:"JetBrains Mono",ui-monospace,monospace;
+    min-height:100%;
+    display:flex;align-items:center;justify-content:center;
+    padding:18px;
+    overflow-x:hidden;
+    -webkit-tap-highlight-color:transparent;
+  }
+  /* faint grain */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:9;
+    opacity:.045;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .cabinet{
+    width:min(980px,100%);
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:linear-gradient(180deg,rgba(28,23,18,.6),rgba(10,9,11,.6));
+    box-shadow:0 0 0 1px rgba(0,0,0,.4),0 30px 80px -30px #000, inset 0 1px 0 rgba(255,255,255,.03);
+    padding:18px 18px 14px;
+  }
+  header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+  h1{
+    font-family:"VT323",monospace;font-weight:400;
+    font-size:clamp(30px,5vw,46px);line-height:.9;margin:0;
+    color:var(--amber);letter-spacing:1px;
+    text-shadow:0 0 14px rgba(232,183,92,.35);
+  }
+  h1 b{color:var(--blood);text-shadow:0 0 16px rgba(192,65,58,.4)}
+  .tag{font-family:"VT323",monospace;font-size:18px;color:var(--dim);letter-spacing:1px}
+  .musicCtl{display:inline-flex;align-items:center;gap:8px;margin-left:auto}
+  .musicCtl button{
+    font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--dim);
+    background:rgba(232,183,92,.08);border:1px solid var(--line,rgba(232,183,92,.22));
+    border-radius:4px;padding:3px 8px;cursor:pointer;letter-spacing:.5px;white-space:nowrap;
+  }
+  .musicCtl button.on{color:var(--amber,#e8b75c);background:rgba(232,183,92,.2)}
+  .musicCtl input[type=range]{
+    width:80px;accent-color:var(--amber,#e8b75c);cursor:pointer;
+  }
+
+  .stage{display:grid;grid-template-columns:1fr 250px;gap:14px;align-items:stretch}
+  @media(max-width:760px){ .stage{grid-template-columns:1fr} }
+
+  .screen-wrap{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#050406}
+  canvas{display:block;width:100%;height:auto;image-rendering:pixelated}
+  /* torchlight + scanlines over the canvas */
+  .screen-wrap::after{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:
+      radial-gradient(75% 75% at 50% 45%, transparent 55%, rgba(0,0,0,.55) 100%),
+      repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 1px, transparent 1px 3px);
+    mix-blend-mode:multiply;
+  }
+
+  .panel{display:flex;flex-direction:column;gap:12px}
+  .card{
+    border:1px solid var(--line);border-radius:10px;background:var(--panel);
+    padding:11px 12px;
+  }
+  .card h2{
+    font-family:"VT323",monospace;font-weight:400;font-size:17px;margin:0 0 7px;
+    color:var(--amber);letter-spacing:1.5px;text-transform:uppercase;
+    border-bottom:1px dashed var(--line);padding-bottom:5px;
+  }
+  .row{display:flex;justify-content:space-between;font-size:12.5px;margin:3px 0;color:var(--ink)}
+  .row span:last-child{color:var(--amber)}
+  .hpbar{height:9px;border:1px solid var(--line);border-radius:5px;overflow:hidden;background:#1a0e0c;margin-top:4px}
+  .hpfill{height:100%;background:linear-gradient(90deg,#7a1f1a,#d4524a);box-shadow:0 0 8px rgba(212,82,74,.5);transition:width .15s}
+  .xpbar{height:6px;border:1px solid var(--line);border-radius:5px;overflow:hidden;background:#10130c;margin-top:4px}
+  .xpfill{height:100%;background:linear-gradient(90deg,#3c6b2e,#86d166);transition:width .15s}
+
+  .slot{font-size:12.5px;margin:3px 0;color:var(--dim)}
+  .slot b{color:var(--ink);font-weight:400}
+  #inv{list-style:none;margin:0;padding:0;font-size:12px;max-height:132px;overflow-y:auto;overflow-x:hidden}
+  #inv::-webkit-scrollbar{width:7px}
+  #inv::-webkit-scrollbar-track{background:rgba(0,0,0,.25);border-radius:4px}
+  #inv::-webkit-scrollbar-thumb{background:var(--amber-deep);border-radius:4px}
+  #inv{scrollbar-width:thin;scrollbar-color:var(--amber-deep) rgba(0,0,0,.25)}
+  #inv li{padding:2px 0;color:var(--dim);cursor:pointer}
+  #inv li:hover{color:var(--ink)}
+  #inv .key{color:var(--amber)}
+  #inv .eq{color:var(--cyan)}
+  #inv .leg{color:#ffd86b;text-shadow:0 0 6px rgba(255,216,107,.4)}
+  #inv .chm{color:#c77dff}
+  .packhead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .togglegroup{display:flex;gap:5px;flex-shrink:0}
+  .autobtn{font-family:"JetBrains Mono",monospace;font-size:10px;cursor:pointer;
+    color:var(--amber);background:rgba(232,183,92,.08);border:1px solid var(--line);
+    border-radius:4px;padding:2px 7px;letter-spacing:.5px;white-space:nowrap}
+  .autobtn.off{color:#8c8270;background:rgba(255,255,255,.03)}
+  #inv .empty{color:#4d473c;font-style:italic;cursor:default}
+
+  #log{
+    margin-top:0;border:1px solid var(--line);border-radius:10px;background:var(--panel);
+    padding:9px 12px;font-size:13px;min-height:120px;max-height:200px;line-height:1.5;flex:1 1 auto;
+    overflow-y:auto; scroll-behavior:smooth;
+  }
+  #log::-webkit-scrollbar{width:8px}
+  #log::-webkit-scrollbar-track{background:transparent}
+  #log::-webkit-scrollbar-thumb{background:rgba(232,183,92,.25);border-radius:4px}
+  #log::-webkit-scrollbar-thumb:hover{background:rgba(232,183,92,.5)}
+  #log{scrollbar-width:thin;scrollbar-color:rgba(232,183,92,.25) transparent}
+  #log div{color:var(--dim)}
+  #log div:last-child{color:var(--ink)}
+  #log .good{color:#86d166} #log .bad{color:#e0716a} #log .gold{color:var(--amber)}
+
+  footer{margin-top:11px;font-size:11.5px;color:#5f5849;line-height:1.7;text-align:center}
+  footer kbd{
+    font-family:"JetBrains Mono",monospace;color:var(--amber);background:rgba(232,183,92,.08);
+    border:1px solid var(--line);border-radius:4px;padding:0 5px;font-size:10.5px;
+  }
+  footer .ver{display:block;margin-top:5px;color:#4d473c;font-size:10.5px;letter-spacing:.5px}
+
+  /* board: map with controls stacked directly beneath it */
+  .board{display:flex;flex-direction:column;gap:10px;min-width:0}
+
+  /* touch controls */
+  .touch{display:none;gap:18px;align-items:center;justify-content:center}
+  @media(pointer:coarse){ .touch{display:flex} }
+  .dpad{display:grid;grid-template-columns:repeat(3,46px);grid-template-rows:repeat(3,46px);gap:5px}
+  .dpad button,.acts button{
+    font-family:"VT323",monospace;font-size:20px;color:var(--amber);
+    background:rgba(232,183,92,.06);border:1px solid var(--line);border-radius:8px;cursor:pointer;
+  }
+  .dpad button:active,.acts button:active{background:rgba(232,183,92,.2)}
+  .dpad .blank{visibility:hidden}
+  .acts{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;flex:1;max-width:170px}
+  .acts button{padding:9px 4px;font-size:15px}
+
+  /* overlay */
+  .overlay{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;gap:12px;padding:18px;
+    overflow-y:auto;
+    background:radial-gradient(80% 80% at 50% 40%,rgba(12,9,7,.9),rgba(5,4,6,.97));backdrop-filter:blur(2px)}
+  .overlay.hidden{display:none}
+  .overlay .big{font-family:"VT323",monospace;font-size:clamp(34px,7vw,60px);color:var(--amber);
+    text-shadow:0 0 22px rgba(232,183,92,.4);line-height:.95}
+  .overlay .big.dead{color:var(--blood);text-shadow:0 0 22px rgba(192,65,58,.45)}
+  .overlay p{margin:0;color:var(--dim);font-size:14px;max-width:440px;line-height:1.7}
+  .overlay .legend{font-size:12.5px;color:var(--ink);line-height:1.9}
+  .overlay .legend i{font-style:normal;display:inline-block}
+  .play-btn{
+    margin-top:4px;font-family:"VT323",monospace;font-size:24px;letter-spacing:2px;
+    color:#120d06;background:linear-gradient(180deg,#f3c977,#cf922f);
+    border:none;border-radius:9px;padding:9px 30px;cursor:pointer;
+    box-shadow:0 0 26px rgba(232,183,92,.35),inset 0 1px 0 rgba(255,255,255,.4);
+  }
+  .play-btn:active{transform:translateY(1px)}
+
+  /* level-up perk picker */
+  .overlay .big.lvl{color:#86d166;text-shadow:0 0 20px rgba(134,209,102,.4)}
+  .perks{display:flex;flex-direction:column;gap:9px;width:100%;max-width:340px}
+  .perk{
+    text-align:left;border:1px solid var(--line);border-radius:9px;background:rgba(232,183,92,.06);
+    color:var(--ink);padding:9px 13px;cursor:pointer;font-family:"JetBrains Mono",monospace;
+    transition:background .12s,transform .05s;
+  }
+  .perk:hover{background:rgba(232,183,92,.15);border-color:rgba(232,183,92,.5)}
+  .perk:active{transform:translateY(1px)}
+  .perk .pk-key{color:var(--amber);font-family:"VT323",monospace;font-size:19px;margin-right:9px}
+  .perk .pk-name{color:var(--amber);font-weight:700;font-size:14px}
+  .perk .pk-desc{display:block;color:var(--dim);font-size:11.5px;margin-top:3px;margin-left:28px}
+  #skills div{margin:2px 0}
+  .leg{color:#ffd86b} .chm{color:#c77dff}
+
+  /* boss health banner */
+  .bossbar{position:absolute;top:7px;left:50%;transform:translateX(-50%);
+    width:min(86%,420px);z-index:4;text-align:center;pointer-events:none}
+  .bossbar.hidden{display:none}
+  #bossName{font-family:"VT323",monospace;font-size:19px;letter-spacing:1px;color:#ff8a78;
+    text-shadow:0 0 8px rgba(0,0,0,.85)}
+  .bosshp{height:8px;margin-top:3px;border:1px solid rgba(224,82,74,.6);border-radius:5px;
+    background:rgba(40,10,8,.7);overflow:hidden}
+  #bossHpFill{height:100%;width:100%;background:linear-gradient(90deg,#7a1f1a,#e0524a);
+    box-shadow:0 0 8px rgba(224,82,74,.6);transition:width .15s}
+
+  /* merchant shop */
+  .shopcols{display:flex;gap:14px;width:100%;max-width:480px}
+  .shopcol{flex:1;border:1px solid var(--line);border-radius:9px;background:rgba(232,183,92,.05);
+    padding:8px 9px;min-height:120px}
+  .shoph{font-family:"VT323",monospace;font-size:17px;color:var(--amber);letter-spacing:1px;
+    border-bottom:1px dashed var(--line);padding-bottom:4px;margin-bottom:6px}
+  .shopitem{display:flex;justify-content:space-between;align-items:center;gap:8px;
+    font-size:12px;color:var(--ink);padding:4px 0;cursor:pointer;border-bottom:1px solid rgba(232,183,92,.07)}
+  .shopitem:hover{color:#fff}
+  .shopitem .pr{color:var(--amber);font-size:11.5px;white-space:nowrap}
+  .shopitem.dis{color:#5f5849;cursor:default}
+  .shopitem.dis:hover{color:#5f5849}
+  #buyList,#sellList{max-height:160px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--amber-deep) rgba(0,0,0,.25)}
+  .shopempty{color:#5f5849;font-style:italic;font-size:11.5px;padding:6px 0}
+
+  /* compact everything on phones so the map + title stay on screen */
+  @media(max-width:760px){
+    body{padding:8px;align-items:flex-start}
+    .cabinet{padding:11px 11px 9px;border-radius:10px}
+    header{margin-bottom:8px}
+    h1{font-size:30px}
+    .stage{gap:10px}
+    .overlay{gap:9px;padding:14px}
+    .overlay .big{font-size:32px}
+    .overlay p{font-size:12px;line-height:1.5}
+    .overlay .legend{font-size:11px;line-height:1.7}
+    .card{padding:8px 10px}
+    .card h2{font-size:15px;margin-bottom:5px}
+    .row,.slot{font-size:12px}
+    #log{font-size:12px;margin-top:10px}
+    footer{margin-top:9px}
+  }
+</style>
+</head>
+<body>
+<div class="cabinet">
+  <header>
+    <h1>CAVES OF&nbsp;<b>QLUD</b></h1>
+    <span class="tag" id="depthTag">— descend, or die trying —</span>
+    <span class="tag" id="godTag" style="display:none;color:#ffd866">[GODMODE · F1]</span>
+    <span class="musicCtl" id="musicCtl">
+      <button id="musicBtn" type="button" title="Toggle music">♪ music: on</button>
+      <input id="musicVol" type="range" min="0" max="100" value="45" title="Music volume">
+    </span>
+  </header>
+
+  <div class="stage">
+    <div class="board">
+    <div class="screen-wrap">
+      <canvas id="game"></canvas>
+      <div class="bossbar hidden" id="bossBar">
+        <span id="bossName"></span>
+        <div class="bosshp"><div id="bossHpFill"></div></div>
+      </div>
+      <div class="overlay" id="overlay">
+        <div class="big" id="overTitle">CAVES OF QLUD</div>
+        <p id="overText">A torch, a blade you haven't found yet, and a hole in the earth. Go down. The deeper you fall, the worse it gets — and the better the loot.</p>
+        <div class="legend" id="legend">
+          <i style="color:#6fd3ff" data-spr="player">@</i> you &nbsp;
+          <i style="color:#d98a5a" data-spr="rat">r</i> rat &nbsp;
+          <i style="color:#7bc96f" data-spr="goblin">g</i> goblin &nbsp;
+          <i style="color:#b6d36f" data-spr="archer">a</i> archer &nbsp;
+          <i style="color:#d97a3a" data-spr="orc">o</i> orc &nbsp;
+          <i style="color:#e0524a" data-spr="troll">T</i> troll &nbsp;
+          <i style="color:#c77dff" data-spr="mage">m</i> mage<br>
+          <i style="color:#ffd866" data-spr="gold">$</i> gold &nbsp;
+          <i style="color:#c77dff" data-spr="potion">!</i> potion &nbsp;
+          <i style="color:#9ad0ff" data-spr="weapon">)</i> weapon &nbsp;
+          <i style="color:#c0a060" data-spr="armor">[</i> armor &nbsp;
+          <i style="color:#d0b48a" data-spr="helm">^</i> helm &nbsp;
+          <i style="color:#a8b0c0" data-spr="shield">0</i> shield &nbsp;
+          <i style="color:#c77dff" data-spr="charm">¤</i> charm &nbsp;
+          <i style="color:#caa45a" data-spr="chest">=</i> chest &nbsp;
+          <i style="color:#ffd866" data-spr="merchant">M</i> merchant &nbsp;
+          <i style="color:#f0e6c0" data-spr="stairs_down">&gt;</i> down &nbsp;
+          <i style="color:#8fd6a0" data-spr="stairs_up">&lt;</i> up
+        </div>
+        <button class="play-btn" id="playBtn">ENTER ▾</button>
+        <button class="play-btn" id="ngBtn" style="display:none;margin-top:8px">NEW GAME+ ▾</button>
+      </div>
+
+      <div class="overlay levelup hidden" id="levelup">
+        <div class="big lvl">LEVEL UP</div>
+        <p id="lvlSub">Choose a boon</p>
+        <div id="perkBtns" class="perks"></div>
+      </div>
+
+      <div class="overlay shop hidden" id="shop">
+        <div class="big" style="color:#ffd866;text-shadow:0 0 18px rgba(255,216,102,.4)">MERCHANT</div>
+        <p id="shopGold" style="margin:0;color:var(--amber)">Gold: 0</p>
+        <div class="shopcols">
+          <div class="shopcol">
+            <div class="shoph">Buy</div>
+            <div id="buyList"></div>
+          </div>
+          <div class="shopcol">
+            <div class="shoph">Sell from pack</div>
+            <div id="sellList"></div>
+          </div>
+        </div>
+        <button class="play-btn" id="closeShop" style="font-size:19px;padding:7px 24px">LEAVE ▴</button>
+      </div>
+    </div><!-- /screen-wrap -->
+
+    <div class="touch">
+      <div class="dpad">
+        <button data-mv="-1,-1">↖</button><button data-mv="0,-1">↑</button><button data-mv="1,-1">↗</button>
+        <button data-mv="-1,0">←</button><button data-act="wait">·</button><button data-mv="1,0">→</button>
+        <button data-mv="-1,1">↙</button><button data-mv="0,1">↓</button><button data-mv="1,1">↘</button>
+      </div>
+      <div class="acts">
+        <button data-act="pickup">grab</button>
+        <button data-act="quaff">quaff</button>
+        <button data-act="descend">down (L)</button>
+        <button data-act="ascend">up (U)</button>
+      </div>
+    </div>
+
+    <div id="log"><div>You stand at the mouth of the dungeon.</div></div>
+    </div><!-- /board -->
+
+    <div class="panel">
+      <div class="card">
+        <h2>Vitals</h2>
+        <div class="row"><span>Health</span><span id="hpTxt">30/30</span></div>
+        <div class="hpbar"><div class="hpfill" id="hpFill" style="width:100%"></div></div>
+        <div class="row" style="margin-top:8px"><span>Level</span><span id="lvlTxt">1</span></div>
+        <div class="xpbar"><div class="xpfill" id="xpFill" style="width:0%"></div></div>
+        <div class="row" style="margin-top:8px"><span>Depth</span><span id="depthTxt">1</span></div>
+        <div class="row"><span>Attack</span><span id="atkTxt">3</span></div>
+        <div class="row"><span>Defense</span><span id="defTxt">1</span></div>
+        <div class="row"><span>Gold</span><span id="goldTxt">0</span></div>
+        <div class="row"><span>Score</span><span id="scoreTxt">0</span></div>
+        <div id="statusLine" style="display:none;margin-top:6px;font-size:11.5px;border-top:1px dashed var(--line);padding-top:5px"></div>
+      </div>
+
+      <div class="card">
+        <h2>Equipped</h2>
+        <div class="slot">⚔ <b id="wepTxt">bare fists</b></div>
+        <div class="slot">🛡 <b id="armTxt">none</b></div>
+        <div class="slot">⛑ <b id="helmTxt">none</b></div>
+        <div class="slot">🔰 <b id="shldTxt">none</b></div>
+        <div class="slot">🔮 <b id="charmTxt">none</b></div>
+        <div class="slot">⚗ <b id="potTxt">0 potions</b></div>
+      </div>
+
+      <div class="card">
+        <h2>Skills</h2>
+        <div id="skills" class="slot"><span style="color:#5f5849">none yet</span></div>
+      </div>
+
+      <div class="card">
+        <h2 class="packhead"><span>Pack <span style="color:#5f5849;font-size:11px">(num key = equip)</span></span>
+          <span class="togglegroup"><button id="autoBtn" class="autobtn">auto: on</button><button id="gfxBtn" class="autobtn off">gfx: off</button></span></h2>
+        <ul id="inv"><li class="empty">empty</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    move <kbd>WASD</kbd> · diagonals <kbd>Q E Z C</kbd> · wait <kbd>.</kbd> ·
+    grab <kbd>G</kbd> · quaff <kbd>P</kbd> · down <kbd>L</kbd> · up <kbd>U</kbd> · equip <kbd>1</kbd>–<kbd>9</kbd>
+    <span class="ver" id="verTag"></span>
+  </footer>
+</div>
+
+<script type="module" src="src/game.js"></script>
+</body>
+</html>
