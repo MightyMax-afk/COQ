@@ -1,6 +1,6 @@
 "use strict";
 import { MAP_W, MAP_H, FOV_R, ACT1_END, FINAL_DEPTH, MERCHANT_EVERY } from './config.js';
-import { clamp, ri } from './util.js';
+import { clamp, ri, log } from './util.js';
 import { G } from './state.js';
 import { PAL, S } from './palette.js';
 import * as Tiles from './art/tiles.js';
@@ -995,8 +995,6 @@ function totalMaxHpBonus(){ return charmStat("maxhp"); }
 function totalAcc(){ return charmStat("acc"); }
 function totalCrit(){ return charmStat("critBonus"); }
 function totalHitLeech(){ return charmStat("hitLeech"); }
-
-function log(text,cls){ G.logLines.push({text,cls}); while(G.logLines.length>200) G.logLines.shift(); }
 
 // ---------- combat ----------
 function monsterAt(x,y){ for(let i=1;i<G.ents.length;i++){const e=G.ents[i]; if(e.alive&&e.x===x&&e.y===y) return e;} return null; }
