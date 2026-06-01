@@ -387,6 +387,18 @@ export function updateUI(){
   if(G.player.armorPen>0)    sk.push(`Armor pierce ${G.player.armorPen}`);
   if(G.player.thornsSelf>0)  sk.push(`Spikes ${G.player.thornsSelf}`);
   if(G.player.hitLeech>0)    sk.push(`Lifesteal +${G.player.hitLeech}/hit`);
+  // boolean Act II perks — these used to be applied silently with no UI, so the
+  // player couldn't tell they had them (e.g. Deflect's +20% dodge vs ranged).
+  if(G.player.giantSlayer)   sk.push("Giant Slayer (+4% of target max HP as dmg)");
+  if(G.player.secondWind)    sk.push("Second Wind (under 25% HP: +5 atk, +15% dodge)");
+  if(G.player.searingBlades) sk.push("Searing Blades (20% melee burn)");
+  if(G.player.antidote)      sk.push("Antidote (incoming poison/burn/bleed −2 turns)");
+  if(G.player.deflect)       sk.push("Deflect (+20% dodge vs ranged)");
+  if(G.player.closeQuarters) sk.push("Close Quarters (+3 def vs 2+ adjacent foes)");
+  if(G.player.scavenger)     sk.push("Scavenger (+25% gold, 20% gear +1 enchant)");
+  if(G.player.luckyFind)     sk.push("Lucky Find (+10% monster drop chance)");
+  if(G.player.catalyst)      sk.push("Catalyst (equipped charm stats doubled)");
+  if(G.player.retribution)   sk.push("Retribution (dodged melee → your def as dmg)");
   // equipped charm effect
   const cd=G.equipped.charm&&charmDef(G.equipped.charm);
   if(cd) sk.push(`<span class="chm">Charm: ${cd.desc}</span>`);

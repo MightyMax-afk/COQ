@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="inventory-screen.css">
 <style>
   :root{
     --bg:#0a0a0c; --stone:#18161a; --ink:#e9e0cf; --dim:#8c8270;
@@ -342,7 +343,8 @@
         <button data-act="quaff">quaff</button>
         <button data-act="descend">down (L)</button>
         <button data-act="ascend">up (U)</button>
-        <button data-act="menu" class="actspan">menu</button>
+        <button data-act="inventory">pack (I)</button>
+        <button data-act="menu">menu</button>
       </div>
     </div>
 
@@ -382,7 +384,7 @@
 
       <div class="card">
         <h2 class="packhead"><span>Pack <span style="color:#5f5849;font-size:11px">(num key = equip)</span></span>
-          <span class="esc-cue"><kbd>Esc</kbd> menu</span></h2>
+          <button id="invOpenBtn" class="autobtn" title="Open the full inventory screen (I)">⊞ expand</button></h2>
         <ul id="inv"><li class="empty">empty</li></ul>
       </div>
     </div>
@@ -390,11 +392,12 @@
 
   <footer>
     move <kbd>WASD</kbd> · diagonals <kbd>Q E Z C</kbd> · wait <kbd>.</kbd> ·
-    grab <kbd>G</kbd> · quaff <kbd>P</kbd> · down <kbd>L</kbd> · up <kbd>U</kbd> · equip <kbd>1</kbd>–<kbd>9</kbd> · menu <kbd>Esc</kbd>
+    grab <kbd>G</kbd> · quaff <kbd>P</kbd> · down <kbd>L</kbd> · up <kbd>U</kbd> · equip <kbd>1</kbd>–<kbd>9</kbd> · inventory <kbd>I</kbd> · menu <kbd>Esc</kbd>
     <span class="ver" id="verTag"></span>
   </footer>
 </div>
 
+<script src="sprites.js"></script>
 <script type="module" src="src/game.js"></script>
 </body>
 </html>
