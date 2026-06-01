@@ -10,6 +10,7 @@ import { makeMonster, monsterAt } from './monsters.js';
 import { genLevel, computeFOV, los, saveLevel, inB } from './worlds.js';
 import { MUSIC, musicTrackForDepth } from './audio.js';
 import { render, updateUI, sizeCanvas, spriteCanvas, GFX, SPRITE_LINES } from './render.js';
+import { openInventory, closeInventory, isInventoryOpen } from './inventory.js';
 
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
@@ -719,7 +720,7 @@ window.addEventListener("keydown",e=>{
   }
   // Escape: toggle the pause menu — only during live gameplay, never over the
   // perk picker or the shop (those own the key themselves below).
-  if(e.key==="Escape" && G.started && G.running && !G.choosing && !G.shopping){
+  if(e.key==="Escape" && G.started && G.running && !G.choosing && !G.shopping && !isInventoryOpen()){
     e.preventDefault();
     toggleEscMenu();
     return;
@@ -727,6 +728,12 @@ window.addEventListener("keydown",e=>{
   // While the pause menu is open, swallow every other key so the player can't
   // move or take a turn behind it.
   if(escMenuOpen()){ e.preventDefault(); return; }
+  // While the inventory overlay is open, swallow keys too — I or Esc closes it.
+  if(isInventoryOpen()){
+    if(e.key==="i"||e.key==="I"||e.key==="Escape"){ e.preventDefault(); closeInventory(); }
+    else e.preventDefault();
+    return;
+  }
   if(G.shopping){
     if(e.key==="Escape"||e.key==="Enter"||e.key==="<"){ e.preventDefault(); closeShop(); }
     return;
@@ -740,6 +747,7 @@ window.addEventListener("keydown",e=>{
     return;
   }
   const k=e.key;
+  if(k==="i"||k==="I"){ e.preventDefault(); openInventory(); return; }   // open the full inventory screen
   if(MOVES[k]){ e.preventDefault(); turn(()=>playerMove(...MOVES[k])); return; }
   if(k==="."){ turn(()=>true); return; }                 // wait
   if(k==="g"){ turn(pickup); return; }                   // grab
@@ -751,7 +759,7 @@ window.addEventListener("keydown",e=>{
 
 // touch / click controls
 document.querySelector(".touch").addEventListener("click",e=>{
-  if(G.shopping||G.choosing||escMenuOpen()) return;
+  if(G.shopping||G.choosing||escMenuOpen()||isInventoryOpen()) return;
   const b=e.target.closest("button"); if(!b) return;
   if(b.dataset.mv){ const[dx,dy]=b.dataset.mv.split(",").map(Number); turn(()=>playerMove(dx,dy)); }
   else if(b.dataset.act){
@@ -761,6 +769,7 @@ document.querySelector(".touch").addEventListener("click",e=>{
     else if(a==="quaff") turn(quaff);
     else if(a==="descend") turn(descend);
     else if(a==="ascend") turn(ascend);
+    else if(a==="inventory"){ if(G.started&&G.running) openInventory(); }   // mobile: open the full inventory screen
     else if(a==="menu"){ if(G.started&&G.running) openEscMenu(); }   // mobile: open the pause menu (Esc has no equivalent on touch)
   }
 });
@@ -769,6 +778,8 @@ $("inv").addEventListener("click",e=>{
   const li=e.target.closest("li[data-i]"); if(!li) return;
   turn(()=>equipIndex(parseInt(li.dataset.i)));
 });
+const invOpenBtn=$("invOpenBtn");
+if(invOpenBtn) invOpenBtn.addEventListener("click",()=>{ if(G.started&&G.running) openInventory(); });
 $("autoBtn").addEventListener("click",()=>{
   G.autoEquipOn=!G.autoEquipOn;
   if(G.autoEquipOn){ log("Auto-equip ON — will equip your strongest gear.","good"); autoEquip(); }
