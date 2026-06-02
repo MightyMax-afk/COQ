@@ -15,9 +15,27 @@ import { openInventory, closeInventory, isInventoryOpen } from './inventory.js';
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
 // ============================================================
-const BUILD = "v0.20.0";
-const BUILD_DATE = "2026-05-31";
+const BUILD = "v0.21.1";
+const BUILD_DATE = "2026-06-01";
 /* CHANGELOG
+   v0.21.1 Layout: the game now fills the browser width instead of sitting in a
+           fixed 980px column. On desktop the cabinet grows as wide as the
+           window height allows while the 14:9 map still fits with no vertical
+           scroll; on short laptop screens (≤860px tall) it instead sizes the
+           map to fill the window height and stay fully visible, with the log
+           and footer below. Fixed: an over-tall page pushed the header above
+           the scroll origin (body was a fixed-height vertically-centred flex
+           box) — "had to zoom out to see the header"; the body now grows with
+           its content so the header stays reachable. Mobile layout unchanged.
+   v0.21.0 INVENTORY / EQUIPMENT SCREEN. Full-screen overlay opened with I (or
+           the ⊞ button by the Pack on desktop / the pack (I) touch button),
+           closed with I or Esc. Built live from game state: gold/depth/level,
+           HP & XP bars, a layered paper-doll hero (new sprites.js → window.QLUD
+           palette + item icons), all six equip slots, the computed stat totals,
+           and every active perk — including the boolean Act II perks. Click a
+           pack item to equip it (turns auto-equip off, like the side list).
+           Also: the side Skills panel now lists those 10 Act II perks (Deflect,
+           Giant Slayer, …) that were being applied silently with no UI.
    v0.20.0 Sixth equipment slot: BOOTS. New tier ladder (leather boots →
            chain sabatons → plate greaves), glyph "L", added to ARMOR_KINDS/
            ALL_SLOTS/GEAR_SLOTS so loot gen, auto-equip and merging handle it
