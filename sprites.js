@@ -1312,6 +1312,31 @@ Object.assign(SPRITES, {
   pd_wpn_rg_0: PD_WPN_RG_0, pd_wpn_rg_1: PD_WPN_RG_1, pd_wpn_rg_2: PD_WPN_RG_2, pd_wpn_rg_3: PD_WPN_RG_3,
 });
 
+/* ============================================================
+   CLASS GEAR TINTS — armor / helmet / shield / boots keep their
+   shapes but recolor to the player's class (no new pixel art):
+     Knight (kn): leather/cloth -> polished steel, gold trim kept.
+     Rogue  (rg): steel -> dark iron, gold/gem -> green poison.
+   Tinted copies are registered as <key>_kn / <key>_rg so the
+   class-aware iconId()/pdId() in inventory.js resolve to them.
+   ============================================================ */
+const GEAR_TINT = {
+  kn: { n:'3', B:'3', b:'4', '6':'3', '7':'4', e:'5', S:'3', t:'4', T:'5' },
+  rg: { '3':'k', '4':'S', '5':'t', S:'k', t:'S', T:'t', L:'H', W:'G', Y:'g', y:'g', i:'H', I:'j', Z:'j', b:'B', e:'b', '7':'6' },
+};
+function recolorSprite(lines, map){ return lines.map(row => row.replace(/./g, ch => map[ch] || ch)); }
+const GEAR_TINT_KEYS = [
+  'arm_leather','arm_chain','arm_plate','helm_cap','helm_iron','helm_great',
+  'shd_wood','shd_kite','shd_tower','boots_leather','boots_iron',
+  'pd_arm_leather','pd_arm_chain','pd_arm_plate','pd_helm_cap','pd_helm_iron','pd_helm_great',
+  'pd_shd_wood','pd_shd_kite','pd_shd_tower','pd_boots_leather','pd_boots_iron',
+];
+for(const cls of ['kn','rg']){
+  for(const k of GEAR_TINT_KEYS){
+    if(SPRITES[k]) SPRITES[`${k}_${cls}`] = recolorSprite(SPRITES[k], GEAR_TINT[cls]);
+  }
+}
+
 const HERO_ORDER = ['boots', 'armor', 'weapon', 'shield', 'helmet'];
 // eq: { boots, armor, weapon, shield, helmet } -> layer key or null/undefined
 function drawLayeredHero(canvas, eq, scale, baseKey){

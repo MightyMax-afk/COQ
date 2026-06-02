@@ -39,22 +39,25 @@ const CHARM_ICON = {
   sap: 'charm_guard', swift: 'charm_focus', leech: 'charm_vigor',
 };
 
-// class weapon sprite suffix ('kn'/'rg'), or null for the Wanderer's generic art
-function wpnClass(){ const c = G.player && G.player.classId; return c === 'knight' ? 'kn' : c === 'rogue' ? 'rg' : null; }
+// class sprite suffix ('kn'/'rg'), or null for the Wanderer's generic art
+function gearClass(){ const c = G.player && G.player.classId; return c === 'knight' ? 'kn' : c === 'rogue' ? 'rg' : null; }
+// append the class suffix to a base sprite key when a class is active (tinted
+// variants are registered in sprites.js); legendaries keep their unique art
+function cls(base, legendary){ const g = !legendary && gearClass(); return g ? `${base}_${g}` : base; }
 
 function iconId(it){
   if(!it) return 'gold';
   switch(it.kind){
     case 'weapon': {
       if(it.legendary) return /frost/i.test(it.fixedName || '') ? 'wpn_frost' : 'wpn_fire';
-      const wc = wpnClass();
+      const wc = gearClass();
       if(wc) return `wpn_${wc}_${it.tier}`;          // class-specific pack icon (wpn_kn_0 …)
       return 'wpn_' + (WPN_VAR[it.tier] || 'sword');
     }
-    case 'armor':  return 'arm_'  + (it.legendary ? 'plate' : (ARM_VAR[it.tier]  || 'leather'));
-    case 'helmet': return 'helm_' + (it.legendary ? 'great' : (HELM_VAR[it.tier] || 'cap'));
-    case 'shield': return it.legendary ? 'shd_legend' : 'shd_' + (SHD_VAR[it.tier] || 'wood');
-    case 'boots':  return 'boots_' + (it.legendary ? 'iron' : (BOOTS_VAR[it.tier] || 'leather'));
+    case 'armor':  return cls('arm_'  + (it.legendary ? 'plate' : (ARM_VAR[it.tier]  || 'leather')), it.legendary);
+    case 'helmet': return cls('helm_' + (it.legendary ? 'great' : (HELM_VAR[it.tier] || 'cap')),     it.legendary);
+    case 'shield': return it.legendary ? 'shd_legend' : cls('shd_' + (SHD_VAR[it.tier] || 'wood'),   false);
+    case 'boots':  return cls('boots_' + (it.legendary ? 'iron' : (BOOTS_VAR[it.tier] || 'leather')), it.legendary);
     case 'charm':  return CHARM_ICON[it.charmId] || 'charm_focus';
     default: return 'gold';
   }

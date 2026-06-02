@@ -15,9 +15,20 @@ import { openInventory, closeInventory, isInventoryOpen } from './inventory.js';
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
 // ============================================================
-const BUILD = "v0.24.0";
+const BUILD = "v0.25.0";
 const BUILD_DATE = "2026-06-02";
 /* CHANGELOG
+   v0.25.0 CLASS GEAR (the rest). Armor, helmets, shields and boots now re-skin
+           to your class too — same tiers/stats, new names and look. Knight kit
+           reads as polished steel with gold trim (brigandine → scale → knight's
+           plate, iron coif → barbute → great helm, round → kite → tower shield,
+           leather greaves → chain sabatons → plate greaves). Rogue kit is dark
+           iron with green poison trim (leather jerkin → studded leather → shadow
+           cloak, hoods/cowls, bucklers, soft boots → treads → shadow striders).
+           Implemented as a per-class recolor of the existing gear art, applied
+           uniformly across the floor drop, pack icon and paper-doll hero, so all
+           four slots and every tier are covered. Legendaries stay unique; the
+           Wanderer keeps the original gear.
    v0.24.0 CLASS WEAPONS. Weapons now re-skin to the player's class — same
            tiers, stats and mechanics, just different names and art (the
            Wanderer keeps the original generic arms). Knight (tier 0-3): arming

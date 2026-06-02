@@ -168,18 +168,36 @@ export function gearBonus(it){
 export function gearName(it){
   if(it.kind==="charm") return it.name;
   if(it.legendary) return it.fixedName;
+  const cls = G.player && G.player.classId;
   if(it.kind==="weapon"){
-    const names = CLASS_WEAPON_NAMES[G.player && G.player.classId];
+    const names = CLASS_WEAPON_NAMES[cls];
     if(names){ const base = names[it.tier]; return it.ench>0 ? `${base} +${it.ench}` : base; }
+  } else if(CLASS_GEAR_NAMES[cls] && CLASS_GEAR_NAMES[cls][it.kind]){
+    const base = CLASS_GEAR_NAMES[cls][it.kind][it.tier];
+    if(base) return it.ench>0 ? `${base} +${it.ench}` : base;
   }
   const base = tierTable(it.kind)[it.tier].name;
   return it.ench>0 ? `${base} +${it.ench}` : base;
 }
-// Same weapon tiers/stats, re-flavored per class (Wanderer keeps the WEAPONS table
-// names). Tier 0-3 each. Knight: knightly steel/maces. Rogue: light blades.
+// Same gear tiers/stats, re-flavored per class (Wanderer keeps the default
+// tables). Knight: heavy steel-and-gold arms. Rogue: light blades + stealth kit.
 const CLASS_WEAPON_NAMES = {
   knight: ["arming sword", "longsword",  "flanged mace", "greatsword"],
   rogue:  ["shiv",         "dirk",       "rapier",       "assassin's blade"],
+};
+const CLASS_GEAR_NAMES = {
+  knight: {
+    armor:  ["brigandine",      "scale mail",      "knight's plate"],
+    helmet: ["iron coif",       "barbute",         "great helm"],
+    shield: ["round shield",    "kite shield",     "tower shield"],
+    boots:  ["leather greaves", "chain sabatons",  "plate greaves"],
+  },
+  rogue: {
+    armor:  ["leather jerkin",  "studded leather", "shadow cloak"],
+    helmet: ["leather hood",    "studded hood",    "shadow cowl"],
+    shield: ["buckler",         "reinforced buckler", "spiked buckler"],
+    boots:  ["soft boots",      "leather treads",  "shadow striders"],
+  },
 };
 export const isGear = it => GEAR_SLOTS.includes(it.kind);          // mergeable tiered gear
 export const isEquippable = it => ALL_SLOTS.includes(it.kind);     // gear or charm

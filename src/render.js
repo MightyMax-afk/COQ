@@ -67,6 +67,18 @@ export const SPRITE_LINES = {
   poison:ART.SP_POISON, burn:ART.SP_BURN, bleed:ART.SP_BLEED, regen:ART.SP_REGEN, weaken:ART.SP_WEAKEN,
 };
 
+// Class floor-drop tints: recolor the generic armor/helm/shield drops to match
+// the player's class (same maps as the inventory gear tints in sprites.js).
+const GEAR_TINT = {
+  kn: { n:'3', B:'3', b:'4', '6':'3', '7':'4', e:'5', S:'3', t:'4', T:'5' },
+  rg: { '3':'k', '4':'S', '5':'t', S:'k', t:'S', T:'t', L:'H', W:'G', Y:'g', y:'g', i:'H', I:'j', Z:'j', b:'B', e:'b', '7':'6' },
+};
+const _recolor = (lines, map) => lines.map(row => row.replace(/./g, ch => map[ch] || ch));
+for(const [base, src] of [["armor",ART.SP_ARMOR],["helm",ART.SP_HELM],["shield",ART.SP_SHIELD]]){
+  SPRITE_LINES[`${base}_kn`] = _recolor(src, GEAR_TINT.kn);
+  SPRITE_LINES[`${base}_rg`] = _recolor(src, GEAR_TINT.rg);
+}
+
 // which sprites have the idle bob
 const SPRITE_ANIM = {
   player:1, player_v2:1, player_knight:1, player_rogue:1, rat:1, goblin:1, archer:1, orc:1, troll:1, mage:1, mimic:1, merchant:1,
@@ -127,16 +139,16 @@ export function sizeCanvas(){
 function itemSpriteId(it){
   if(it.kind==="potion") return "potion";
   if(it.kind==="gold")   return "gold";
+  const gc = (!it.legendary && G.player) ? (G.player.classId==="knight"?"_kn":G.player.classId==="rogue"?"_rg":"") : "";
   if(it.kind==="weapon"){
-    const c=G.player&&G.player.classId;
-    if(!it.legendary&&c==="knight") return "weapon_knight";
-    if(!it.legendary&&c==="rogue")  return "weapon_rogue";
+    if(!it.legendary&&G.player&&G.player.classId==="knight") return "weapon_knight";
+    if(!it.legendary&&G.player&&G.player.classId==="rogue")  return "weapon_rogue";
     return "weapon";
   }
-  if(it.kind==="armor")  return "armor";
-  if(it.kind==="helmet") return "helm";
-  if(it.kind==="shield") return "shield";
-  if(it.kind==="boots")  return "armor";   // reuse armor sprite until a dedicated boot sprite exists
+  if(it.kind==="armor")  return "armor"+gc;
+  if(it.kind==="helmet") return "helm"+gc;
+  if(it.kind==="shield") return "shield"+gc;
+  if(it.kind==="boots")  return "armor"+gc;   // reuse armor sprite until a dedicated boot sprite exists
   if(it.kind==="charm")  return "charm";
   return null;
 }
