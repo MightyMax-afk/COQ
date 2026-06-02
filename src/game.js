@@ -395,6 +395,35 @@ function monstersTurn(){
     const dist=Math.max(Math.abs(dx),Math.abs(dy));
     const sees=G.visible[m.y][m.x];
 
+    // --- ZARAKHEL CUSTOM AI ---
+    if(m.name === "Zarakhel, the Unborn Sun" && sees) {
+      // Enrage mechanic: If below 50% HP, gain a temporary attack boost on his turn
+      if(m.hp < m.maxhp * 0.5 && !m._enraged) {
+         m._enraged = true;
+         m.atk += 10;
+         log(`Zarakhel burns with a blinding intensity! His attacks grow fiercer!`, "bad");
+      }
+
+      // Solar Dash mechanic: If player is trying to kite (3 to 4 tiles away)
+      if(!adj && dist >= 3 && dist <= 4 && los(m.x, m.y, G.player.x, G.player.y)) {
+         const sx = Math.sign(dx), sy = Math.sign(dy);
+         const dashX = G.player.x - sx;
+         const dashY = G.player.y - sy;
+
+         // Only dash if the destination tile directly adjacent to the player is free
+         if(!blocked(dashX, dashY) && !monsterAt(dashX, dashY) && !occupied(dashX, dashY)) {
+             // Leave a visual trail
+             G.shots.push({x: m.x, y: m.y, col: "#ffd866"});
+             m.x = dashX;
+             m.y = dashY;
+             log(`Zarakhel flashes across the room and strikes!`, "bad");
+             attack(m, G.player);
+             continue; // Turn complete, skip standard movement
+         }
+      }
+    }
+    // --- END ZARAKHEL AI ---
+
     // self-healing foes mend a little each turn — but NOT while burning/bleeding/poisoned.
     // Bosses are different: they only regenerate once they've lost sight of you (de-aggroed),
     // so you can't out-stalemate a boss that heals while you trade blows.
