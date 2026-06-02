@@ -16,7 +16,12 @@
     --cyan:#6fd3ff;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;height:100%}
+  html{margin:0;height:100%}
+  /* body grows with its content (only min-height pins it to the viewport). If
+     it were a fixed height:100% box, align-items:center would center an
+     over-tall cabinet and push the header above the scroll origin where it
+     can't be reached — the "have to zoom out to see the header" bug. */
+  body{margin:0}
   body{
     background:
       radial-gradient(120% 90% at 50% 8%, #1a1510 0%, #0b0a0c 55%, #060507 100%);
@@ -49,6 +54,21 @@
     background:linear-gradient(180deg,rgba(28,23,18,.6),rgba(10,9,11,.6));
     box-shadow:0 0 0 1px rgba(0,0,0,.4),0 30px 80px -30px #000, inset 0 1px 0 rgba(255,255,255,.03);
     padding:18px 18px 14px;
+  }
+  /* Short desktop/laptop windows (e.g. 768p): the full no-scroll layout above
+     can't get any wider without overflowing, so it just floors at 980px and
+     wastes the sides. Here we instead size the cabinet so the MAP fills the
+     window height and stays fully on screen (≈150px reserved for the header +
+     paddings), letting the much-wider map use the horizontal space; the message
+     log and footer sit below and scroll. min-width:761px keeps phones on their
+     own untouched layout. */
+  @media (max-height:860px) and (min-width:761px){
+    .cabinet{
+      width:min(100%, max(980px, (100vh - 150px) * 14 / 9 + 302px));
+      padding:12px 16px 10px;
+    }
+    header{margin-bottom:8px}
+    footer{margin-top:7px}
   }
   header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
   h1{
