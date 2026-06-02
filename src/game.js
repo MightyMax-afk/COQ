@@ -15,9 +15,17 @@ import { openInventory, closeInventory, isInventoryOpen } from './inventory.js';
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
 // ============================================================
-const BUILD = "v0.23.1";
+const BUILD = "v0.24.0";
 const BUILD_DATE = "2026-06-02";
 /* CHANGELOG
+   v0.24.0 CLASS WEAPONS. Weapons now re-skin to the player's class — same
+           tiers, stats and mechanics, just different names and art (the
+           Wanderer keeps the original generic arms). Knight (tier 0-3): arming
+           sword, longsword, flanged mace, greatsword — steel with gold fittings.
+           Rogue (tier 0-3): shiv, dirk, rapier, assassin's blade — dark blades
+           with green poison edges. Re-skinned across all three surfaces: the
+           dropped-on-floor sprite, the inventory pack icon, and the weapon the
+           paper-doll hero holds. Legendaries are unchanged (still fire/frost).
    v0.23.1 CLASS LOOKS. Knight and Rogue now have their own art instead of
            sharing the Wanderer's cyan @. On the dungeon map the Knight shows
            plate armor with a gold-trimmed helm and a glowing cyan visor; the

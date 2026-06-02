@@ -168,9 +168,19 @@ export function gearBonus(it){
 export function gearName(it){
   if(it.kind==="charm") return it.name;
   if(it.legendary) return it.fixedName;
+  if(it.kind==="weapon"){
+    const names = CLASS_WEAPON_NAMES[G.player && G.player.classId];
+    if(names){ const base = names[it.tier]; return it.ench>0 ? `${base} +${it.ench}` : base; }
+  }
   const base = tierTable(it.kind)[it.tier].name;
   return it.ench>0 ? `${base} +${it.ench}` : base;
 }
+// Same weapon tiers/stats, re-flavored per class (Wanderer keeps the WEAPONS table
+// names). Tier 0-3 each. Knight: knightly steel/maces. Rogue: light blades.
+const CLASS_WEAPON_NAMES = {
+  knight: ["arming sword", "longsword",  "flanged mace", "greatsword"],
+  rogue:  ["shiv",         "dirk",       "rapier",       "assassin's blade"],
+};
 export const isGear = it => GEAR_SLOTS.includes(it.kind);          // mergeable tiered gear
 export const isEquippable = it => ALL_SLOTS.includes(it.kind);     // gear or charm
 export function bestOf(kind){ let b=null; for(const it of G.inv) if(it.kind===kind && (!b||gearBonus(it)>gearBonus(b))) b=it; return b; }

@@ -62,7 +62,7 @@ export const SPRITE_LINES = {
   boss_vaelin:ART.SP_BOSS_VAELIN, boss_mura:ART.SP_BOSS_MURA, boss_iskvar:ART.SP_BOSS_ISKVAR, boss_khaazum:ART.SP_BOSS_KHAAZUM,
   boss_marrow:ART.SP_BOSS_MARROW, boss_volthus:ART.SP_BOSS_VOLTHUS, boss_erevhal:ART.SP_BOSS_EREVHAL,
   boss_hollowchoir:ART.SP_BOSS_HOLLOWCHOIR, boss_zarakhel:ART.SP_BOSS_ZARAKHEL,
-  potion:ART.SP_POTION, gold:ART.SP_GOLD, weapon:ART.SP_WEAPON, armor:ART.SP_ARMOR, helm:ART.SP_HELM, shield:ART.SP_SHIELD, charm:ART.SP_CHARM,
+  potion:ART.SP_POTION, gold:ART.SP_GOLD, weapon:ART.SP_WEAPON, weapon_knight:ART.SP_WEAPON_KNIGHT, weapon_rogue:ART.SP_WEAPON_ROGUE, armor:ART.SP_ARMOR, helm:ART.SP_HELM, shield:ART.SP_SHIELD, charm:ART.SP_CHARM,
   arrow:ART.SP_ARROW,
   poison:ART.SP_POISON, burn:ART.SP_BURN, bleed:ART.SP_BLEED, regen:ART.SP_REGEN, weaken:ART.SP_WEAKEN,
 };
@@ -127,7 +127,12 @@ export function sizeCanvas(){
 function itemSpriteId(it){
   if(it.kind==="potion") return "potion";
   if(it.kind==="gold")   return "gold";
-  if(it.kind==="weapon") return "weapon";
+  if(it.kind==="weapon"){
+    const c=G.player&&G.player.classId;
+    if(!it.legendary&&c==="knight") return "weapon_knight";
+    if(!it.legendary&&c==="rogue")  return "weapon_rogue";
+    return "weapon";
+  }
   if(it.kind==="armor")  return "armor";
   if(it.kind==="helmet") return "helm";
   if(it.kind==="shield") return "shield";
