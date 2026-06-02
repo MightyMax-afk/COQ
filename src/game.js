@@ -15,9 +15,31 @@ import { openInventory, closeInventory, isInventoryOpen } from './inventory.js';
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
 // ============================================================
-const BUILD = "v0.21.1";
-const BUILD_DATE = "2026-06-01";
+const BUILD = "v0.22.0";
+const BUILD_DATE = "2026-06-02";
 /* CHANGELOG
+   v0.22.0 DASH + build/boss/shop pass.
+           (1) DASH: a leap of up to 2 tiles. Charges come from boots tier
+               (leather 0 / chain 1 / plate greaves 2, legendary 3) plus the new
+               Dash Charm; 1 charge regenerates every 5 turns. Desktop: hold
+               Space + a direction. Mobile: a "dash" button arms the next
+               directional tap. A blocked dash costs no charge and no turn; the
+               leap leaves a short burn-sprite trail. Catalyst doubles the Dash
+               Charm's charge, matching its "doubles equipped charm effects" text.
+           (2) PERK REWORK: the Act II perks now stack with caps (Giant Slayer
+               →20%, Searing Blades →100%, Deflect →60%, Close Quarters →+12,
+               Lucky Find →70%) instead of one-shot booleans, and the level-up
+               picker skips anything already maxed — no more dead picks.
+           (3) ZARAKHEL AI: the final boss gets a Solar Dash gap-closer (flashes
+               adjacent and strikes when you kite at range 3–4 with line of sight)
+               and a one-time Enrage (+10 atk under 50% HP).
+           (4) MERCHANT: a live "Your gear" column (Attack/Defense totals + each
+               equipped slot's stats) and stat labels on sell rows, so you can
+               compare before you buy or sell.
+           (5) HUD: equipped items show their stat bonus inline; the armor-pierce
+               line is labeled "Sunder"; stacking perks display their values.
+           (6) FIX: Capslock / Shift no longer break movement and commands (single
+               printable keys are normalized to lowercase).
    v0.21.1 Layout: the game now fills the browser width instead of sitting in a
            fixed 980px column. On desktop the cabinet grows as wide as the
            window height allows while the 14:9 map still fits with no vertical
