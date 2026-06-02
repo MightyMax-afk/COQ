@@ -764,8 +764,11 @@ window.addEventListener("keydown",e=>{
     if(e.key==="Enter"||e.key===" ") { e.preventDefault(); newGame(); }
     return;
   }
-  const k=e.key;
-  if(k==="i"||k==="I"){ e.preventDefault(); openInventory(); return; }   // open the full inventory screen
+  // Normalize single printable keys to lowercase so Capslock/Shift don't break
+  // movement and commands. Digits, symbols (>,<,.), and named keys (ArrowUp,
+  // Escape) are unaffected by toLowerCase().
+  const k=e.key.length===1 ? e.key.toLowerCase() : e.key;
+  if(k==="i"){ e.preventDefault(); openInventory(); return; }   // open the full inventory screen
   if(MOVES[k]){ e.preventDefault(); turn(()=>playerMove(...MOVES[k])); return; }
   if(k==="."){ turn(()=>true); return; }                 // wait
   if(k==="g"){ turn(pickup); return; }                   // grab
