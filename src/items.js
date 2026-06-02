@@ -244,7 +244,7 @@ export function effDef(){
   if(G.player.closeQuarters){
     let adj=0;
     for(const e of G.ents){ if(e&&e.alive&&!e.isPlayer&&Math.abs(e.x-G.player.x)<=1&&Math.abs(e.y-G.player.y)<=1) adj++; }
-    if(adj>=2) d+=3;
+    if(adj>=2) d+=G.player.closeQuarters;
   }
   // diminishing returns past 20: each point beyond counts for half, so you can't wall to immunity
   if(d>20) d=20+(d-20)*0.5;

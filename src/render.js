@@ -389,14 +389,14 @@ export function updateUI(){
   if(G.player.hitLeech>0)    sk.push(`Lifesteal +${G.player.hitLeech}/hit`);
   // boolean Act II perks — these used to be applied silently with no UI, so the
   // player couldn't tell they had them (e.g. Deflect's +20% dodge vs ranged).
-  if(G.player.giantSlayer)   sk.push("Giant Slayer (+4% of target max HP as dmg)");
+  if(G.player.giantSlayer>0) sk.push(`Giant Slayer (+${Math.round(G.player.giantSlayer*100)}% target max HP dmg)`);
   if(G.player.secondWind)    sk.push("Second Wind (under 25% HP: +5 atk, +15% dodge)");
-  if(G.player.searingBlades) sk.push("Searing Blades (20% melee burn)");
+  if(G.player.searingBlades>0) sk.push(`Searing Blades (${Math.round(G.player.searingBlades*100)}% melee burn)`);
   if(G.player.antidote)      sk.push("Antidote (incoming poison/burn/bleed −2 turns)");
-  if(G.player.deflect)       sk.push("Deflect (+20% dodge vs ranged)");
-  if(G.player.closeQuarters) sk.push("Close Quarters (+3 def vs 2+ adjacent foes)");
+  if(G.player.deflect>0)     sk.push(`Deflect (+${Math.round(G.player.deflect*100)}% dodge vs ranged)`);
+  if(G.player.closeQuarters>0) sk.push(`Close Quarters (+${G.player.closeQuarters} def vs 2+ adjacent foes)`);
+  if(G.player.luckyFind>0)   sk.push(`Lucky Find (+${Math.round(G.player.luckyFind*100)}% drop chance)`);
   if(G.player.scavenger)     sk.push("Scavenger (+25% gold, 20% gear +1 enchant)");
-  if(G.player.luckyFind)     sk.push("Lucky Find (+10% monster drop chance)");
   if(G.player.catalyst)      sk.push("Catalyst (equipped charm stats doubled)");
   if(G.player.retribution)   sk.push("Retribution (dodged melee → your def as dmg)");
   // equipped charm effect

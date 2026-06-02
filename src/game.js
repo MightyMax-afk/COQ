@@ -387,7 +387,7 @@ function monstersTurn(){
       m.alive=false;
       log(`The ${m.name} succumbs.`,"good");
       G.score+=m.maxhp*2; gainXp(m.xp);
-      if(Math.random() < (G.player.luckyFind?0.40:0.30)){ const drop=rollLoot(m.x,m.y,G.depth); if(drop){ drop.x=m.x; drop.y=m.y; G.items.push(drop);} }
+      if(Math.random() < (0.30+G.player.luckyFind)){ const drop=rollLoot(m.x,m.y,G.depth); if(drop){ drop.x=m.x; drop.y=m.y; G.items.push(drop);} }
       continue;
     }
     const dx=G.player.x-m.x, dy=G.player.y-m.y;
@@ -473,7 +473,13 @@ function turn(actionFn){
 // ---------- level-up perk picker ----------
 function presentLevelUp(){
   G.choosing=true;
-  const pool=PERKS.slice(); G.currentPerks=[];
+  // Skip perks the player has already maxed: binary perks already owned, and
+  // stacking perks whose value has hit its cap. Keeps every offered pick useful.
+  const pool=PERKS.filter(p=>{
+    if(p.binary) return !G.player[p.key];
+    if(p.cap!=null) return (G.player[p.key]||0) < p.cap - 1e-9;
+    return true;
+  }); G.currentPerks=[];
   while(G.currentPerks.length<3 && pool.length){
     const tot=pool.reduce((s,p)=>s+(p.w||1),0);
     let r=Math.random()*tot, idx=0;
