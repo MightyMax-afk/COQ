@@ -810,6 +810,7 @@ const MOVES={
 };
 let spaceHeld=false;
 window.addEventListener("keyup",e=>{ if(e.key===" ") spaceHeld=false; });
+window.addEventListener("blur",()=>{ spaceHeld=false; });   // don't get stuck armed after alt-tab
 window.addEventListener("keydown",e=>{
   // debug: F1 toggles godmode (no health loss). Works any time.
   if(e.key==="F1"){

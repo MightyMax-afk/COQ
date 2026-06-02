@@ -186,7 +186,7 @@ export function attack(att,def,ranged){
         const gld={kind:"gold",glyph:"$",col:COL.gold,name:"gold",value:ri(15,30)*Math.max(1,G.depth),x:def.x,y:def.y}; G.items.push(gld);
       } else {
         log(`The ${def.name} dies.`,"good");
-        if(att.isPlayer && Math.random() < (G.player.luckyFind?0.40:0.30)){   // ordinary enemies sometimes drop loot (Lucky Find: +10%)
+        if(att.isPlayer && Math.random() < (0.30+G.player.luckyFind)){   // ordinary enemies sometimes drop loot (Lucky Find: stacking +10%)
           const drop=rollLoot(def.x,def.y,G.depth); if(drop){ drop.x=def.x; drop.y=def.y; G.items.push(drop); }
         }
       }
