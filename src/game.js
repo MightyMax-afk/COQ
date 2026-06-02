@@ -285,7 +285,7 @@ function dash(dx,dy){
     cx=tx; cy=ty; steps=s; trail.push({x:tx,y:ty});
   }
   if(steps===0){ log("You can't dash there.","bad"); return false; }   // no move, no charge, no turn
-  for(const t of trail) G.shots.push({x:t.x,y:t.y,col:"#7ad0ff"});
+  for(const t of trail) G.shots.push({x:t.x,y:t.y,col:"#ff8a3a",sprite:"burn"});
   G.player.x=cx; G.player.y=cy;
   G.player.dashCharges--;
   log(`You dash ${steps} tile${steps>1?"s":""}!`,"good");

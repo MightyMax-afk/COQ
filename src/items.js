@@ -42,13 +42,13 @@ export function makeCharm(){ const c=CHARMS[ri(0,CHARMS.length-1)];
   return {kind:"charm", charmId:c.id, glyph:"¤", col:"#c77dff", name:c.name, value:60}; }
 export function charmDef(it){ return CHARMS.find(c=>c.id===it.charmId); }
 // Max dash charges: boots tier (leather 0, chain 1, plate greaves 2),
-// legendary boots 3, plus +1 if a Dash Charm is equipped.
+// legendary boots 3, plus the Dash Charm's bonus if equipped (doubled by Catalyst).
 export function dashMax(){
   let n=0;
   const b=G.equipped.boots;
   if(b) n = b.legendary ? 3 : b.tier;
   const c=G.equipped.charm, cd=c&&charmDef(c);
-  if(cd && cd.dash) n += cd.dash;
+  if(cd && cd.dash) n += cd.dash * ((G.player&&G.player.catalyst) ? 2 : 1);
   return n;
 }
 

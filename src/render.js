@@ -274,7 +274,7 @@ export function render(){
     glyph(m.x,m.y,m.glyph,m.col,true,entSpriteId(m));
     if(GFX.on) drawStatusIcon(m);
   } }
-  for(const s of G.shots){ if(G.visible[s.y]&&G.visible[s.y][s.x]) glyph(s.x,s.y,"•",s.col,true,"arrow"); }
+  for(const s of G.shots){ if(G.visible[s.y]&&G.visible[s.y][s.x]) glyph(s.x,s.y,"•",s.col,true,s.sprite||"arrow"); }
   // Player art: v2 (geared) once you've ever set foot in Act II; original cyan @ otherwise.
   // Once swapped, stays swapped — even after NG+ resets you back to Act I.
   const playerSpr = (G.player && G.player.everAct2) ? "player_v2" : "player";
