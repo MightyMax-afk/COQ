@@ -9,7 +9,7 @@ import * as BossArt from './art/bosses.js';
 import * as ItemsFx from './art/items-fx.js';
 import { biomeFor } from './game.js';
 import { STATUS } from './combat.js';
-import { effAtk, effDef, gearBonus, gearName, gearEvade, gearThorns, gearRegen, charmDef, ALL_SLOTS } from './items.js';
+import { effAtk, effDef, gearBonus, gearName, gearEvade, gearThorns, gearRegen, charmDef, ALL_SLOTS, dashMax } from './items.js';
 
 const ART = { ...Tiles, ...Creatures, ...BossArt, ...ItemsFx };
 
@@ -274,7 +274,7 @@ export function render(){
     glyph(m.x,m.y,m.glyph,m.col,true,entSpriteId(m));
     if(GFX.on) drawStatusIcon(m);
   } }
-  for(const s of G.shots){ if(G.visible[s.y]&&G.visible[s.y][s.x]) glyph(s.x,s.y,"•",s.col,true,"arrow"); }
+  for(const s of G.shots){ if(G.visible[s.y]&&G.visible[s.y][s.x]) glyph(s.x,s.y,"•",s.col,true,s.sprite||"arrow"); }
   // Player art: v2 (geared) once you've ever set foot in Act II; original cyan @ otherwise.
   // Once swapped, stays swapped — even after NG+ resets you back to Act I.
   const playerSpr = (G.player && G.player.everAct2) ? "player_v2" : "player";
@@ -343,12 +343,12 @@ export function updateUI(){
   $("defTxt").textContent=effDef();
   $("goldTxt").textContent=G.gold;
   $("scoreTxt").textContent=G.score;
-  $("wepTxt").textContent=G.equipped.weapon?gearName(G.equipped.weapon):"bare fists";
-  $("armTxt").textContent=G.equipped.armor?gearName(G.equipped.armor):"none";
-  $("helmTxt").textContent=G.equipped.helmet?gearName(G.equipped.helmet):"none";
-  $("shldTxt").textContent=G.equipped.shield?gearName(G.equipped.shield):"none";
-  $("bootsTxt").textContent=G.equipped.boots?gearName(G.equipped.boots):"none";
-  $("charmTxt").textContent=G.equipped.charm?G.equipped.charm.name:"none";
+  $("wepTxt").textContent=G.equipped.weapon?`${gearName(G.equipped.weapon)} (+${gearBonus(G.equipped.weapon)} atk)`:"bare fists";
+  $("armTxt").textContent=G.equipped.armor?`${gearName(G.equipped.armor)} (+${gearBonus(G.equipped.armor)} def)`:"none";
+  $("helmTxt").textContent=G.equipped.helmet?`${gearName(G.equipped.helmet)} (+${gearBonus(G.equipped.helmet)} def)`:"none";
+  $("shldTxt").textContent=G.equipped.shield?`${gearName(G.equipped.shield)} (+${gearBonus(G.equipped.shield)} def)`:"none";
+  $("bootsTxt").textContent=G.equipped.boots?`${gearName(G.equipped.boots)} (+${gearBonus(G.equipped.boots)} def)`:"none";
+  $("charmTxt").textContent=G.equipped.charm?`${G.equipped.charm.name}${charmDef(G.equipped.charm)?` — ${charmDef(G.equipped.charm).desc}`:""}`:"none";
   $("potTxt").textContent=G.potions+(G.potions===1?" potion":" potions");
 
   const isEq = it => ALL_SLOTS.some(s=>G.equipped[s]===it);
@@ -377,6 +377,8 @@ export function updateUI(){
   }
 
   const sk=[];
+  const dMax=dashMax();
+  if(dMax>0) sk.push(`Dash ${G.player.dashCharges}/${dMax}${G.player.dashCharges<dMax?" (recharging)":""}`);
   if(G.player.sight>FOV_R)   sk.push(`Sight ${G.player.sight}`);
   if(G.player.regenAmt>0)    sk.push(`Regen +${G.player.regenAmt}/9 turns`);
   if(G.player.lifesteal>0)   sk.push(`Lifesteal +${G.player.lifesteal}/kill`);
@@ -384,19 +386,19 @@ export function updateUI(){
   if(G.player.evasion>0)     sk.push(`Dodge +${Math.round(G.player.evasion*100)}%`);
   if(G.player.accBonus>0)    sk.push(`Accuracy +${Math.round(G.player.accBonus*100)}%`);
   if(G.player.critBonus>0)   sk.push(`Crit +${Math.round(G.player.critBonus*100)}%`);
-  if(G.player.armorPen>0)    sk.push(`Armor pierce ${G.player.armorPen}`);
+  if(G.player.armorPen>0)    sk.push(`Sunder (ignore ${G.player.armorPen} enemy defense)`);
   if(G.player.thornsSelf>0)  sk.push(`Spikes ${G.player.thornsSelf}`);
   if(G.player.hitLeech>0)    sk.push(`Lifesteal +${G.player.hitLeech}/hit`);
   // boolean Act II perks — these used to be applied silently with no UI, so the
   // player couldn't tell they had them (e.g. Deflect's +20% dodge vs ranged).
-  if(G.player.giantSlayer)   sk.push("Giant Slayer (+4% of target max HP as dmg)");
+  if(G.player.giantSlayer>0) sk.push(`Giant Slayer (+${Math.round(G.player.giantSlayer*100)}% target max HP dmg)`);
   if(G.player.secondWind)    sk.push("Second Wind (under 25% HP: +5 atk, +15% dodge)");
-  if(G.player.searingBlades) sk.push("Searing Blades (20% melee burn)");
+  if(G.player.searingBlades>0) sk.push(`Searing Blades (${Math.round(G.player.searingBlades*100)}% melee burn)`);
   if(G.player.antidote)      sk.push("Antidote (incoming poison/burn/bleed −2 turns)");
-  if(G.player.deflect)       sk.push("Deflect (+20% dodge vs ranged)");
-  if(G.player.closeQuarters) sk.push("Close Quarters (+3 def vs 2+ adjacent foes)");
+  if(G.player.deflect>0)     sk.push(`Deflect (+${Math.round(G.player.deflect*100)}% dodge vs ranged)`);
+  if(G.player.closeQuarters>0) sk.push(`Close Quarters (+${G.player.closeQuarters} def vs 2+ adjacent foes)`);
+  if(G.player.luckyFind>0)   sk.push(`Lucky Find (+${Math.round(G.player.luckyFind*100)}% drop chance)`);
   if(G.player.scavenger)     sk.push("Scavenger (+25% gold, 20% gear +1 enchant)");
-  if(G.player.luckyFind)     sk.push("Lucky Find (+10% monster drop chance)");
   if(G.player.catalyst)      sk.push("Catalyst (equipped charm stats doubled)");
   if(G.player.retribution)   sk.push("Retribution (dodged melee → your def as dmg)");
   // equipped charm effect

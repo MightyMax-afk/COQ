@@ -3,7 +3,7 @@ import { ACT1_END, FINAL_DEPTH, T_WALL, T_STAIRS, T_STAIRS_UP } from './config.j
 import { clamp, ri, log, $ } from './util.js';
 import { G } from './state.js';
 import { COL } from './palette.js';
-import { makeGear, rollLoot, chestLoot, makeCharm, makeLegendary, resetLegendPool, autoEquip, tryMerge, gearBonus, gearName, gearRegen, isEquippable, reconcileCharmHp, ALL_SLOTS } from './items.js';
+import { makeGear, rollLoot, chestLoot, makeCharm, makeLegendary, resetLegendPool, autoEquip, tryMerge, gearBonus, gearName, gearRegen, isEquippable, reconcileCharmHp, ALL_SLOTS, dashMax, effAtk, effDef, charmDef } from './items.js';
 import { PERKS, gainXp, makePlayer } from './player.js';
 import { tickStatus, attack } from './combat.js';
 import { makeMonster, monsterAt } from './monsters.js';
@@ -15,9 +15,31 @@ import { openInventory, closeInventory, isInventoryOpen } from './inventory.js';
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
 // ============================================================
-const BUILD = "v0.21.1";
-const BUILD_DATE = "2026-06-01";
+const BUILD = "v0.22.0";
+const BUILD_DATE = "2026-06-02";
 /* CHANGELOG
+   v0.22.0 DASH + build/boss/shop pass.
+           (1) DASH: a leap of up to 2 tiles. Charges come from boots tier
+               (leather 0 / chain 1 / plate greaves 2, legendary 3) plus the new
+               Dash Charm; 1 charge regenerates every 5 turns. Desktop: hold
+               Space + a direction. Mobile: a "dash" button arms the next
+               directional tap. A blocked dash costs no charge and no turn; the
+               leap leaves a short burn-sprite trail. Catalyst doubles the Dash
+               Charm's charge, matching its "doubles equipped charm effects" text.
+           (2) PERK REWORK: the Act II perks now stack with caps (Giant Slayer
+               →20%, Searing Blades →100%, Deflect →60%, Close Quarters →+12,
+               Lucky Find →70%) instead of one-shot booleans, and the level-up
+               picker skips anything already maxed — no more dead picks.
+           (3) ZARAKHEL AI: the final boss gets a Solar Dash gap-closer (flashes
+               adjacent and strikes when you kite at range 3–4 with line of sight)
+               and a one-time Enrage (+10 atk under 50% HP).
+           (4) MERCHANT: a live "Your gear" column (Attack/Defense totals + each
+               equipped slot's stats) and stat labels on sell rows, so you can
+               compare before you buy or sell.
+           (5) HUD: equipped items show their stat bonus inline; the armor-pierce
+               line is labeled "Sunder"; stacking perks display their values.
+           (6) FIX: Capslock / Shift no longer break movement and commands (single
+               printable keys are normalized to lowercase).
    v0.21.1 Layout: the game now fills the browser width instead of sitting in a
            fixed 980px column. On desktop the cabinet grows as wide as the
            window height allows while the 14:9 map still fits with no vertical
@@ -272,6 +294,26 @@ function playerMove(dx,dy){
   G.player.x=nx; G.player.y=ny; return true;
 }
 
+// Dash: leap up to 2 tiles in a direction. Pure movement — stops at walls,
+// monsters, and the merchant. Costs 1 charge; a blocked dash costs nothing and
+// is not a turn. A successful dash leaves a short trail and ends the turn.
+function dash(dx,dy){
+  if(dashMax()<=0){ log("You have no dash — find better boots or a Dash Charm.","bad"); return false; }
+  if(G.player.dashCharges<=0){ log("Dash is still recharging.","bad"); return false; }
+  let steps=0, cx=G.player.x, cy=G.player.y; const trail=[];
+  for(let s=1;s<=2;s++){
+    const tx=G.player.x+dx*s, ty=G.player.y+dy*s;
+    if(blocked(tx,ty)||monsterAt(tx,ty)||occupied(tx,ty)||(tx===G.player.x&&ty===G.player.y)) break;
+    cx=tx; cy=ty; steps=s; trail.push({x:tx,y:ty});
+  }
+  if(steps===0){ log("You can't dash there.","bad"); return false; }   // no move, no charge, no turn
+  for(const t of trail) G.shots.push({x:t.x,y:t.y,col:"#ff8a3a",sprite:"burn"});
+  G.player.x=cx; G.player.y=cy;
+  G.player.dashCharges--;
+  log(`You dash ${steps} tile${steps>1?"s":""}!`,"good");
+  return true;
+}
+
 // open a chest: either loot spills out, or a mimic springs and attacks
 function openChest(ch){
   ch.opened=true;
@@ -379,7 +421,6 @@ function ascend(){
 
 // ---------- monster AI ----------
 function monstersTurn(){
-  G.shots=[];
   for(let i=1;i<G.ents.length;i++){
     const m=G.ents[i]; if(!m.alive) continue;
     // status effects tick first; damage-over-time can finish a monster off
@@ -387,13 +428,42 @@ function monstersTurn(){
       m.alive=false;
       log(`The ${m.name} succumbs.`,"good");
       G.score+=m.maxhp*2; gainXp(m.xp);
-      if(Math.random() < (G.player.luckyFind?0.40:0.30)){ const drop=rollLoot(m.x,m.y,G.depth); if(drop){ drop.x=m.x; drop.y=m.y; G.items.push(drop);} }
+      if(Math.random() < (0.30+G.player.luckyFind)){ const drop=rollLoot(m.x,m.y,G.depth); if(drop){ drop.x=m.x; drop.y=m.y; G.items.push(drop);} }
       continue;
     }
     const dx=G.player.x-m.x, dy=G.player.y-m.y;
     const adj=Math.abs(dx)<=1&&Math.abs(dy)<=1;
     const dist=Math.max(Math.abs(dx),Math.abs(dy));
     const sees=G.visible[m.y][m.x];
+
+    // --- ZARAKHEL CUSTOM AI ---
+    if(m.name === "Zarakhel, the Unborn Sun" && sees) {
+      // Enrage mechanic: If below 50% HP, gain a temporary attack boost on his turn
+      if(m.hp < m.maxhp * 0.5 && !m._enraged) {
+         m._enraged = true;
+         m.atk += 10;
+         log(`Zarakhel burns with a blinding intensity! His attacks grow fiercer!`, "bad");
+      }
+
+      // Solar Dash mechanic: If player is trying to kite (3 to 4 tiles away)
+      if(!adj && dist >= 3 && dist <= 4 && los(m.x, m.y, G.player.x, G.player.y)) {
+         const sx = Math.sign(dx), sy = Math.sign(dy);
+         const dashX = G.player.x - sx;
+         const dashY = G.player.y - sy;
+
+         // Only dash if the destination tile directly adjacent to the player is free
+         if(!blocked(dashX, dashY) && !monsterAt(dashX, dashY) && !occupied(dashX, dashY)) {
+             // Leave a visual trail (burn sprite; solar-gold text-mode fallback)
+             G.shots.push({x: m.x, y: m.y, col: "#ffd866", sprite: "burn"});
+             m.x = dashX;
+             m.y = dashY;
+             log(`Zarakhel flashes across the room and strikes!`, "bad");
+             attack(m, G.player);
+             continue; // Turn complete, skip standard movement
+         }
+      }
+    }
+    // --- END ZARAKHEL AI ---
 
     // self-healing foes mend a little each turn — but NOT while burning/bleeding/poisoned.
     // Bosses are different: they only regenerate once they've lost sight of you (de-aggroed),
@@ -448,6 +518,7 @@ function traceShot(x1,y1,x2,y2,col){
 // ---------- turn driver ----------
 function turn(actionFn){
   if(!G.running||!G.started||G.choosing||G.shopping) return;   // ignore input while a modal is open
+  G.shots=[];                                       // clear last frame's shots/trails before this turn acts
   const tookTurn=actionFn();
   if(!G.running){ render(); return; }              // victory (dragon slain) ended the game
   if(!G.player.alive){ render(); endGame(false); return; }
@@ -464,6 +535,15 @@ function turn(actionFn){
       if(G.player.hp<G.player.maxhp) G.player.hp=Math.min(G.player.maxhp,G.player.hp+totalRegen);
     }
     computeFOV();
+    // Dash recharge: 1 charge per 5 turns, capped at the current max (clamps down
+    // if boots/charm changed and max shrank).
+    if(G.player.alive){
+      const dMax=dashMax();
+      if(G.player.dashCharges>dMax) G.player.dashCharges=dMax;
+      if(G.player.dashCharges<dMax){
+        if(++G.player.dashRegen>=5){ G.player.dashRegen=0; G.player.dashCharges++; }
+      } else G.player.dashRegen=0;
+    }
   }
   render();
   if(!G.player.alive){ endGame(false); return; }
@@ -473,7 +553,13 @@ function turn(actionFn){
 // ---------- level-up perk picker ----------
 function presentLevelUp(){
   G.choosing=true;
-  const pool=PERKS.slice(); G.currentPerks=[];
+  // Skip perks the player has already maxed: binary perks already owned, and
+  // stacking perks whose value has hit its cap. Keeps every offered pick useful.
+  const pool=PERKS.filter(p=>{
+    if(p.binary) return !G.player[p.key];
+    if(p.cap!=null) return (G.player[p.key]||0) < p.cap - 1e-9;
+    return true;
+  }); G.currentPerks=[];
   while(G.currentPerks.length<3 && pool.length){
     const tot=pool.reduce((s,p)=>s+(p.w||1),0);
     let r=Math.random()*tot, idx=0;
@@ -536,7 +622,7 @@ function startNgPlus(){
   G.ngPlus++;
   G.depth=1; G.potions=Math.max(G.potions,1);
   G.maxDepthReached=Math.max(G.maxDepthReached, scaledDepth());  // keep the descend reward honest across tiers
-  G.levels={}; G.upX=-1; G.upY=-1; G.merchant=null; G.shopping=false; G.chests=[];
+  G.levels={}; G.upX=-1; G.upY=-1; G.merchant=null; G.shopping=false; G.chests=[]; G.dashArmed=false;
   G.bossEnt=null; G.choosing=false; G.pendingLevelUps=0; G.currentPerks=[];
   G.player.stairX=-1; G.player.stairY=-1; G.player.status=[];
   G.player.hp=G.player.maxhp;                 // a fresh-floor heal as a small mercy
@@ -557,7 +643,7 @@ function newGame(){
   G.depth=1; G.gold=0; G.score=0; G.potions=2; G.ngPlus=0; G.maxDepthReached=1; G.godMode=false;
   G.equipped={weapon:null,armor:null,helmet:null,shield:null,boots:null,charm:null}; G.inv=[]; G.logLines=[];
   G.choosing=false; G.pendingLevelUps=0; G.currentPerks=[]; G.bossEnt=null;
-  G.levels={}; G.upX=-1; G.upY=-1; G.merchant=null; G.shopping=false; G.chests=[];
+  G.levels={}; G.upX=-1; G.upY=-1; G.merchant=null; G.shopping=false; G.chests=[]; G.dashArmed=false;
   G.autoEquipOn=true; G.autoEquipWarned=false;
   resetLegendPool();
   G.player = makePlayer();
@@ -625,9 +711,27 @@ function renderShop(){
        <span>${shopLabel(it)}</span><span class="pr">${pr}g</span></div>`;
   }).join("") || '<div class="shopempty">sold out</div>';
   if(G.inv.length===0) $("sellList").innerHTML='<div class="shopempty">pack is empty</div>';
-  else $("sellList").innerHTML=G.inv.map((it,i)=>
-    `<div class="shopitem" data-sell="${i}">
-       <span>${gearName(it)}</span><span class="pr">+${sellPrice(it)}g</span></div>`).join("");
+  else $("sellList").innerHTML=G.inv.map((it,i)=>{
+    const stat = it.kind==="charm" ? "charm"
+               : it.kind==="weapon" ? `+${gearBonus(it)} atk`
+               : `+${gearBonus(it)} def`;
+    return `<div class="shopitem" data-sell="${i}">
+       <span>${gearName(it)} <small style="color:#8a7a55">${stat}</small></span><span class="pr">+${sellPrice(it)}g</span></div>`;
+  }).join("");
+  // equipped gear + live stats so the player can compare before buying/selling
+  const slotLine=(label,slot)=>{
+    const it=G.equipped[slot];
+    if(!it) return `<div class="shopitem"><span>${label}</span><span class="pr" style="color:#5f5849">—</span></div>`;
+    const val = slot==="weapon" ? `+${gearBonus(it)} atk`
+              : slot==="charm" ? (charmDef(it)?charmDef(it).desc:"charm")
+              : `+${gearBonus(it)} def`;
+    return `<div class="shopitem"><span>${gearName(it)}</span><span class="pr">${val}</span></div>`;
+  };
+  $("shopGear").innerHTML =
+    `<div class="shopitem"><span>Attack</span><span class="pr">${effAtk()}</span></div>`+
+    `<div class="shopitem"><span>Defense</span><span class="pr">${effDef()}</span></div>`+
+    slotLine("(weapon)","weapon")+slotLine("(armor)","armor")+slotLine("(helmet)","helmet")+
+    slotLine("(shield)","shield")+slotLine("(boots)","boots")+slotLine("(charm)","charm");
 }
 function buyItem(i){
   const it=G.merchant.stock[i]; if(!it) return;
@@ -726,6 +830,9 @@ const MOVES={
   w:[0,-1],s:[0,1],a:[-1,0],d:[1,0],
   q:[-1,-1],e:[1,-1],z:[-1,1],c:[1,1],
 };
+let spaceHeld=false;
+window.addEventListener("keyup",e=>{ if(e.key===" ") spaceHeld=false; });
+window.addEventListener("blur",()=>{ spaceHeld=false; });   // don't get stuck armed after alt-tab
 window.addEventListener("keydown",e=>{
   // debug: F1 toggles godmode (no health loss). Works any time.
   if(e.key==="F1"){
@@ -764,8 +871,13 @@ window.addEventListener("keydown",e=>{
     if(e.key==="Enter"||e.key===" ") { e.preventDefault(); newGame(); }
     return;
   }
-  const k=e.key;
-  if(k==="i"||k==="I"){ e.preventDefault(); openInventory(); return; }   // open the full inventory screen
+  // Normalize single printable keys to lowercase so Capslock/Shift don't break
+  // movement and commands. Digits, symbols (>,<,.), and named keys (ArrowUp,
+  // Escape) are unaffected by toLowerCase().
+  const k=e.key.length===1 ? e.key.toLowerCase() : e.key;
+  if(k==="i"){ e.preventDefault(); openInventory(); return; }   // open the full inventory screen
+  if(k===" "){ e.preventDefault(); spaceHeld=true; return; }      // hold Space to arm a dash
+  if(spaceHeld && MOVES[k]){ e.preventDefault(); turn(()=>dash(...MOVES[k])); return; }
   if(MOVES[k]){ e.preventDefault(); turn(()=>playerMove(...MOVES[k])); return; }
   if(k==="."){ turn(()=>true); return; }                 // wait
   if(k==="g"){ turn(pickup); return; }                   // grab
@@ -776,10 +888,15 @@ window.addEventListener("keydown",e=>{
 });
 
 // touch / click controls
+function updateDashBtn(){ const b=$("dashBtn"); if(b) b.classList.toggle("armed", !!G.dashArmed); }
 document.querySelector(".touch").addEventListener("click",e=>{
   if(G.shopping||G.choosing||escMenuOpen()||isInventoryOpen()) return;
   const b=e.target.closest("button"); if(!b) return;
-  if(b.dataset.mv){ const[dx,dy]=b.dataset.mv.split(",").map(Number); turn(()=>playerMove(dx,dy)); }
+  if(b.dataset.mv){
+    const[dx,dy]=b.dataset.mv.split(",").map(Number);
+    if(G.dashArmed){ G.dashArmed=false; updateDashBtn(); turn(()=>dash(dx,dy)); }
+    else turn(()=>playerMove(dx,dy));
+  }
   else if(b.dataset.act){
     const a=b.dataset.act;
     if(a==="wait") turn(()=>true);
@@ -788,6 +905,7 @@ document.querySelector(".touch").addEventListener("click",e=>{
     else if(a==="descend") turn(descend);
     else if(a==="ascend") turn(ascend);
     else if(a==="inventory"){ if(G.started&&G.running) openInventory(); }   // mobile: open the full inventory screen
+    else if(a==="dash"){ G.dashArmed=!G.dashArmed; updateDashBtn(); }   // mobile: arm/disarm the next directional tap as a dash
     else if(a==="menu"){ if(G.started&&G.running) openEscMenu(); }   // mobile: open the pause menu (Esc has no equivalent on touch)
   }
 });

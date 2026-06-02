@@ -62,7 +62,7 @@ export function rollHit(att,def){
   let acc = att.isPlayer ? 0.90+G.player.accBonus+totalAcc() : (0.85+(att.acc||0));
   if(att.isPlayer && w && w.acc) acc+=w.acc;
   let eva = def.isPlayer ? G.player.evasion+gearEvade() : (def.evade||0);
-  if(def.isPlayer && G.player.deflect && att.ranged) eva += 0.20;   // Deflect: dodge ranged shots
+  if(def.isPlayer && att.ranged) eva += G.player.deflect;   // Deflect: dodge ranged shots (stacking %)
   return Math.random() < clamp(acc - eva, 0.35, 0.99);
 }
 
@@ -82,7 +82,7 @@ export function attack(att,def,ranged){
           att.alive=false;
           log(`The ${att.name} dies to your riposte.`,"good");
           G.score+=att.maxhp*2; gainXp(att.xp);
-          if(Math.random() < (G.player.luckyFind?0.40:0.30)){
+          if(Math.random() < (0.30+G.player.luckyFind)){
             const drop=rollLoot(att.x,att.y,G.depth); if(drop){ drop.x=att.x; drop.y=att.y; G.items.push(drop); }
           }
         }
@@ -95,7 +95,7 @@ export function attack(att,def,ranged){
   if(att.isPlayer && G.player.armorPen) d=Math.max(0, d-G.player.armorPen);   // Sunder ignores some defense
   let dmg = Math.max(1, a - d + ri(-1,2));
   // Giant Slayer: bonus damage scaling with the target's max HP (great vs tanks/bosses).
-  if(att.isPlayer && G.player.giantSlayer) dmg += Math.floor(def.maxhp*0.04);
+  if(att.isPlayer && G.player.giantSlayer) dmg += Math.floor(def.maxhp*G.player.giantSlayer);
   // Player anti-stonewall: even against very high armor, a hit always lands a meaningful
   // chunk (~3% of the target's max HP). Stops armored elites/bosses from being un-killable
   // when your attack hasn't out-scaled their defense.
@@ -136,7 +136,7 @@ export function attack(att,def,ranged){
       log(`The ${def.name} is afflicted: ${STATUS[o.type].name}.`,"good"); }
   }
   // Searing Blades: a melee strike may set the target alight.
-  if(att.isPlayer && !ranged && G.player.searingBlades && def.alive!==false && def.hp>0 && Math.random()<0.20){
+  if(att.isPlayer && !ranged && G.player.searingBlades>0 && def.alive!==false && def.hp>0 && Math.random()<G.player.searingBlades){
     addStatus(def,"burn",3,3);
     log(`Your blade sears the ${def.name}.`,"good");
   }
@@ -186,7 +186,7 @@ export function attack(att,def,ranged){
         const gld={kind:"gold",glyph:"$",col:COL.gold,name:"gold",value:ri(15,30)*Math.max(1,G.depth),x:def.x,y:def.y}; G.items.push(gld);
       } else {
         log(`The ${def.name} dies.`,"good");
-        if(att.isPlayer && Math.random() < (G.player.luckyFind?0.40:0.30)){   // ordinary enemies sometimes drop loot (Lucky Find: +10%)
+        if(att.isPlayer && Math.random() < (0.30+G.player.luckyFind)){   // ordinary enemies sometimes drop loot (Lucky Find: stacking +10%)
           const drop=rollLoot(def.x,def.y,G.depth); if(drop){ drop.x=def.x; drop.y=def.y; G.items.push(drop); }
         }
       }
