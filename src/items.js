@@ -36,10 +36,21 @@ export const CHARMS = [
   {id:"focus",   name:"Focus Charm",     desc:"+12% accuracy",             stat:{acc:0.12}},
   {id:"leech",   name:"Leeching Charm",  desc:"+1 HP every other hit",   stat:{hitLeech:1}},
   {id:"savage",  name:"Savage Charm",    desc:"+8% critical chance",       stat:{critBonus:0.08}},
+  {id:"dash",    name:"Dash Charm",      desc:"+1 dash charge",            dash:1},
 ];
 export function makeCharm(){ const c=CHARMS[ri(0,CHARMS.length-1)];
   return {kind:"charm", charmId:c.id, glyph:"¤", col:"#c77dff", name:c.name, value:60}; }
 export function charmDef(it){ return CHARMS.find(c=>c.id===it.charmId); }
+// Max dash charges: boots tier (leather 0, chain 1, plate greaves 2),
+// legendary boots 3, plus +1 if a Dash Charm is equipped.
+export function dashMax(){
+  let n=0;
+  const b=G.equipped.boots;
+  if(b) n = b.legendary ? 3 : b.tier;
+  const c=G.equipped.charm, cd=c&&charmDef(c);
+  if(cd && cd.dash) n += cd.dash;
+  return n;
+}
 
 // ---------- legendary gear (boss drops) ----------
 // 40 unique weapon names + legendary armor pieces; each rolled with a random title + affix

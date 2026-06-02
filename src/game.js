@@ -3,7 +3,7 @@ import { ACT1_END, FINAL_DEPTH, T_WALL, T_STAIRS, T_STAIRS_UP } from './config.j
 import { clamp, ri, log, $ } from './util.js';
 import { G } from './state.js';
 import { COL } from './palette.js';
-import { makeGear, rollLoot, chestLoot, makeCharm, makeLegendary, resetLegendPool, autoEquip, tryMerge, gearBonus, gearName, gearRegen, isEquippable, reconcileCharmHp, ALL_SLOTS } from './items.js';
+import { makeGear, rollLoot, chestLoot, makeCharm, makeLegendary, resetLegendPool, autoEquip, tryMerge, gearBonus, gearName, gearRegen, isEquippable, reconcileCharmHp, ALL_SLOTS, dashMax } from './items.js';
 import { PERKS, gainXp, makePlayer } from './player.js';
 import { tickStatus, attack } from './combat.js';
 import { makeMonster, monsterAt } from './monsters.js';
@@ -272,6 +272,26 @@ function playerMove(dx,dy){
   G.player.x=nx; G.player.y=ny; return true;
 }
 
+// Dash: leap up to 2 tiles in a direction. Pure movement — stops at walls,
+// monsters, and the merchant. Costs 1 charge; a blocked dash costs nothing and
+// is not a turn. A successful dash leaves a short trail and ends the turn.
+function dash(dx,dy){
+  if(dashMax()<=0){ log("You have no dash — find better boots or a Dash Charm.","bad"); return false; }
+  if(G.player.dashCharges<=0){ log("Dash is still recharging.","bad"); return false; }
+  let steps=0, cx=G.player.x, cy=G.player.y; const trail=[];
+  for(let s=1;s<=2;s++){
+    const tx=G.player.x+dx*s, ty=G.player.y+dy*s;
+    if(blocked(tx,ty)||monsterAt(tx,ty)||occupied(tx,ty)||(tx===G.player.x&&ty===G.player.y)) break;
+    cx=tx; cy=ty; steps=s; trail.push({x:tx,y:ty});
+  }
+  if(steps===0){ log("You can't dash there.","bad"); return false; }   // no move, no charge, no turn
+  for(const t of trail) G.shots.push({x:t.x,y:t.y,col:"#7ad0ff"});
+  G.player.x=cx; G.player.y=cy;
+  G.player.dashCharges--;
+  log(`You dash ${steps} tile${steps>1?"s":""}!`,"good");
+  return true;
+}
+
 // open a chest: either loot spills out, or a mimic springs and attacks
 function openChest(ch){
   ch.opened=true;
@@ -379,7 +399,6 @@ function ascend(){
 
 // ---------- monster AI ----------
 function monstersTurn(){
-  G.shots=[];
   for(let i=1;i<G.ents.length;i++){
     const m=G.ents[i]; if(!m.alive) continue;
     // status effects tick first; damage-over-time can finish a monster off
@@ -477,6 +496,7 @@ function traceShot(x1,y1,x2,y2,col){
 // ---------- turn driver ----------
 function turn(actionFn){
   if(!G.running||!G.started||G.choosing||G.shopping) return;   // ignore input while a modal is open
+  G.shots=[];                                       // clear last frame's shots/trails before this turn acts
   const tookTurn=actionFn();
   if(!G.running){ render(); return; }              // victory (dragon slain) ended the game
   if(!G.player.alive){ render(); endGame(false); return; }
@@ -493,6 +513,15 @@ function turn(actionFn){
       if(G.player.hp<G.player.maxhp) G.player.hp=Math.min(G.player.maxhp,G.player.hp+totalRegen);
     }
     computeFOV();
+    // Dash recharge: 1 charge per 5 turns, capped at the current max (clamps down
+    // if boots/charm changed and max shrank).
+    if(G.player.alive){
+      const dMax=dashMax();
+      if(G.player.dashCharges>dMax) G.player.dashCharges=dMax;
+      if(G.player.dashCharges<dMax){
+        if(++G.player.dashRegen>=5){ G.player.dashRegen=0; G.player.dashCharges++; }
+      } else G.player.dashRegen=0;
+    }
   }
   render();
   if(!G.player.alive){ endGame(false); return; }

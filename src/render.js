@@ -9,7 +9,7 @@ import * as BossArt from './art/bosses.js';
 import * as ItemsFx from './art/items-fx.js';
 import { biomeFor } from './game.js';
 import { STATUS } from './combat.js';
-import { effAtk, effDef, gearBonus, gearName, gearEvade, gearThorns, gearRegen, charmDef, ALL_SLOTS } from './items.js';
+import { effAtk, effDef, gearBonus, gearName, gearEvade, gearThorns, gearRegen, charmDef, ALL_SLOTS, dashMax } from './items.js';
 
 const ART = { ...Tiles, ...Creatures, ...BossArt, ...ItemsFx };
 
@@ -377,6 +377,8 @@ export function updateUI(){
   }
 
   const sk=[];
+  const dMax=dashMax();
+  if(dMax>0) sk.push(`Dash ${G.player.dashCharges}/${dMax}${G.player.dashCharges<dMax?" (recharging)":""}`);
   if(G.player.sight>FOV_R)   sk.push(`Sight ${G.player.sight}`);
   if(G.player.regenAmt>0)    sk.push(`Regen +${G.player.regenAmt}/9 turns`);
   if(G.player.lifesteal>0)   sk.push(`Lifesteal +${G.player.lifesteal}/kill`);
