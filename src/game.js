@@ -3,7 +3,7 @@ import { ACT1_END, FINAL_DEPTH, T_WALL, T_STAIRS, T_STAIRS_UP } from './config.j
 import { clamp, ri, log, $ } from './util.js';
 import { G } from './state.js';
 import { COL } from './palette.js';
-import { makeGear, rollLoot, chestLoot, makeCharm, makeLegendary, resetLegendPool, autoEquip, tryMerge, gearBonus, gearName, gearRegen, isEquippable, reconcileCharmHp, ALL_SLOTS, dashMax } from './items.js';
+import { makeGear, rollLoot, chestLoot, makeCharm, makeLegendary, resetLegendPool, autoEquip, tryMerge, gearBonus, gearName, gearRegen, isEquippable, reconcileCharmHp, ALL_SLOTS, dashMax, effAtk, effDef, charmDef } from './items.js';
 import { PERKS, gainXp, makePlayer } from './player.js';
 import { tickStatus, attack } from './combat.js';
 import { makeMonster, monsterAt } from './monsters.js';
@@ -689,9 +689,27 @@ function renderShop(){
        <span>${shopLabel(it)}</span><span class="pr">${pr}g</span></div>`;
   }).join("") || '<div class="shopempty">sold out</div>';
   if(G.inv.length===0) $("sellList").innerHTML='<div class="shopempty">pack is empty</div>';
-  else $("sellList").innerHTML=G.inv.map((it,i)=>
-    `<div class="shopitem" data-sell="${i}">
-       <span>${gearName(it)}</span><span class="pr">+${sellPrice(it)}g</span></div>`).join("");
+  else $("sellList").innerHTML=G.inv.map((it,i)=>{
+    const stat = it.kind==="charm" ? "charm"
+               : it.kind==="weapon" ? `+${gearBonus(it)} atk`
+               : `+${gearBonus(it)} def`;
+    return `<div class="shopitem" data-sell="${i}">
+       <span>${gearName(it)} <small style="color:#8a7a55">${stat}</small></span><span class="pr">+${sellPrice(it)}g</span></div>`;
+  }).join("");
+  // equipped gear + live stats so the player can compare before buying/selling
+  const slotLine=(label,slot)=>{
+    const it=G.equipped[slot];
+    if(!it) return `<div class="shopitem"><span>${label}</span><span class="pr" style="color:#5f5849">—</span></div>`;
+    const val = slot==="weapon" ? `+${gearBonus(it)} atk`
+              : slot==="charm" ? (charmDef(it)?charmDef(it).desc:"charm")
+              : `+${gearBonus(it)} def`;
+    return `<div class="shopitem"><span>${gearName(it)}</span><span class="pr">${val}</span></div>`;
+  };
+  $("shopGear").innerHTML =
+    `<div class="shopitem"><span>Attack</span><span class="pr">${effAtk()}</span></div>`+
+    `<div class="shopitem"><span>Defense</span><span class="pr">${effDef()}</span></div>`+
+    slotLine("(weapon)","weapon")+slotLine("(armor)","armor")+slotLine("(helmet)","helmet")+
+    slotLine("(shield)","shield")+slotLine("(boots)","boots")+slotLine("(charm)","charm");
 }
 function buyItem(i){
   const it=G.merchant.stock[i]; if(!it) return;
