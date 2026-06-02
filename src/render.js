@@ -343,12 +343,12 @@ export function updateUI(){
   $("defTxt").textContent=effDef();
   $("goldTxt").textContent=G.gold;
   $("scoreTxt").textContent=G.score;
-  $("wepTxt").textContent=G.equipped.weapon?gearName(G.equipped.weapon):"bare fists";
-  $("armTxt").textContent=G.equipped.armor?gearName(G.equipped.armor):"none";
-  $("helmTxt").textContent=G.equipped.helmet?gearName(G.equipped.helmet):"none";
-  $("shldTxt").textContent=G.equipped.shield?gearName(G.equipped.shield):"none";
-  $("bootsTxt").textContent=G.equipped.boots?gearName(G.equipped.boots):"none";
-  $("charmTxt").textContent=G.equipped.charm?G.equipped.charm.name:"none";
+  $("wepTxt").textContent=G.equipped.weapon?`${gearName(G.equipped.weapon)} (+${gearBonus(G.equipped.weapon)} atk)`:"bare fists";
+  $("armTxt").textContent=G.equipped.armor?`${gearName(G.equipped.armor)} (+${gearBonus(G.equipped.armor)} def)`:"none";
+  $("helmTxt").textContent=G.equipped.helmet?`${gearName(G.equipped.helmet)} (+${gearBonus(G.equipped.helmet)} def)`:"none";
+  $("shldTxt").textContent=G.equipped.shield?`${gearName(G.equipped.shield)} (+${gearBonus(G.equipped.shield)} def)`:"none";
+  $("bootsTxt").textContent=G.equipped.boots?`${gearName(G.equipped.boots)} (+${gearBonus(G.equipped.boots)} def)`:"none";
+  $("charmTxt").textContent=G.equipped.charm?`${G.equipped.charm.name}${charmDef(G.equipped.charm)?` — ${charmDef(G.equipped.charm).desc}`:""}`:"none";
   $("potTxt").textContent=G.potions+(G.potions===1?" potion":" potions");
 
   const isEq = it => ALL_SLOTS.some(s=>G.equipped[s]===it);
@@ -384,7 +384,7 @@ export function updateUI(){
   if(G.player.evasion>0)     sk.push(`Dodge +${Math.round(G.player.evasion*100)}%`);
   if(G.player.accBonus>0)    sk.push(`Accuracy +${Math.round(G.player.accBonus*100)}%`);
   if(G.player.critBonus>0)   sk.push(`Crit +${Math.round(G.player.critBonus*100)}%`);
-  if(G.player.armorPen>0)    sk.push(`Armor pierce ${G.player.armorPen}`);
+  if(G.player.armorPen>0)    sk.push(`Sunder (ignore ${G.player.armorPen} enemy defense)`);
   if(G.player.thornsSelf>0)  sk.push(`Spikes ${G.player.thornsSelf}`);
   if(G.player.hitLeech>0)    sk.push(`Lifesteal +${G.player.hitLeech}/hit`);
   // boolean Act II perks — these used to be applied silently with no UI, so the
