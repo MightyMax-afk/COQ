@@ -15,9 +15,16 @@ import { openInventory, closeInventory, isInventoryOpen } from './inventory.js';
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
 // ============================================================
-const BUILD = "v0.23.0";
+const BUILD = "v0.23.1";
 const BUILD_DATE = "2026-06-02";
 /* CHANGELOG
+   v0.23.1 CLASS LOOKS. Knight and Rogue now have their own art instead of
+           sharing the Wanderer's cyan @. On the dungeon map the Knight shows
+           plate armor with a gold-trimmed helm and a glowing cyan visor; the
+           Rogue is a dark green hood with a shadowed face and glowing eyes.
+           The inventory paper-doll hero uses a matching class body (equipment
+           layers still stack on top), and the character sheet's name plate now
+           reads the chosen class. The Wanderer is unchanged (cyan @ / "Delver").
    v0.23.0 CHARACTER CLASSES. The title screen now offers a class to start as,
            each just a different opening stat block (no new mechanics — every
            stat already existed and is read by combat/render):

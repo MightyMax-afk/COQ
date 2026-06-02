@@ -110,7 +110,7 @@ function build(){
       <section class="iv-panel iv-z1">
         <h2 class="iv-h2">Statistics</h2>
         <div class="iv-who"><div class="iv-portrait"><canvas id="ivPortrait"></canvas></div>
-          <div><div class="iv-name">HERO</div><div class="iv-cls">Delver <span class="lv" id="ivClsLv">· Lv 1</span></div></div></div>
+          <div><div class="iv-name">HERO</div><div class="iv-cls"><span id="ivClsName">Delver</span> <span class="lv" id="ivClsLv">· Lv 1</span></div></div></div>
         <div class="iv-bar-row"><div class="iv-bar-lbl"><span class="l">Health</span><span class="r" id="ivHpTxt">30 / 30</span></div><div class="iv-bar hp"><i id="ivHpFill" style="width:100%"></i></div></div>
         <div class="iv-bar-row"><div class="iv-bar-lbl"><span class="l">Experience</span><span class="r" id="ivXpTxt">Lv 1 · 0%</span></div><div class="iv-bar xp"><i id="ivXpFill" style="width:0%"></i></div></div>
         <div class="iv-stat-grid" id="ivStats"></div>
@@ -121,7 +121,7 @@ function build(){
         <div class="iv-doll">
           <div class="iv-slot-col left" id="ivSlotsLeft"></div>
           <div class="iv-hero"><div class="iv-hero-stage"><div class="iv-hero-base"></div><canvas id="ivHero"></canvas></div>
-            <div class="iv-hero-plate">Delver</div><div class="iv-hero-rot">click pack gear to equip</div></div>
+            <div class="iv-hero-plate" id="ivHeroPlate">Delver</div><div class="iv-hero-rot">click pack gear to equip</div></div>
           <div class="iv-slot-col right" id="ivSlotsRight"></div>
         </div>
       </section>
@@ -333,6 +333,12 @@ function renderHero(){
   for(const slot of ['weapon', 'armor', 'helmet', 'shield', 'boots']){
     const k = pdId(G.equipped[slot]); if(k) eq[slot] = k;
   }
-  QL().drawLayeredHero($iv('ivHero'), eq, 12);
-  QL().drawLayeredHero($iv('ivPortrait'), eq, 3);
+  const cid = G.player && G.player.classId;
+  const baseKey = cid === 'knight' ? 'pd_base_knight' : cid === 'rogue' ? 'pd_base_rogue' : 'pd_base';
+  QL().drawLayeredHero($iv('ivHero'), eq, 12, baseKey);
+  QL().drawLayeredHero($iv('ivPortrait'), eq, 3, baseKey);
+  // reflect the chosen class on the sheet (defaults to "Delver" for the Wanderer)
+  const cname = (G.player && G.player.className && G.player.className !== 'Wanderer') ? G.player.className : 'Delver';
+  const plate = $iv('ivHeroPlate'); if(plate) plate.textContent = cname;
+  const clsn = $iv('ivClsName'); if(clsn) clsn.textContent = cname;
 }

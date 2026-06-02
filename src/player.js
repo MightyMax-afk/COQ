@@ -75,6 +75,7 @@ export function makePlayer(classId){
         status:[],alive:true,isPlayer:true,stairX:-1,stairY:-1};
   const cls=classById(classId);
   cls.apply(p);
+  p.classId=cls.id;       // drives class-specific sprites (map @ and inventory hero)
   p.className=cls.name;   // shown on the HUD
   return p;
 }

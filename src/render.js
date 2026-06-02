@@ -41,7 +41,7 @@ export const SPRITE_LINES = {
   v_wall:ART.TILE_V_WALL, v_floor:ART.TILE_V_FLOOR, v_corpse:ART.TILE_V_CORPSE, v_fungus:ART.TILE_V_FUNGUS,
   // Act II biome 8: The Citadel of Stars (obsidian + onyx). 'cit_' prefix to avoid the crypt's 'c_wall'.
   cit_wall:ART.TILE_CIT_WALL, cit_floor:ART.TILE_CIT_FLOOR, cit_crystal:ART.TILE_CIT_CRYSTAL, cit_starfield:ART.TILE_CIT_STARFIELD,
-  player:ART.SP_PLAYER, player_v2:ART.SP_PLAYER_V2,
+  player:ART.SP_PLAYER, player_v2:ART.SP_PLAYER_V2, player_knight:ART.SP_PLAYER_KNIGHT, player_rogue:ART.SP_PLAYER_ROGUE,
   rat:ART.SP_RAT, goblin:ART.SP_GOBLIN, archer:ART.SP_ARCHER, orc:ART.SP_ORC, troll:ART.SP_TROLL, mage:ART.SP_MAGE, mimic:ART.SP_MIMIC,
   // Act II revamped basics (same archetypes, fiercer art). Drop-in art, not wired yet.
   rat_v2:ART.SP_RAT_V2, goblin_v2:ART.SP_GOBLIN_V2, archer_v2:ART.SP_ARCHER_V2, orc_v2:ART.SP_ORC_V2,
@@ -69,7 +69,7 @@ export const SPRITE_LINES = {
 
 // which sprites have the idle bob
 const SPRITE_ANIM = {
-  player:1, player_v2:1, rat:1, goblin:1, archer:1, orc:1, troll:1, mage:1, mimic:1, merchant:1,
+  player:1, player_v2:1, player_knight:1, player_rogue:1, rat:1, goblin:1, archer:1, orc:1, troll:1, mage:1, mimic:1, merchant:1,
   rat_v2:1, goblin_v2:1, archer_v2:1, orc_v2:1, troll_v2:1, mage_v2:1, mimic_v2:1,
   wraith:1, hound:1, spitter:1, glasshusk:1, cinderling:1, brine:1, boneknight:1,
   boss_ratking:1, boss_warlord:1, boss_widow:1, boss_dragon:1,
@@ -275,9 +275,12 @@ export function render(){
     if(GFX.on) drawStatusIcon(m);
   } }
   for(const s of G.shots){ if(G.visible[s.y]&&G.visible[s.y][s.x]) glyph(s.x,s.y,"•",s.col,true,s.sprite||"arrow"); }
-  // Player art: v2 (geared) once you've ever set foot in Act II; original cyan @ otherwise.
+  // Player art: a chosen class shows its own look; otherwise the Wanderer uses
+  // v2 (geared) once you've ever set foot in Act II and the original cyan @ before.
   // Once swapped, stays swapped — even after NG+ resets you back to Act I.
-  const playerSpr = (G.player && G.player.everAct2) ? "player_v2" : "player";
+  let playerSpr = (G.player && G.player.everAct2) ? "player_v2" : "player";
+  if(G.player && G.player.classId==="knight") playerSpr="player_knight";
+  else if(G.player && G.player.classId==="rogue") playerSpr="player_rogue";
   glyph(G.player.x,G.player.y,"@",COL.player,true,playerSpr);
   if(GFX.on) drawStatusIcon(G.player);
 
