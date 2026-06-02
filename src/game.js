@@ -431,8 +431,8 @@ function monstersTurn(){
 
          // Only dash if the destination tile directly adjacent to the player is free
          if(!blocked(dashX, dashY) && !monsterAt(dashX, dashY) && !occupied(dashX, dashY)) {
-             // Leave a visual trail
-             G.shots.push({x: m.x, y: m.y, col: "#ffd866"});
+             // Leave a visual trail (burn sprite; solar-gold text-mode fallback)
+             G.shots.push({x: m.x, y: m.y, col: "#ffd866", sprite: "burn"});
              m.x = dashX;
              m.y = dashY;
              log(`Zarakhel flashes across the room and strikes!`, "bad");
