@@ -192,6 +192,15 @@
     box-shadow:0 0 26px rgba(232,183,92,.35),inset 0 1px 0 rgba(255,255,255,.4);
   }
   .play-btn:active{transform:translateY(1px)}
+  /* class picker on the title screen */
+  .classpick{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:2px}
+  .class-btn{font-family:"VT323",monospace;font-size:18px;letter-spacing:1px;
+    color:var(--amber);background:rgba(40,30,16,.5);
+    border:1px solid rgba(232,183,92,.35);border-radius:8px;padding:6px 16px;cursor:pointer}
+  .class-btn:hover{background:rgba(60,45,22,.6)}
+  .class-btn.sel{color:#120d06;background:linear-gradient(180deg,#f3c977,#cf922f);
+    border-color:transparent;box-shadow:0 0 16px rgba(232,183,92,.35)}
+  .classdesc{color:var(--dim);font-size:13px;max-width:440px;min-height:2.6em;line-height:1.6}
 
   /* escape / pause menu — a true full-viewport modal so it's always visible,
      even on mobile where it's opened from the touch controls below the canvas */
@@ -316,6 +325,12 @@
           <i style="color:#f0e6c0" data-spr="stairs_down">&gt;</i> down &nbsp;
           <i style="color:#8fd6a0" data-spr="stairs_up">&lt;</i> up
         </div>
+        <div class="classpick" id="classPick">
+          <button class="class-btn" data-class="wanderer">WANDERER</button>
+          <button class="class-btn" data-class="knight">KNIGHT</button>
+          <button class="class-btn" data-class="rogue">ROGUE</button>
+        </div>
+        <div class="classdesc" id="classDesc"></div>
         <button class="play-btn" id="playBtn">ENTER ▾</button>
         <button class="play-btn" id="ngBtn" style="display:none;margin-top:8px">NEW GAME+ ▾</button>
       </div>

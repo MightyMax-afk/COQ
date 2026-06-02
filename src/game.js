@@ -4,7 +4,7 @@ import { clamp, ri, log, $ } from './util.js';
 import { G } from './state.js';
 import { COL } from './palette.js';
 import { makeGear, rollLoot, chestLoot, makeCharm, makeLegendary, resetLegendPool, autoEquip, tryMerge, gearBonus, gearName, gearRegen, isEquippable, reconcileCharmHp, ALL_SLOTS, dashMax, effAtk, effDef, charmDef } from './items.js';
-import { PERKS, gainXp, makePlayer } from './player.js';
+import { PERKS, gainXp, makePlayer, CLASSES, classById } from './player.js';
 import { tickStatus, attack } from './combat.js';
 import { makeMonster, monsterAt } from './monsters.js';
 import { genLevel, computeFOV, los, saveLevel, inB } from './worlds.js';
@@ -15,9 +15,18 @@ import { openInventory, closeInventory, isInventoryOpen } from './inventory.js';
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
 // ============================================================
-const BUILD = "v0.22.0";
+const BUILD = "v0.23.0";
 const BUILD_DATE = "2026-06-02";
 /* CHANGELOG
+   v0.23.0 CHARACTER CLASSES. The title screen now offers a class to start as,
+           each just a different opening stat block (no new mechanics — every
+           stat already existed and is read by combat/render):
+             • Wanderer — the original classless start (default; balance intact).
+             • Knight — +12 max HP, +3 Defense, starts with Close Quarters 3
+               (+3 Def when 2+ foes are adjacent), −1 Attack. A durable wall.
+             • Rogue — +2 Attack, +10% Crit, +8% Dodge, −6 max HP. A glass dagger.
+           The chosen class is shown in the HUD skills panel (Wanderer is hidden
+           since it adds nothing) and carries through NEW GAME+.
    v0.22.0 DASH + build/boss/shop pass.
            (1) DASH: a leap of up to 2 tiles. Charges come from boots tier
                (leather 0 / chain 1 / plate greaves 2, legendary 3) plus the new
@@ -646,7 +655,7 @@ function newGame(){
   G.levels={}; G.upX=-1; G.upY=-1; G.merchant=null; G.shopping=false; G.chests=[]; G.dashArmed=false;
   G.autoEquipOn=true; G.autoEquipWarned=false;
   resetLegendPool();
-  G.player = makePlayer();
+  G.player = makePlayer(G.selectedClass);
   $("levelup").classList.add("hidden");
   $("bossBar").classList.add("hidden");
   $("shop").classList.add("hidden");
@@ -952,6 +961,24 @@ function updateLegendSprites(){
 }
 // idle-bob + status-icon animation: flip frame ~2/sec while in graphics mode
 setInterval(()=>{ if(GFX.on && G.started && G.running){ GFX.frame=1-GFX.frame; render(); } }, 520);
+// ---------- class picker (title screen) ----------
+G.selectedClass = G.selectedClass || "wanderer";
+function selectClass(id){
+  const cls=classById(id);
+  G.selectedClass=cls.id;
+  const pick=$("classPick");
+  if(pick) for(const b of pick.querySelectorAll("button")) b.classList.toggle("sel", b.dataset.class===cls.id);
+  const d=$("classDesc"); if(d) d.textContent=cls.blurb;
+}
+(function initClassPick(){
+  const pick=$("classPick"); if(!pick) return;
+  pick.addEventListener("click",e=>{
+    const b=e.target.closest("button[data-class]"); if(!b) return;
+    selectClass(b.dataset.class);
+  });
+  selectClass(G.selectedClass);   // paint the default selection + blurb
+})();
+
 $("playBtn").addEventListener("click",newGame);
 $("ngBtn").addEventListener("click",startNgPlus);
 $("overlay").addEventListener("click",e=>{ if(e.target.id==="overlay") newGame(); });

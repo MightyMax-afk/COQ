@@ -377,6 +377,7 @@ export function updateUI(){
   }
 
   const sk=[];
+  if(G.player.className && G.player.className!=="Wanderer") sk.push(`Class: ${G.player.className}`);
   const dMax=dashMax();
   if(dMax>0) sk.push(`Dash ${G.player.dashCharges}/${dMax}${G.player.dashCharges<dMax?" (recharging)":""}`);
   if(G.player.sight>FOV_R)   sk.push(`Sight ${G.player.sight}`);

@@ -45,7 +45,26 @@ export function gainXp(n){
   }
 }
 
-export function makePlayer(){ return {glyph:"@",baseAtk:4,baseDef:1,maxhp:32,hp:32,level:1,xp:0,xpNext:30,
+// ---------- character classes ----------
+// A class is just a different starting stat block: each one mutates the fresh
+// player via apply(). Every field touched here already exists on the player and
+// is read by combat/render, so classes need no new mechanics. "wanderer" is the
+// original classless start, kept as the default so existing balance is intact.
+export const CLASSES = [
+  {id:"wanderer", name:"Wanderer",
+   blurb:"The classic descent — balanced stats, no specialty. Shaped entirely by the perks and gear you find.",
+   apply(p){ /* base stats unchanged */ }},
+  {id:"knight", name:"Knight",
+   blurb:"A walking wall: +12 HP, +3 Defense, and +3 Defense more whenever 2+ foes crowd you — but a blunted blade (−1 Attack).",
+   apply(p){ p.maxhp+=12; p.hp=p.maxhp; p.baseDef+=3; p.baseAtk=Math.max(1,p.baseAtk-1); p.closeQuarters=3; }},
+  {id:"rogue", name:"Rogue",
+   blurb:"A glass dagger: +2 Attack, +10% Crit and +8% Dodge — fast and lethal, but frail (−6 max HP).",
+   apply(p){ p.baseAtk+=2; p.critBonus+=0.10; p.evasion+=0.08; p.maxhp=Math.max(1,p.maxhp-6); p.hp=p.maxhp; }},
+];
+export function classById(id){ return CLASSES.find(c=>c.id===id) || CLASSES[0]; }
+
+export function makePlayer(classId){
+  const p={glyph:"@",baseAtk:4,baseDef:1,maxhp:32,hp:32,level:1,xp:0,xpNext:30,
         sight:FOV_R,regenAmt:0,regenTick:0,lifesteal:0,potionBonus:0,
         evasion:0,accBonus:0,critBonus:0,armorPen:0,thornsSelf:0,hitLeech:0,charmHp:0,
         leechCounter:0,everAct2:false,
@@ -53,4 +72,9 @@ export function makePlayer(){ return {glyph:"@",baseAtk:4,baseDef:1,maxhp:32,hp:
         giantSlayer:0,secondWind:false,searingBlades:0,antidote:false,deflect:0,
         closeQuarters:0,scavenger:false,luckyFind:0,catalyst:false,retribution:false,
         dashCharges:0,dashRegen:0,
-        status:[],alive:true,isPlayer:true,stairX:-1,stairY:-1}; }
+        status:[],alive:true,isPlayer:true,stairX:-1,stairY:-1};
+  const cls=classById(classId);
+  cls.apply(p);
+  p.className=cls.name;   // shown on the HUD
+  return p;
+}

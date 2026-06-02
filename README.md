@@ -60,7 +60,7 @@ src/
 | Bosses (names, stats, which floor) | `bosses.js` |
 | Loot, gear tiers, enchanting, legendaries, charms | `items.js` |
 | Biomes, dungeon generation, line-of-sight | `worlds.js` |
-| Player start stats, level-up perks, XP curve | `player.js` |
+| Player start stats, character classes, level-up perks, XP curve | `player.js` |
 | Hit/damage/crit math, status effects | `combat.js` |
 | Sprites (pixel art) | `src/art/*.js` |
 | Music | `audio.js` |
