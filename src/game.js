@@ -600,7 +600,7 @@ function startNgPlus(){
   G.ngPlus++;
   G.depth=1; G.potions=Math.max(G.potions,1);
   G.maxDepthReached=Math.max(G.maxDepthReached, scaledDepth());  // keep the descend reward honest across tiers
-  G.levels={}; G.upX=-1; G.upY=-1; G.merchant=null; G.shopping=false; G.chests=[];
+  G.levels={}; G.upX=-1; G.upY=-1; G.merchant=null; G.shopping=false; G.chests=[]; G.dashArmed=false;
   G.bossEnt=null; G.choosing=false; G.pendingLevelUps=0; G.currentPerks=[];
   G.player.stairX=-1; G.player.stairY=-1; G.player.status=[];
   G.player.hp=G.player.maxhp;                 // a fresh-floor heal as a small mercy
@@ -621,7 +621,7 @@ function newGame(){
   G.depth=1; G.gold=0; G.score=0; G.potions=2; G.ngPlus=0; G.maxDepthReached=1; G.godMode=false;
   G.equipped={weapon:null,armor:null,helmet:null,shield:null,boots:null,charm:null}; G.inv=[]; G.logLines=[];
   G.choosing=false; G.pendingLevelUps=0; G.currentPerks=[]; G.bossEnt=null;
-  G.levels={}; G.upX=-1; G.upY=-1; G.merchant=null; G.shopping=false; G.chests=[];
+  G.levels={}; G.upX=-1; G.upY=-1; G.merchant=null; G.shopping=false; G.chests=[]; G.dashArmed=false;
   G.autoEquipOn=true; G.autoEquipWarned=false;
   resetLegendPool();
   G.player = makePlayer();
@@ -790,6 +790,8 @@ const MOVES={
   w:[0,-1],s:[0,1],a:[-1,0],d:[1,0],
   q:[-1,-1],e:[1,-1],z:[-1,1],c:[1,1],
 };
+let spaceHeld=false;
+window.addEventListener("keyup",e=>{ if(e.key===" ") spaceHeld=false; });
 window.addEventListener("keydown",e=>{
   // debug: F1 toggles godmode (no health loss). Works any time.
   if(e.key==="F1"){
@@ -833,6 +835,8 @@ window.addEventListener("keydown",e=>{
   // Escape) are unaffected by toLowerCase().
   const k=e.key.length===1 ? e.key.toLowerCase() : e.key;
   if(k==="i"){ e.preventDefault(); openInventory(); return; }   // open the full inventory screen
+  if(k===" "){ e.preventDefault(); spaceHeld=true; return; }      // hold Space to arm a dash
+  if(spaceHeld && MOVES[k]){ e.preventDefault(); turn(()=>dash(...MOVES[k])); return; }
   if(MOVES[k]){ e.preventDefault(); turn(()=>playerMove(...MOVES[k])); return; }
   if(k==="."){ turn(()=>true); return; }                 // wait
   if(k==="g"){ turn(pickup); return; }                   // grab
@@ -843,10 +847,15 @@ window.addEventListener("keydown",e=>{
 });
 
 // touch / click controls
+function updateDashBtn(){ const b=$("dashBtn"); if(b) b.classList.toggle("armed", !!G.dashArmed); }
 document.querySelector(".touch").addEventListener("click",e=>{
   if(G.shopping||G.choosing||escMenuOpen()||isInventoryOpen()) return;
   const b=e.target.closest("button"); if(!b) return;
-  if(b.dataset.mv){ const[dx,dy]=b.dataset.mv.split(",").map(Number); turn(()=>playerMove(dx,dy)); }
+  if(b.dataset.mv){
+    const[dx,dy]=b.dataset.mv.split(",").map(Number);
+    if(G.dashArmed){ G.dashArmed=false; updateDashBtn(); turn(()=>dash(dx,dy)); }
+    else turn(()=>playerMove(dx,dy));
+  }
   else if(b.dataset.act){
     const a=b.dataset.act;
     if(a==="wait") turn(()=>true);
@@ -855,6 +864,7 @@ document.querySelector(".touch").addEventListener("click",e=>{
     else if(a==="descend") turn(descend);
     else if(a==="ascend") turn(ascend);
     else if(a==="inventory"){ if(G.started&&G.running) openInventory(); }   // mobile: open the full inventory screen
+    else if(a==="dash"){ G.dashArmed=!G.dashArmed; updateDashBtn(); }   // mobile: arm/disarm the next directional tap as a dash
     else if(a==="menu"){ if(G.started&&G.running) openEscMenu(); }   // mobile: open the pause menu (Esc has no equivalent on touch)
   }
 });

@@ -255,6 +255,7 @@
   .shopitem.dis{color:#5f5849;cursor:default}
   .shopitem.dis:hover{color:#5f5849}
   #buyList,#sellList{max-height:160px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--amber-deep) rgba(0,0,0,.25)}
+      .acts button.armed{ background:#ffd866; color:#1a1206; box-shadow:0 0 10px rgba(255,216,102,.6); }
   .shopempty{color:#5f5849;font-style:italic;font-size:11.5px;padding:6px 0}
 
   /* compact everything on phones so the map + title stay on screen */
@@ -372,6 +373,7 @@
         <button data-act="descend">down (L)</button>
         <button data-act="ascend">up (U)</button>
         <button data-act="inventory">pack (I)</button>
+        <button data-act="dash" id="dashBtn">dash</button>
         <button data-act="menu">menu</button>
       </div>
     </div>
