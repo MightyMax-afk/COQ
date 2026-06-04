@@ -384,8 +384,14 @@ export function updateUI(){
 
   const ab=$("autoBtn"); if(ab){ ab.textContent="auto: "+(G.autoEquipOn?"on":"off"); ab.className="autobtn"+(G.autoEquipOn?"":" off"); }
   const lg=$("log");
+  // Stick to the latest line only if the player is already near the bottom. If
+  // they've scrolled up to read history, leave their position alone instead of
+  // yanking them back down on the next render. The threshold is ~2 lines so the
+  // smooth-scroll animation (scroll-behavior:smooth) settling between renders
+  // still reads as "at bottom".
+  const atBottom = lg.scrollHeight - lg.clientHeight - lg.scrollTop <= 40;
   lg.innerHTML=G.logLines.map(l=>`<div class="${l.cls||""}">${l.text}</div>`).join("");
-  lg.scrollTop = lg.scrollHeight;   // stick to the latest line
+  if(atBottom) lg.scrollTop = lg.scrollHeight;
 
   // player status conditions banner
   const stEl=$("statusLine");

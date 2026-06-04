@@ -129,8 +129,33 @@ In `src/game.js`: bump `BUILD` (feature batch → minor, current `v0.25.0` →
 `v0.26.0`), set `BUILD_DATE` to `2026-06-03`, and prepend a terse numbered
 `/* CHANGELOG */` entry covering all four items. Live site rebuilds from `main`.
 
+## Addenda (added during implementation, per live feedback)
+
+### A. Test gauntlet grants ~20 levels
+
+End-game gear on a floor-1 HP pool (~32) still let Zarakhel ~3-hit the test
+player, because defense has diminishing returns past 20 (`items.js`), so even
+full legendary armor leaves ~40/hit and the HP bar is tiny. On entry the test
+player now also gets +20 levels of raw power: `level += 20`, `maxhp += 250`,
+`baseAtk += 20`, `baseDef += 10`, then full heal. Verified: the test player
+clears Zarakhel keeping ~70% HP.
+
+### B. Zarakhel attack −10%
+
+On top of the HP cut (§3b), the final boss's attack is reduced 10%
+(`bosses.js`: `atk = isFinal ? round(atkRaw*0.9) : atkRaw`). The enrage (+10) and
+Solar Dash cooldown (§3a) are unchanged.
+
+### C. XP is stat-based, not depth-based
+
+Monster XP scaled on a steep standalone depth curve (`m.xp *= 1.12^(d-1)` in
+`monsters.js`), which ballooned to ~93× by floor 40. Because `d` is the *scaled*
+depth, NEW GAME+ floors handed out runaway XP → fast leveling. XP now scales with
+the monster's HP multiplier (`m.xp *= hpMul`, i.e. `1.06^(d-1)`), so it tracks the
+monster's actual strength. Preserves the hand-tuned base XP values (ranged-unit
+premiums intact).
+
 ## Out of scope
 
-- No damage/enrage nerf to Zarakhel (per-hit threat kept intentionally).
 - No changes to Varmathrax stats.
 - No persistence of the test arena (not saved/loaded).

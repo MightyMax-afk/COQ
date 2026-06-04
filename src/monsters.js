@@ -92,7 +92,11 @@ export function makeMonster(d,x,y){
     m.maxhp = Math.round(m.maxhp*hpMul);
     m.atk   = Math.round(m.atk*atkMul);
     m.def  += Math.floor((d-1)/3);         // +1 defense every 3 floors (was every 2)
-    m.xp    = Math.round(m.xp*Math.pow(1.12,d-1));
+    // XP tracks the monster's actual strength (scales with its HP), NOT a separate
+    // steep depth curve. The old 1.12^(d-1) curve outran every stat — at NG+ scaled
+    // depths it ballooned XP ~93x by d40, causing runaway leveling. Tying it to hpMul
+    // keeps XP proportional to how tough the monster really is.
+    m.xp    = Math.round(m.xp*hpMul);
     if(m.regen) m.regen += Math.floor((d-1)/4);
   }
   m.x=x; m.y=y; m.hp=m.maxhp; m.alive=true;

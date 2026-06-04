@@ -103,8 +103,8 @@ export function makeLegendaryWeapon(d){
     fixedName:`${baseName} ${title}`, fixedBonus:atk, affixTxt:affix.txt, value:atk*12,
   }, affix.roll());
 }
-export function makeLegendaryArmor(d){
-  const kind=ARMOR_KINDS[ri(0,ARMOR_KINDS.length-1)];
+export function makeLegendaryArmor(d, kind){
+  if(!kind) kind=ARMOR_KINDS[ri(0,ARMOR_KINDS.length-1)];
   const names=LEG_ARMOR_NAMES[kind];
   const baseName=names[ri(0,names.length-1)];
   const affix=LEG_ARMOR_AFFIX[ri(0,LEG_ARMOR_AFFIX.length-1)];
