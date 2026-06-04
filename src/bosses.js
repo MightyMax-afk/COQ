@@ -61,15 +61,15 @@ export function makeBoss(floor, sd){
   const act1 = sd <= ACT1_END;             // act-band gate (uses scaled depth so NG+ tracks)
   const hpBase  = act1 ? 1.085 : 1.08;
   const atkBase = act1 ? 1.075 : 1.07;
-  // Zarakhel (final) was a ~3,170 HP marathon. Playtests of a real floor-40
-  // character (atk ~40-60/hit) showed even ~2,400 HP was an unwinnable ~50-turn
-  // slog, so the final boss gets a gentler HP growth base — ~1,650 HP at floor
-  // 40, a hard-but-winnable ~35-hit fight. Varmathrax (Act-I end) sits at the
-  // exponent's base (sd-ACT1_END = 0) so it's untouched.
+  // Zarakhel (final) was a ~3,170 HP marathon, eased to ~1,650, then cut a further
+  // 20% to ~1,320 at floor 40. Gentler HP growth base + a final-only 0.8 multiplier.
+  // Varmathrax (Act-I end) sits at the exponent's base (sd-ACT1_END = 0) so it's
+  // untouched, and the 0.8 only applies to the final boss.
   const heavyHpBase = isFinal ? 1.05 : hpBase;
-  const hp = heavy
+  let hp = heavy
     ? Math.round(620 * Math.pow(heavyHpBase, sd - ACT1_END))
     : Math.round(55  * Math.pow(hpBase,      sd - 1));
+  if(isFinal) hp = Math.round(hp * 0.8);   // Zarakhel: -20% HP (per request)
   const atkRaw = heavy
     ? Math.round(32  * Math.pow(atkBase, sd - ACT1_END))
     : Math.round(7   * Math.pow(atkBase, sd - 1));

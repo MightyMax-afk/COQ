@@ -15,9 +15,11 @@ import { openInventory, closeInventory, isInventoryOpen } from './inventory.js';
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
 // ============================================================
-const BUILD = "v0.26.2";
+const BUILD = "v0.26.3";
 const BUILD_DATE = "2026-06-04";
 /* CHANGELOG
+   v0.26.3 ZARAKHEL HP −20% more (~1,650 → ~1,320 at floor 40) via a final-only
+           0.8 multiplier. Attack and Varmathrax unchanged.
    v0.26.2 ZARAKHEL HP cut + test-arena retune. Scripted playtests of a genuine
            floor-40 character (≈L17, ~155 HP, attack ~60, defense ~69, one mid-run
            legendary) showed even the v0.26 ~2,400 HP Zarakhel was an unwinnable
