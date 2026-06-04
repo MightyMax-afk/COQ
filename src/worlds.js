@@ -191,38 +191,33 @@ export function genTestRoom(){
   G.ents.push(G.player);
   G.player.x=8; G.player.y=15;
 
-  // gear: full best-in-slot legendary loadout, auto-equipped, + potions
-  const D=FINAL_DEPTH;
+  // gear: a kit tuned to a *measured* real floor-40 descent — NOT a god build.
+  // A scripted, fully-looted run reaches Zarakhel at roughly level 17, ~155 HP,
+  // attack ~60 (with one mid-run legendary weapon) and defense ~69. We mirror
+  // that here (at level 15, per request) so the arena gauges the true fight:
+  // ONE mid-tier legendary weapon + regular top-tier armor with a deep enchant.
+  // (A full best-in-slot legendary set would push defense to ~115, which alone
+  // cancels Zarakhel's attack and made him feel weak.)
   G.inv = G.inv || [];
   const give=(it,slot)=>{ G.inv.push(it); G.equipped[slot]=it; };
-  // A *realistic* floor-40 survivor's kit — NOT a god build. The point is to
-  // gauge the real Zarakhel fight, so we deliberately avoid full best-in-slot
-  // legendaries: at depth 40 even regular top-tier armor auto-enchants so hard
-  // that a full legendary set pushes effective defense to ~115, which alone
-  // cancels Zarakhel's attack and trivializes him. Instead: ONE legendary weapon
-  // (a deep run usually finds one) + regular top-tier armor with a moderate
-  // enchant, landing effective defense around ~45 and HP around ~210.
   const armorPiece = (kind, ench) => ({ kind, glyph:GEAR_GLYPH[kind], col:GEAR_COL[kind], tier:ARMOR_TIERS[kind].length-1, ench });
-  give(makeLegendaryWeapon(D), "weapon");
-  for(const k of ARMOR_KINDS) give(armorPiece(k, 6), k);
+  give(makeLegendaryWeapon(ACT1_END), "weapon");      // mid-run legendary (~+50 atk) → effAtk ~65
+  for(const k of ARMOR_KINDS) give(armorPiece(k, 11), k);   // top-tier, deep enchant → effDef ~65
   const charm=makeCharm(); G.inv.push(charm); G.equipped.charm=charm;
-  // a solid-but-not-god floor-40 footing: meaningful HP/attack, modest defense.
-  G.player.level += 18;
-  G.player.maxhp += 180;
-  G.player.baseAtk += 14;
-  G.player.baseDef += 3;
-  G.player.potionBonus += 12;   // so potions actually matter at this HP pool
+  G.player.level += 14;          // → level 15
+  G.player.maxhp += 118;         // → ~150 max HP
+  G.player.baseAtk += 6;         // → effAtk ~65 with the legendary
   reconcileCharmHp();
   G.player.hp=G.player.maxhp;
-  G.potions=Math.max(G.potions||0, 10);
+  G.potions=Math.max(G.potions||0, 12);
 
   // spare pile on the loadout-room floor for swapping (also realistic gear)
   const pile=[
-    Object.assign(armorPiece("armor", 8), {x:5, y:13}),
-    Object.assign(armorPiece("shield",8), {x:7, y:13}),
-    Object.assign(makeCharm(),            {x:11,y:13}),
-    Object.assign(armorPiece("helmet",8), {x:5, y:17}),
-    Object.assign(armorPiece("boots", 8), {x:11,y:17}),
+    Object.assign(armorPiece("armor", 11), {x:5, y:13}),
+    Object.assign(armorPiece("shield",11), {x:7, y:13}),
+    Object.assign(makeCharm(),             {x:11,y:13}),
+    Object.assign(armorPiece("helmet",11), {x:5, y:17}),
+    Object.assign(armorPiece("boots", 11), {x:11,y:17}),
   ];
   for(const it of pile) G.items.push(it);
 
