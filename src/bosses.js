@@ -73,9 +73,10 @@ export function makeBoss(floor, sd){
   const atkRaw = heavy
     ? Math.round(32  * Math.pow(atkBase, sd - ACT1_END))
     : Math.round(7   * Math.pow(atkBase, sd - 1));
-  // Zarakhel (final) gets -10% attack power on top of the HP cut — still the
+  // Zarakhel (final) gets -25% attack power on top of the HP cut — still the
   // hardest fight, but no longer a near-one-shot even through good armor.
-  const atk = isFinal ? Math.round(atkRaw*0.9) : atkRaw;
+  // (Was -10%; dropped further per player feedback that he hit too hard.)
+  const atk = isFinal ? Math.round(atkRaw*0.75) : atkRaw;
   const b={glyph:def.glyph,col:def.col,name:def.name,boss:true,final:isFinal,act1End:isAct1End,
           maxhp:hp,hp,atk:atk,
           def:Math.round(2+sd*0.45),

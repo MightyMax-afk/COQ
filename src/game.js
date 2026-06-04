@@ -15,9 +15,13 @@ import { openInventory, closeInventory, isInventoryOpen } from './inventory.js';
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
 // ============================================================
-const BUILD = "v0.26.3";
+const BUILD = "v0.26.4";
 const BUILD_DATE = "2026-06-04";
 /* CHANGELOG
+   v0.26.4 ZARAKHEL ATTACK −. Players found the final boss still hit too hard, so
+           his attack power dropped from −10% to −25% off the raw curve, and his
+           one-time Enrage spike (under 50% HP) was halved from +10 to +5 atk. HP,
+           Solar Dash, and Varmathrax are unchanged.
    v0.26.3 ZARAKHEL HP −20% more (~1,650 → ~1,320 at floor 40) via a final-only
            0.8 multiplier. Attack and Varmathrax unchanged.
    v0.26.2 ZARAKHEL HP cut + test-arena retune. Scripted playtests of a genuine
@@ -521,9 +525,10 @@ function monstersTurn(){
     // --- ZARAKHEL CUSTOM AI ---
     if(m.name === "Zarakhel, the Unborn Sun" && sees) {
       // Enrage mechanic: If below 50% HP, gain a temporary attack boost on his turn
+      // (+5; halved from +10 per player feedback that the enrage spike hit too hard)
       if(m.hp < m.maxhp * 0.5 && !m._enraged) {
          m._enraged = true;
-         m.atk += 10;
+         m.atk += 5;
          log(`Zarakhel burns with a blinding intensity! His attacks grow fiercer!`, "bad");
       }
 
