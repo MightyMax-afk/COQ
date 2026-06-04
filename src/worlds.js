@@ -3,8 +3,9 @@ import { G } from './state.js';
 import { ri, log } from './util.js';
 import { MAP_W, MAP_H, FOV_R, FINAL_DEPTH, MERCHANT_EVERY, T_WALL, T_FLOOR, T_STAIRS, T_STAIRS_UP } from './config.js';
 import { makeMonster, makeElite } from './monsters.js';
-import { placeBoss } from './bosses.js';
-import { rollLoot } from './items.js';
+import { placeBoss, makeBoss } from './bosses.js';
+import { ACT1_END } from './config.js';
+import { rollLoot, makeLegendaryWeapon, makeLegendaryArmor, makeCharm, reconcileCharmHp, ARMOR_KINDS } from './items.js';
 import { biomeFor, scaledDepth } from './game.js';
 
 // ---------- merchant ----------
@@ -162,6 +163,69 @@ export function genLevel(dir){
       G.feats[y][x]=biome.features[ri(0,biome.features.length-1)];
     }
   }
+}
+
+// ---------- hidden boss-test gauntlet (Shift+T on floor 1) ----------
+// A hand-laid arena: a loadout room (full legendary kit equipped + a spare pile)
+// → Varmathrax's chamber → a sealed gate → Zarakhel's chamber. The gate opens
+// when Varmathrax dies (see the turn driver). Bosses spawn at their true floor
+// stats (floor 20 / floor 40) so it faithfully tests the real fights.
+export function genTestRoom(){
+  G.map      = Array.from({length:MAP_H},()=>Array(MAP_W).fill(T_WALL));
+  G.visible  = Array.from({length:MAP_H},()=>Array(MAP_W).fill(false));
+  G.explored = Array.from({length:MAP_H},()=>Array(MAP_W).fill(false));
+  G.feats    = Array.from({length:MAP_H},()=>Array(MAP_W).fill(null));
+  G.items=[]; G.ents=[]; G.merchant=null; G.bossEnt=null; G.chests=[];
+  G.upX=-1; G.upY=-1; G.player.stairX=-1; G.player.stairY=-1;   // sealed arena, no stairs
+
+  // three rooms left→right, joined at y=15
+  const load ={x1:3, y1:12, x2:14, y2:18};   // loadout room
+  const mid  ={x1:19,y1:10, x2:30, y2:20};   // Varmathrax chamber
+  const right={x1:35,y1:9,  x2:47, y2:21};   // Zarakhel chamber
+  for(const r of [load,mid,right]) carve(r);
+  hTun(14,19,15);                  // loadout → Varmathrax
+  hTun(30,35,15);                  // Varmathrax → Zarakhel (gated)
+  const gate={x:32,y:15};
+  G.map[gate.y][gate.x]=T_WALL;    // seal until Varmathrax dies
+
+  G.ents.push(G.player);
+  G.player.x=8; G.player.y=15;
+
+  // gear: full best-in-slot legendary loadout, auto-equipped, + potions
+  const D=FINAL_DEPTH;
+  G.inv = G.inv || [];
+  const give=(it,slot)=>{ G.inv.push(it); G.equipped[slot]=it; };
+  give(makeLegendaryWeapon(D), "weapon");
+  for(const k of ARMOR_KINDS) give(makeLegendaryArmor(D,k), k);
+  const charm=makeCharm(); G.inv.push(charm); G.equipped.charm=charm;
+  // ~20 levels of raw power — end-game gear is wasted on a floor-1 HP pool, so
+  // the final boss still 3-hits you. Bump HP/attack/defense to a floor-40 footing.
+  G.player.level += 20;
+  G.player.maxhp += 250;
+  G.player.baseAtk += 20;
+  G.player.baseDef += 10;
+  reconcileCharmHp();
+  G.player.hp=G.player.maxhp;
+  G.potions=Math.max(G.potions||0, 20);
+
+  // spare pile on the loadout-room floor for swapping
+  const pile=[
+    Object.assign(makeLegendaryWeapon(D),      {x:5, y:13}),
+    Object.assign(makeLegendaryArmor(D,"armor"),{x:7, y:13}),
+    Object.assign(makeLegendaryArmor(D,"shield"),{x:11,y:13}),
+    Object.assign(makeCharm(),                 {x:5, y:17}),
+    Object.assign(makeLegendaryArmor(D,"boots"),{x:11,y:17}),
+  ];
+  for(const it of pile) G.items.push(it);
+
+  // bosses at their true floor stats
+  const varm=makeBoss(ACT1_END, ACT1_END);       varm.x=24; varm.y=15;
+  const zar =makeBoss(FINAL_DEPTH, FINAL_DEPTH);  zar.x=41; zar.y=15;
+  G.ents.push(varm); G.ents.push(zar);
+  G.bossEnt=varm;
+  G.testGate={x:gate.x, y:gate.y, opened:false, act1:varm, finalBoss:zar};
+
+  log("[test] Gear up, then slay Varmathrax to open the way to Zarakhel.","gold");
 }
 
 export function placeMerchant(room){

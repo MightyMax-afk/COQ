@@ -1,5 +1,5 @@
 "use strict";
-import { ACT1_END, FINAL_DEPTH, T_WALL, T_STAIRS, T_STAIRS_UP } from './config.js';
+import { ACT1_END, FINAL_DEPTH, T_WALL, T_FLOOR, T_STAIRS, T_STAIRS_UP } from './config.js';
 import { clamp, ri, log, $ } from './util.js';
 import { G } from './state.js';
 import { COL } from './palette.js';
@@ -7,7 +7,7 @@ import { makeGear, rollLoot, chestLoot, makeCharm, makeLegendary, resetLegendPoo
 import { PERKS, gainXp, makePlayer, CLASSES, classById } from './player.js';
 import { tickStatus, attack } from './combat.js';
 import { makeMonster, monsterAt } from './monsters.js';
-import { genLevel, computeFOV, los, saveLevel, inB } from './worlds.js';
+import { genLevel, genTestRoom, computeFOV, los, saveLevel, inB } from './worlds.js';
 import { MUSIC, musicTrackForDepth } from './audio.js';
 import { render, updateUI, sizeCanvas, spriteCanvas, GFX, SPRITE_LINES } from './render.js';
 import { openInventory, closeInventory, isInventoryOpen } from './inventory.js';
@@ -15,9 +15,27 @@ import { openInventory, closeInventory, isInventoryOpen } from './inventory.js';
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
 // ============================================================
-const BUILD = "v0.25.0";
-const BUILD_DATE = "2026-06-02";
+const BUILD = "v0.26.0";
+const BUILD_DATE = "2026-06-03";
 /* CHANGELOG
+   v0.26.0 QoL + balance + a hidden test arena.
+           (1) DASH HINT: the desktop controls footer now lists dash (Space+dir)
+               — it was the one control with no on-screen reference.
+           (2) LOG SCROLL: the message log no longer yanks you back to the bottom
+               on every render. Scroll up to read history and it stays put; new
+               lines only auto-follow when you're already at the bottom.
+           (3) ZARAKHEL REBALANCE: the final boss was a near-one-shot marathon.
+               His HP growth eased (1.085→1.07 base, ~3,170→~2,400 HP at floor 40),
+               his attack dropped 10%, and his Solar Dash gap-closer now has a
+               4-turn cooldown so dashing away actually buys you distance.
+           (4) XP IS STAT-BASED: monster XP now scales with the monster's HP
+               (its real strength) instead of a separate steep depth curve. The
+               old 1.12^(depth-1) curve ballooned to ~93x by floor 40 and caused
+               runaway leveling in NEW GAME+ (where depth is the scaled depth).
+           (5) HIDDEN TEST GAUNTLET (Shift+T on floor 1, undocumented): drops you
+               into a sealed arena with a full legendary loadout + spare pile and
+               ~20 levels, then a Varmathrax→(sealed gate)→Zarakhel gauntlet at
+               their true floor-20/40 stats. Slaying Varmathrax opens the gate.
    v0.25.0 CLASS GEAR (the rest). Armor, helmets, shields and boots now re-skin
            to your class too — same tiers/stats, new names and look. Knight kit
            reads as polished steel with gold trim (brigandine → scale → knight's
@@ -454,6 +472,15 @@ function ascend(){
   return false;
 }
 
+// hidden debug arena: rebuild the current level as the boss-test gauntlet.
+// Reachable only via Shift+T on floor 1 (see keydown handler).
+function enterTestRoom(){
+  G.testGate=null;          // fresh build each time
+  genTestRoom();
+  computeFOV();
+  render();
+}
+
 // ---------- monster AI ----------
 function monstersTurn(){
   for(let i=1;i<G.ents.length;i++){
@@ -480,8 +507,12 @@ function monstersTurn(){
          log(`Zarakhel burns with a blinding intensity! His attacks grow fiercer!`, "bad");
       }
 
+      // Solar Dash cooldown ticks down on his turn. Without it the gap-closer
+      // fired every turn, so dashing away never bought any distance.
+      if(m._solarCd > 0) m._solarCd--;
+
       // Solar Dash mechanic: If player is trying to kite (3 to 4 tiles away)
-      if(!adj && dist >= 3 && dist <= 4 && los(m.x, m.y, G.player.x, G.player.y)) {
+      if(!adj && dist >= 3 && dist <= 4 && (m._solarCd|0) <= 0 && los(m.x, m.y, G.player.x, G.player.y)) {
          const sx = Math.sign(dx), sy = Math.sign(dy);
          const dashX = G.player.x - sx;
          const dashY = G.player.y - sy;
@@ -492,6 +523,7 @@ function monstersTurn(){
              G.shots.push({x: m.x, y: m.y, col: "#ffd866", sprite: "burn"});
              m.x = dashX;
              m.y = dashY;
+             m._solarCd = 4;   // can't flash-close again for 4 turns — gives the player a kiting window
              log(`Zarakhel flashes across the room and strikes!`, "bad");
              attack(m, G.player);
              continue; // Turn complete, skip standard movement
@@ -559,6 +591,13 @@ function turn(actionFn){
   if(!G.player.alive){ render(); endGame(false); return; }
   if(tookTurn){
     monstersTurn();
+    // test gauntlet: once Varmathrax falls, open the sealed gate to Zarakhel
+    if(G.testGate && !G.testGate.opened && (!G.testGate.act1 || !G.testGate.act1.alive)){
+      G.map[G.testGate.y][G.testGate.x]=T_FLOOR;
+      G.testGate.opened=true;
+      if(G.testGate.finalBoss) G.bossEnt=G.testGate.finalBoss;
+      log("The way deeper opens. Zarakhel awaits.","gold");
+    }
     // player status conditions tick (poison/burn/bleed can be lethal)
     if(G.player.alive){
       const died=tickStatus(G.player);
@@ -657,7 +696,7 @@ function startNgPlus(){
   G.ngPlus++;
   G.depth=1; G.potions=Math.max(G.potions,1);
   G.maxDepthReached=Math.max(G.maxDepthReached, scaledDepth());  // keep the descend reward honest across tiers
-  G.levels={}; G.upX=-1; G.upY=-1; G.merchant=null; G.shopping=false; G.chests=[]; G.dashArmed=false;
+  G.levels={}; G.upX=-1; G.upY=-1; G.merchant=null; G.shopping=false; G.chests=[]; G.dashArmed=false; G.testGate=null;
   G.bossEnt=null; G.choosing=false; G.pendingLevelUps=0; G.currentPerks=[];
   G.player.stairX=-1; G.player.stairY=-1; G.player.status=[];
   G.player.hp=G.player.maxhp;                 // a fresh-floor heal as a small mercy
@@ -678,7 +717,7 @@ function newGame(){
   G.depth=1; G.gold=0; G.score=0; G.potions=2; G.ngPlus=0; G.maxDepthReached=1; G.godMode=false;
   G.equipped={weapon:null,armor:null,helmet:null,shield:null,boots:null,charm:null}; G.inv=[]; G.logLines=[];
   G.choosing=false; G.pendingLevelUps=0; G.currentPerks=[]; G.bossEnt=null;
-  G.levels={}; G.upX=-1; G.upY=-1; G.merchant=null; G.shopping=false; G.chests=[]; G.dashArmed=false;
+  G.levels={}; G.upX=-1; G.upY=-1; G.merchant=null; G.shopping=false; G.chests=[]; G.dashArmed=false; G.testGate=null;
   G.autoEquipOn=true; G.autoEquipWarned=false;
   resetLegendPool();
   G.player = makePlayer(G.selectedClass);
@@ -876,6 +915,14 @@ window.addEventListener("keydown",e=>{
     if(typeof log==="function" && G.started) log(G.godMode?"[debug] godmode ON — you take no damage.":"[debug] godmode OFF.","gold");
     const dt=$("godTag"); if(dt) dt.style.display = G.godMode ? "" : "none";
     if(G.started&&G.running) updateUI();
+    return;
+  }
+  // hidden debug: Shift+T on floor 1 of a live run drops into the boss-test
+  // gauntlet. Checked before the lowercase normalization below so the uppercase
+  // "T" is seen. Intentionally undocumented (no footer/legend/title hint).
+  if(e.shiftKey && (e.key==="T"||e.key==="t") && G.started && G.running && !G.choosing && !G.shopping && !escMenuOpen() && !isInventoryOpen() && G.depth===1){
+    e.preventDefault();
+    enterTestRoom();
     return;
   }
   // Escape: toggle the pause menu — only during live gameplay, never over the
