@@ -15,9 +15,19 @@ import { openInventory, closeInventory, isInventoryOpen } from './inventory.js';
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
 // ============================================================
-const BUILD = "v0.26.1";
-const BUILD_DATE = "2026-06-03";
+const BUILD = "v0.26.2";
+const BUILD_DATE = "2026-06-04";
 /* CHANGELOG
+   v0.26.2 ZARAKHEL HP cut + test-arena retune. Scripted playtests of a genuine
+           floor-40 character (≈L17, ~155 HP, attack ~60, defense ~69, one mid-run
+           legendary) showed even the v0.26 ~2,400 HP Zarakhel was an unwinnable
+           ~50-turn slog vs realistic DPS — his attack was fine (def soaks it to
+           ~40/hit) but his HP pool was the wall. Eased his HP growth (1.07→1.05
+           base → ~1,650 HP at floor 40, a hard-but-winnable ~35-hit fight); attack
+           and Varmathrax are unchanged. The Shift+T test arena's kit is now tuned
+           to that measured floor-40 character (level 15, ~150 HP, attack ~65,
+           defense ~65: one mid-tier legendary weapon + deep-enchanted top-tier
+           armor) so it gauges the true fight instead of a god build.
    v0.26.1 TEST ARENA tuning: the hidden Shift+T gauntlet now hands out a
            *realistic* floor-40 survivor's kit instead of a god build — one
            legendary weapon + regular top-tier armor at a moderate enchant
