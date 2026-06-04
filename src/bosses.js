@@ -69,7 +69,7 @@ export function makeBoss(floor, sd){
   let hp = heavy
     ? Math.round(620 * Math.pow(heavyHpBase, sd - ACT1_END))
     : Math.round(55  * Math.pow(hpBase,      sd - 1));
-  if(isFinal) hp = Math.round(hp * 0.8);   // Zarakhel: -20% HP (per request)
+  if(isFinal) hp = Math.round(hp * 0.6);   // Zarakhel: -20% HP (per request)
   const atkRaw = heavy
     ? Math.round(32  * Math.pow(atkBase, sd - ACT1_END))
     : Math.round(7   * Math.pow(atkBase, sd - 1));
