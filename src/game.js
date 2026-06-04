@@ -15,9 +15,22 @@ import { openInventory, closeInventory, isInventoryOpen } from './inventory.js';
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
 // ============================================================
-const BUILD = "v0.26.5";
+const BUILD = "v0.26.6";
 const BUILD_DATE = "2026-06-04";
 /* CHANGELOG
+   v0.26.6 ZARAKHEL small buff + NG+ softened.
+           (1) ZARAKHEL: v0.26.5's 68 attack / ~800 HP turned out too easy — the
+               arena bot cleared him 12/12 spending ~1 potion and never dropping below
+               ~75 HP. Nudged to ~900 HP / 72 attack: the bot still wins 12/12 but now
+               burns ~7 potions and gets dragged to ~20 HP — tense again, without
+               reintroducing unfair deaths (the new enrage-+5 knee is ~74 attack, where
+               the bot falls to 9/12). Final-only multipliers in bosses.js.
+           (2) NEW GAME+ softened. Each NG+ tier added a full +40 effective depth and
+               stats scale exponentially off it, so NG+ spiked brutally hard (NG+1's
+               Zarakhel attack alone was ~1,000+). Added NG_SOFTEN (0.88) on the NG+
+               term of scaledDepth — a ~20-30% stat cut at NG+1 that compounds on deeper
+               tiers. Loot keys to unscaled depth, so reward is untouched. NG+ stays
+               clearly harder than the base run, just no longer a one-shot wall.
    v0.26.5 ZARAKHEL NERF (attack to the winnable knee). A scripted Shift+T arena bot
            that drives the real game — face-tanking, drinking potions, picking perks
            on the measured floor-40 kit (level 15, ~150 HP, ~65 defense, 12 potions) —
@@ -353,7 +366,15 @@ export function biomeFor(d){
 
 // ---------- state ----------
 // All mutable run-state now lives on the shared G object (see src/state.js).
-export const scaledDepth = () => G.depth + G.ngPlus*FINAL_DEPTH;
+// Each New Game+ tier adds a full act's worth of effective depth, and monster/boss
+// stats grow exponentially off scaledDepth — so NG+ ramped brutally hard (NG+1's
+// Zarakhel attack alone was ~1,000+). NG_SOFTEN shaves the NG+ contribution so each
+// tier adds a bit less effective depth; because the curve is exponential this lands
+// as a ~20-30% stat cut at NG+1 and compounds further on deeper tiers, taming the
+// "very hard" spike while keeping NG+ clearly tougher than the base run. Loot is keyed
+// to the unscaled G.depth, so this softens difficulty without touching reward.
+const NG_SOFTEN = 0.88;
+export const scaledDepth = () => G.depth + Math.round(G.ngPlus*FINAL_DEPTH*NG_SOFTEN);
 
 // ($, cv, ctx, sizeCanvas moved to render.js / util.js)
 sizeCanvas();

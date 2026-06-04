@@ -67,24 +67,26 @@ export function makeBoss(floor, sd){
   // face-tanking, potion-using, perk-picking bot ~0/8: at 93 attack it dealt ~28 per
   // hit through ~65 defense, and earlier 112 attack ~47/hit. Survival is gated by
   // attack vs the player's defense (damage floors at 1 below it), and the win/loss
-  // knee sits at ~68 — above it the fight is a slog the player can't survive, below
-  // it Zarakhel barely scratches. Set to ~800 HP and 68 attack, where the bot clears
-  // him 11-12/12 while still spending potions and sometimes finishing near ~40 HP — a
-  // genuine fight, not a one-shot. Multipliers (not absolutes) so NG+ growth applies.
+  // knee sits at ~74 (enrage +5) — above it the fight is a slog the player can't
+  // survive, below it Zarakhel barely scratches. At 68 attack he was trivial (bot
+  // 12/12, ~1 potion, never dropped below ~75 HP), so nudged up to ~900 HP / 72 attack:
+  // the bot still wins 12/12 but now burns ~7 potions and gets dragged to ~20 HP — a
+  // tense fight without reintroducing unfair deaths (74 attack drops the bot to 9/12).
+  // Multipliers (not absolutes) so NG+ growth applies.
   // Varmathrax (Act-I end) sits at the exponent's base (sd-ACT1_END = 0) and the
   // final-only multipliers below never touch it.
-  const FINAL_HP_MUL  = 0.4863;   // 1,645 -> ~800 at floor 40
-  const FINAL_ATK_MUL = 0.548;    // 124   -> 68  at floor 40
+  const FINAL_HP_MUL  = 0.5471;   // 1,645 -> ~900 at floor 40
+  const FINAL_ATK_MUL = 0.5806;   // 124   -> 72  at floor 40
   const heavyHpBase = isFinal ? 1.05 : hpBase;
   let hp = heavy
     ? Math.round(620 * Math.pow(heavyHpBase, sd - ACT1_END))
     : Math.round(55  * Math.pow(hpBase,      sd - 1));
-  if(isFinal) hp = Math.round(hp * FINAL_HP_MUL);   // Zarakhel HP cut (~987 -> ~800)
+  if(isFinal) hp = Math.round(hp * FINAL_HP_MUL);   // Zarakhel HP (~900 at floor 40)
   const atkRaw = heavy
     ? Math.round(32  * Math.pow(atkBase, sd - ACT1_END))
     : Math.round(7   * Math.pow(atkBase, sd - 1));
-  // Zarakhel attack cut to 68 (was 93) — just above the player's ~65 defense, so its
-  // hits still bite (and the enrage +5 keeps phase two tense) without being lethal.
+  // Zarakhel attack 72 — a few points above the player's ~65 defense, so his hits
+  // bite (and the enrage +5 keeps phase two tense) without being a near-one-shot.
   const atk = isFinal ? Math.round(atkRaw*FINAL_ATK_MUL) : atkRaw;
   const b={glyph:def.glyph,col:def.col,name:def.name,boss:true,final:isFinal,act1End:isAct1End,
           maxhp:hp,hp,atk:atk,
