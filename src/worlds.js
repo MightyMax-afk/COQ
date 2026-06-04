@@ -5,7 +5,7 @@ import { MAP_W, MAP_H, FOV_R, FINAL_DEPTH, MERCHANT_EVERY, T_WALL, T_FLOOR, T_ST
 import { makeMonster, makeElite } from './monsters.js';
 import { placeBoss, makeBoss } from './bosses.js';
 import { ACT1_END } from './config.js';
-import { rollLoot, makeLegendaryWeapon, makeLegendaryArmor, makeCharm, reconcileCharmHp, ARMOR_KINDS } from './items.js';
+import { rollLoot, makeLegendaryWeapon, makeCharm, reconcileCharmHp, ARMOR_KINDS, GEAR_GLYPH, GEAR_COL, ARMOR_TIERS } from './items.js';
 import { biomeFor, scaledDepth } from './game.js';
 
 // ---------- merchant ----------
@@ -195,26 +195,34 @@ export function genTestRoom(){
   const D=FINAL_DEPTH;
   G.inv = G.inv || [];
   const give=(it,slot)=>{ G.inv.push(it); G.equipped[slot]=it; };
+  // A *realistic* floor-40 survivor's kit — NOT a god build. The point is to
+  // gauge the real Zarakhel fight, so we deliberately avoid full best-in-slot
+  // legendaries: at depth 40 even regular top-tier armor auto-enchants so hard
+  // that a full legendary set pushes effective defense to ~115, which alone
+  // cancels Zarakhel's attack and trivializes him. Instead: ONE legendary weapon
+  // (a deep run usually finds one) + regular top-tier armor with a moderate
+  // enchant, landing effective defense around ~45 and HP around ~210.
+  const armorPiece = (kind, ench) => ({ kind, glyph:GEAR_GLYPH[kind], col:GEAR_COL[kind], tier:ARMOR_TIERS[kind].length-1, ench });
   give(makeLegendaryWeapon(D), "weapon");
-  for(const k of ARMOR_KINDS) give(makeLegendaryArmor(D,k), k);
+  for(const k of ARMOR_KINDS) give(armorPiece(k, 6), k);
   const charm=makeCharm(); G.inv.push(charm); G.equipped.charm=charm;
-  // ~20 levels of raw power — end-game gear is wasted on a floor-1 HP pool, so
-  // the final boss still 3-hits you. Bump HP/attack/defense to a floor-40 footing.
-  G.player.level += 20;
-  G.player.maxhp += 250;
-  G.player.baseAtk += 20;
-  G.player.baseDef += 10;
+  // a solid-but-not-god floor-40 footing: meaningful HP/attack, modest defense.
+  G.player.level += 18;
+  G.player.maxhp += 180;
+  G.player.baseAtk += 14;
+  G.player.baseDef += 3;
+  G.player.potionBonus += 12;   // so potions actually matter at this HP pool
   reconcileCharmHp();
   G.player.hp=G.player.maxhp;
-  G.potions=Math.max(G.potions||0, 20);
+  G.potions=Math.max(G.potions||0, 10);
 
-  // spare pile on the loadout-room floor for swapping
+  // spare pile on the loadout-room floor for swapping (also realistic gear)
   const pile=[
-    Object.assign(makeLegendaryWeapon(D),      {x:5, y:13}),
-    Object.assign(makeLegendaryArmor(D,"armor"),{x:7, y:13}),
-    Object.assign(makeLegendaryArmor(D,"shield"),{x:11,y:13}),
-    Object.assign(makeCharm(),                 {x:5, y:17}),
-    Object.assign(makeLegendaryArmor(D,"boots"),{x:11,y:17}),
+    Object.assign(armorPiece("armor", 8), {x:5, y:13}),
+    Object.assign(armorPiece("shield",8), {x:7, y:13}),
+    Object.assign(makeCharm(),            {x:11,y:13}),
+    Object.assign(armorPiece("helmet",8), {x:5, y:17}),
+    Object.assign(armorPiece("boots", 8), {x:11,y:17}),
   ];
   for(const it of pile) G.items.push(it);
 
@@ -225,7 +233,7 @@ export function genTestRoom(){
   G.bossEnt=varm;
   G.testGate={x:gate.x, y:gate.y, opened:false, act1:varm, finalBoss:zar};
 
-  log("[test] Gear up, then slay Varmathrax to open the way to Zarakhel.","gold");
+  log("[test] Realistic floor-40 kit. Slay Varmathrax to open the way to Zarakhel.","gold");
 }
 
 export function placeMerchant(room){

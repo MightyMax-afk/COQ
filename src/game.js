@@ -15,9 +15,17 @@ import { openInventory, closeInventory, isInventoryOpen } from './inventory.js';
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
 // ============================================================
-const BUILD = "v0.26.0";
+const BUILD = "v0.26.1";
 const BUILD_DATE = "2026-06-03";
 /* CHANGELOG
+   v0.26.1 TEST ARENA tuning: the hidden Shift+T gauntlet now hands out a
+           *realistic* floor-40 survivor's kit instead of a god build — one
+           legendary weapon + regular top-tier armor at a moderate enchant
+           (effective defense ~45, HP ~210), so it gauges the real Zarakhel
+           fight. The full best-in-slot legendary set pushed defense to ~115,
+           which alone cancelled his attack and made him feel weak; with the
+           realistic kit he hits for ~65-70 again and the fight demands dash +
+           potions. (Live game balance unchanged.)
    v0.26.0 QoL + balance + a hidden test arena.
            (1) DASH HINT: the desktop controls footer now lists dash (Space+dir)
                — it was the one control with no on-screen reference.
