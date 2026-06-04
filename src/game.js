@@ -15,9 +15,20 @@ import { openInventory, closeInventory, isInventoryOpen } from './inventory.js';
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
 // ============================================================
-const BUILD = "v0.26.4";
+const BUILD = "v0.26.5";
 const BUILD_DATE = "2026-06-04";
 /* CHANGELOG
+   v0.26.5 ZARAKHEL NERF (attack to the winnable knee). A scripted Shift+T arena bot
+           that drives the real game — face-tanking, drinking potions, picking perks
+           on the measured floor-40 kit (level 15, ~150 HP, ~65 defense, 12 potions) —
+           still lost ~0/8 to the v0.26.4 boss. The wall was always his ATTACK, not
+           his HP: damage floors at 1 below the player's defense, so survivability has
+           a sharp knee at ~68 attack (the bot wins 0/6 at 90, 6/8 at 70, 8/8 at 66).
+           v0.26.4 cut HP hard (~987) but left attack at 93 — still unsurvivable. Set
+           attack to 68 (just above the player's ~65 defense) and HP to ~800; the bot
+           now clears him 11-12/12 while still spending potions and occasionally
+           finishing near ~40 HP. Enrage (+5 below 50% HP) keeps phase two tense.
+           Varmathrax untouched.
    v0.26.4 ZARAKHEL ATTACK −. Players found the final boss still hit too hard, so
            his attack power dropped from −10% to −25% off the raw curve, and his
            one-time Enrage spike (under 50% HP) was halved from +10 to +5 atk. HP,

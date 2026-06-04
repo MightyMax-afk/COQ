@@ -61,22 +61,31 @@ export function makeBoss(floor, sd){
   const act1 = sd <= ACT1_END;             // act-band gate (uses scaled depth so NG+ tracks)
   const hpBase  = act1 ? 1.085 : 1.08;
   const atkBase = act1 ? 1.075 : 1.07;
-  // Zarakhel (final) was a ~3,170 HP marathon, eased to ~1,650, then cut a further
-  // 20% to ~1,320 at floor 40. Gentler HP growth base + a final-only 0.8 multiplier.
-  // Varmathrax (Act-I end) sits at the exponent's base (sd-ACT1_END = 0) so it's
-  // untouched, and the 0.8 only applies to the final boss.
+  // Zarakhel (final) tuning — set empirically from scripted Shift+T arena playtests
+  // driving the *real* game (a measured floor-40 kit: level 15, ~150 HP, ~65 defense,
+  // 12 potions). The prior 93-attack version (and every version above it) lost a
+  // face-tanking, potion-using, perk-picking bot ~0/8: at 93 attack it dealt ~28 per
+  // hit through ~65 defense, and earlier 112 attack ~47/hit. Survival is gated by
+  // attack vs the player's defense (damage floors at 1 below it), and the win/loss
+  // knee sits at ~68 — above it the fight is a slog the player can't survive, below
+  // it Zarakhel barely scratches. Set to ~800 HP and 68 attack, where the bot clears
+  // him 11-12/12 while still spending potions and sometimes finishing near ~40 HP — a
+  // genuine fight, not a one-shot. Multipliers (not absolutes) so NG+ growth applies.
+  // Varmathrax (Act-I end) sits at the exponent's base (sd-ACT1_END = 0) and the
+  // final-only multipliers below never touch it.
+  const FINAL_HP_MUL  = 0.4863;   // 1,645 -> ~800 at floor 40
+  const FINAL_ATK_MUL = 0.548;    // 124   -> 68  at floor 40
   const heavyHpBase = isFinal ? 1.05 : hpBase;
   let hp = heavy
     ? Math.round(620 * Math.pow(heavyHpBase, sd - ACT1_END))
     : Math.round(55  * Math.pow(hpBase,      sd - 1));
-  if(isFinal) hp = Math.round(hp * 0.6);   // Zarakhel: -20% HP (per request)
+  if(isFinal) hp = Math.round(hp * FINAL_HP_MUL);   // Zarakhel HP cut (~987 -> ~800)
   const atkRaw = heavy
     ? Math.round(32  * Math.pow(atkBase, sd - ACT1_END))
     : Math.round(7   * Math.pow(atkBase, sd - 1));
-  // Zarakhel (final) gets -25% attack power on top of the HP cut — still the
-  // hardest fight, but no longer a near-one-shot even through good armor.
-  // (Was -10%; dropped further per player feedback that he hit too hard.)
-  const atk = isFinal ? Math.round(atkRaw*0.75) : atkRaw;
+  // Zarakhel attack cut to 68 (was 93) — just above the player's ~65 defense, so its
+  // hits still bite (and the enrage +5 keeps phase two tense) without being lethal.
+  const atk = isFinal ? Math.round(atkRaw*FINAL_ATK_MUL) : atkRaw;
   const b={glyph:def.glyph,col:def.col,name:def.name,boss:true,final:isFinal,act1End:isAct1End,
           maxhp:hp,hp,atk:atk,
           def:Math.round(2+sd*0.45),
