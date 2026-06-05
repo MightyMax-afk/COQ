@@ -58,8 +58,9 @@ export const CLASSES = [
    blurb:"A walking wall: +12 HP, +3 Defense, and +3 Defense more whenever 2+ foes crowd you — but a blunted blade (−1 Attack).",
    apply(p){ p.maxhp+=12; p.hp=p.maxhp; p.baseDef+=3; p.baseAtk=Math.max(1,p.baseAtk-1); p.closeQuarters=3; }},
   {id:"rogue", name:"Rogue",
-   blurb:"A glass dagger: +2 Attack, +10% Crit and +8% Dodge — fast and lethal, but frail (−6 max HP).",
-   apply(p){ p.baseAtk+=2; p.critBonus+=0.10; p.evasion+=0.08; p.maxhp=Math.max(1,p.maxhp-6); p.hp=p.maxhp; }},
+   blurb:"A glass dagger: +2 Attack, +10% Crit, +8% Dodge and an innate Dash — fast and lethal, but frail (−6 max HP).",
+   apply(p){ p.baseAtk+=2; p.critBonus+=0.10; p.evasion+=0.08; p.maxhp=Math.max(1,p.maxhp-6); p.hp=p.maxhp;
+             p.innateDash=1; p.dashCharges=1; }},   // the nimble class always has at least one dash (even on tier-0 boots)
 ];
 export function classById(id){ return CLASSES.find(c=>c.id===id) || CLASSES[0]; }
 
@@ -71,7 +72,7 @@ export function makePlayer(classId){
         // Act II build perks (boolean flags, default off)
         giantSlayer:0,secondWind:false,searingBlades:0,antidote:false,deflect:0,
         closeQuarters:0,scavenger:false,luckyFind:0,catalyst:false,retribution:false,
-        dashCharges:0,dashRegen:0,
+        dashCharges:0,dashRegen:0,innateDash:0,   // innateDash: class-granted dash, on top of boots/charm
         status:[],alive:true,isPlayer:true,stairX:-1,stairY:-1};
   const cls=classById(classId);
   cls.apply(p);

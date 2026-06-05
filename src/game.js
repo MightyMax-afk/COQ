@@ -15,9 +15,16 @@ import { openInventory, closeInventory, isInventoryOpen } from './inventory.js';
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
 // ============================================================
-const BUILD = "v0.26.7";
+const BUILD = "v0.26.8";
 const BUILD_DATE = "2026-06-04";
 /* CHANGELOG
+   v0.26.8 ROGUE innate dash. Dash charges come only from boots tier (1/2 from
+           tier-1/2, 3 from legendary) or a Dash Charm, and the common tier-0 starter
+           boots give 0 — so EVERY class (not just Rogue) had no dash until it found
+           better boots. The nimble Rogue now carries an innate +1 dash (new
+           player.innateDash, added into dashMax) and starts with a charge ready, so
+           it can always dash and stacks on top of boots (tier-0 → 1, tier-1 → 2,
+           tier-2 → 3, legendary → 4). Knight and Wanderer are unchanged.
    v0.26.7 GOLD ECONOMY tightened. Gold drops scale with depth but merchant prices
            barely do, so by mid-game (≈depth 13) you out-earned a full merchant buyout
            every time and gold stopped being a meaningful choice. Added a single

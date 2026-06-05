@@ -50,6 +50,7 @@ export function dashMax(){
   if(b) n = b.legendary ? 3 : b.tier;
   const c=G.equipped.charm, cd=c&&charmDef(c);
   if(cd && cd.dash) n += cd.dash * ((G.player&&G.player.catalyst) ? 2 : 1);
+  if(G.player && G.player.innateDash) n += G.player.innateDash;   // class-granted dash (Rogue), on top of gear
   return n;
 }
 
