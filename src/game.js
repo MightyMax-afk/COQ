@@ -15,9 +15,16 @@ import { openInventory, closeInventory, isInventoryOpen } from './inventory.js';
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
 // ============================================================
-const BUILD = "v0.26.6";
+const BUILD = "v0.26.7";
 const BUILD_DATE = "2026-06-04";
 /* CHANGELOG
+   v0.26.7 GOLD ECONOMY tightened. Gold drops scale with depth but merchant prices
+           barely do, so by mid-game (≈depth 13) you out-earned a full merchant buyout
+           every time and gold stopped being a meaningful choice. Added a single
+           GOLD_DROP_MUL (config.js, 0.5) applied to all four gold sources — normal
+           loot, chests, elite kills, mimic kills — halving income so a buyout now
+           costs ~2 floors of gold instead of ~1. Prices and the Scavenger perk are
+           unchanged; tune the one constant if it needs to be looser or tighter.
    v0.26.6 ZARAKHEL small buff + NG+ softened.
            (1) ZARAKHEL: v0.26.5's 68 attack / ~800 HP turned out too easy — the
                arena bot cleared him 12/12 spending ~1 potion and never dropping below

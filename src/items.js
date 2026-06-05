@@ -2,6 +2,7 @@
 import { G } from './state.js';
 import { ri, log } from './util.js';
 import { COL } from './palette.js';
+import { GOLD_DROP_MUL } from './config.js';
 import { statusAtkMod } from './combat.js';
 
 // ---------- gear slot data ----------
@@ -120,7 +121,7 @@ export function makeLegendaryArmor(d, kind){
 // what a (non-mimic) chest contains
 export function chestLoot(d){
   const out=[]; const r=ri(1,100);
-  out.push({kind:"gold",glyph:"$",col:COL.gold,name:"gold",value:ri(15,30)*d});  // always some gold
+  out.push({kind:"gold",glyph:"$",col:COL.gold,name:"gold",value:Math.round(ri(15,30)*d*GOLD_DROP_MUL)});  // always some gold
   if(r<=4) out.push(makeCharm());                        // 4% a charm (very rare)
   else if(r<=60) out.push(makeGear(0,0,d+1));            // a slightly better gear piece
   else out.push({kind:"potion",glyph:"!",col:COL.potion,name:"potion",heal:12});
@@ -131,7 +132,7 @@ export function chestLoot(d){
 export function rollLoot(x,y,d){
   const t=ri(1,100);
   if(t<=8) return {x,y,kind:"potion",glyph:"!",col:COL.potion,name:"potion",heal:12};
-  if(t<=34) return {x,y,kind:"gold",glyph:"$",col:COL.gold,name:"gold",value:ri(5,15)*d};
+  if(t<=34) return {x,y,kind:"gold",glyph:"$",col:COL.gold,name:"gold",value:Math.round(ri(5,15)*d*GOLD_DROP_MUL)};
   // remaining ~66% is gear
   return makeGear(x,y,d);
 }

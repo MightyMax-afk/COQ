@@ -3,6 +3,7 @@ import { G } from './state.js';
 import { clamp, ri, log } from './util.js';
 import { COL } from './palette.js';
 import { effAtk, effDef, gearEvade, gearThorns, totalAcc, totalCrit, totalHitLeech, charmDef, makeGear, makeCharm, makeLegendary, rollLoot } from './items.js';
+import { GOLD_DROP_MUL } from './config.js';
 import { gainXp } from './player.js';
 import { endGame } from './game.js';
 import { MUSIC } from './audio.js';
@@ -176,14 +177,14 @@ export function attack(att,def,ranged){
         if(Math.random()<0.12){ const leg=makeLegendary(G.depth); leg.x=def.x; leg.y=def.y; G.items.push(leg); log(`It held the ${leg.fixedName}!`,"gold"); }
         else { const g=makeGear(def.x,def.y,G.depth+1); G.items.push(g); }
         if(Math.random()<0.25){ const ch=makeCharm(); ch.x=def.x; ch.y=def.y; G.items.push(ch); }
-        const gld={kind:"gold",glyph:"$",col:COL.gold,name:"gold",value:ri(20,40)*G.depth,x:def.x,y:def.y}; G.items.push(gld);
+        const gld={kind:"gold",glyph:"$",col:COL.gold,name:"gold",value:Math.round(ri(20,40)*G.depth*GOLD_DROP_MUL),x:def.x,y:def.y}; G.items.push(gld);
       } else if(def.elite){
         log(`The ${def.name} falls — it was carrying something.`,"gold");
         // elites always drop: a strong gear piece, gold, sometimes a charm, rare legendary
         if(Math.random()<0.06){ const leg=makeLegendary(G.depth); leg.x=def.x; leg.y=def.y; G.items.push(leg); log(`It held the ${leg.fixedName}!`,"gold"); }
         else { const g=makeGear(def.x,def.y,G.depth+2); G.items.push(g); }
         if(Math.random()<0.15){ const ch=makeCharm(); ch.x=def.x; ch.y=def.y; G.items.push(ch); }
-        const gld={kind:"gold",glyph:"$",col:COL.gold,name:"gold",value:ri(15,30)*Math.max(1,G.depth),x:def.x,y:def.y}; G.items.push(gld);
+        const gld={kind:"gold",glyph:"$",col:COL.gold,name:"gold",value:Math.round(ri(15,30)*Math.max(1,G.depth)*GOLD_DROP_MUL),x:def.x,y:def.y}; G.items.push(gld);
       } else {
         log(`The ${def.name} dies.`,"good");
         if(att.isPlayer && Math.random() < (0.30+G.player.luckyFind)){   // ordinary enemies sometimes drop loot (Lucky Find: stacking +10%)
