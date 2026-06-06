@@ -15,9 +15,14 @@ import { openInventory, closeInventory, isInventoryOpen } from './inventory.js';
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
 // ============================================================
-const BUILD = "v0.26.8";
-const BUILD_DATE = "2026-06-04";
+const BUILD = "v0.27.0";
+const BUILD_DATE = "2026-06-06";
 /* CHANGELOG
+   v0.27.0 SPRITE PASS — all art redone at 32×32 (heroes, full Act I & II
+           bestiary, all 40 bosses, gear, status FX, and 8 dungeon biomes).
+           Fix: the sprite baker (_bakeSprite in render.js) had the grid size
+           hardcoded at 16, so it only rendered the top-left quarter of each new
+           32×32 sprite — it now infers N from the art and bakes any size.
    v0.26.8 ROGUE innate dash. Dash charges come only from boots tier (1/2 from
            tier-1/2, 3 from legendary) or a Dash Charm, and the common tier-0 starter
            boots give 0 — so EVERY class (not just Rogue) had no dash until it found

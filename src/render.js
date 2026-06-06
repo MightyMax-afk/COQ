@@ -99,16 +99,18 @@ const SPRITE_ANIM = {
 export const GFX = { on:true, frame:0 };           // graphics mode on by default
 const _spriteCache = {};                    // key:`id|bob|px` -> canvas
 
-// render a 16x16 sprite into an offscreen canvas sized px×px (nearest-neighbor)
+// render an N×N sprite into an offscreen canvas sized px×px (nearest-neighbor).
+// N is inferred from the sprite grid, so 16×16 and 32×32 art both bake correctly.
 function _bakeSprite(lines, px, bob){
-  const scale=Math.max(1, Math.round(px/16));   // integer scale -> uniform square pixels
-  const dim=16*scale;
+  const N=lines.length;                          // grid size from the art itself
+  const scale=Math.max(1, Math.round(px/N));    // integer scale -> uniform square pixels
+  const dim=N*scale;
   const c=document.createElement('canvas'); c.width=dim; c.height=dim;
   const ctx=c.getContext('2d'); ctx.imageSmoothingEnabled=false;
-  for(let y=0;y<16;y++){
-    const srcY=y-bob; if(srcY<0||srcY>=16) continue;
+  for(let y=0;y<N;y++){
+    const srcY=y-bob; if(srcY<0||srcY>=N) continue;
     const row=lines[srcY];
-    for(let x=0;x<16;x++){ const col=PAL[row[x]]; if(!col) continue;
+    for(let x=0;x<row.length;x++){ const col=PAL[row[x]]; if(!col) continue;
       ctx.fillStyle=col; ctx.fillRect(x*scale, y*scale, scale, scale); }
   }
   return c;

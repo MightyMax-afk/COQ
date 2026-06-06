@@ -59,6 +59,23 @@ export const PAL = {
   'Z': '#ffffff',
   'z': '#d6c6a8',
   '1': '#ff5a3a',
+  // ---- expanded ramps (additive; 16x16 art still valid) ----
+  '0': '#0d0a0c',   // deep occlusion (warm black)
+  '8': '#281a0d',   // deep brown shadow
+  'a': '#6e4630',   // skin shadow
+  'f': '#b07a52',   // skin mid
+  'h': '#e0a87a',   // skin light
+  'l': '#f3d0a4',   // skin highlight
+  'm': '#343d4d',   // steel dark-mid
+  'v': '#7e8a9a',   // steel mid
+  'V': '#eaf2fb',   // cool near-white
+  'A': '#13260c',   // deep green
+  'D': '#2e0a08',   // deep crimson
+  'M': '#7a241f',   // muscle deep red
+  'N': '#c4574e',   // muscle mid red
+  'E': '#cdec78',   // toxic highlight
+  'F': '#ffd27a',   // warm ember mid
+  'J': '#8a4ca8',   // purple mid
 };
 
 export const COL = {
@@ -69,12 +86,14 @@ export const COL = {
   potion:"#c77dff", gold:"#ffd866", weapon:"#9ad0ff", armor:"#c0a060",
 };
 
-// helper: a sprite is just a 16-line array, all rows must be 16 chars.
+// helper: a sprite is a square grid of single-char palette codes. Size is
+// inferred from the row count, so both 16x16 (legacy) and 32x32 (hi-detail)
+// art are valid — the renderer scales to whatever N it finds.
 export function S(lines){
   const arr = lines.trim().split('\n').map(s => s.replace(/^\s+/, ''));
-  // hard-validate so a typo can't break the renderer silently
-  if(arr.length !== 16) console.warn('sprite row count !=16', arr.length);
-  for(let i=0;i<arr.length;i++) if(arr[i].length !== 16)
-    console.warn('sprite col count !=16 row', i, JSON.stringify(arr[i]));
+  const n = arr.length;
+  // hard-validate squareness so a typo can't break the renderer silently
+  for(let i=0;i<arr.length;i++) if(arr[i].length !== n)
+    console.warn(`sprite not square (${n} rows): row ${i} has ${arr[i].length} cols`, JSON.stringify(arr[i]));
   return arr;
 }
