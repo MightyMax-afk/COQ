@@ -99,10 +99,10 @@ const SPRITE_ANIM = {
 export const GFX = { on:true, frame:0 };           // graphics mode on by default
 const _spriteCache = {};                    // key:`id|bob|px` -> canvas
 
-// render an N×N sprite into an offscreen canvas sized px×px (nearest-neighbor).
-// N is inferred from the sprite grid, so 16×16 and 32×32 art both bake correctly.
+// render an N×N sprite (N inferred from the art) into an offscreen canvas
+// sized px×px (nearest-neighbor). Supports mixed 16×16 and 32×32 art.
 function _bakeSprite(lines, px, bob){
-  const N=lines.length;                          // grid size from the art itself
+  const N=lines.length;
   const scale=Math.max(1, Math.round(px/N));    // integer scale -> uniform square pixels
   const dim=N*scale;
   const c=document.createElement('canvas'); c.width=dim; c.height=dim;
@@ -110,7 +110,7 @@ function _bakeSprite(lines, px, bob){
   for(let y=0;y<N;y++){
     const srcY=y-bob; if(srcY<0||srcY>=N) continue;
     const row=lines[srcY];
-    for(let x=0;x<row.length;x++){ const col=PAL[row[x]]; if(!col) continue;
+    for(let x=0;x<N;x++){ const col=PAL[row[x]]; if(!col) continue;
       ctx.fillStyle=col; ctx.fillRect(x*scale, y*scale, scale, scale); }
   }
   return c;
@@ -240,7 +240,8 @@ function glyph(wx,wy,ch,color,glow,spriteId,dim){
   // graphics mode: draw the pixel sprite if one exists for this id
   if(GFX.on && spriteId && SPRITE_LINES[spriteId]){
     const px=CELL*2;                                // bake at 2× for crispness, draw to CELL
-    const bob=(GFX.frame===1 && SPRITE_ANIM[spriteId]) ? 1 : 0;
+    const N=SPRITE_LINES[spriteId].length;          // 16 or 32 -> scale bob to match
+    const bob=(GFX.frame===1 && SPRITE_ANIM[spriteId]) ? Math.max(1, Math.round(N/16)) : 0;
     const cnv=spriteCanvas(spriteId, px, bob);
     if(cnv){
       ctx.save();

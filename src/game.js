@@ -15,9 +15,15 @@ import { openInventory, closeInventory, isInventoryOpen } from './inventory.js';
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
 // ============================================================
-const BUILD = "v0.27.0";
-const BUILD_DATE = "2026-06-06";
+const BUILD = "v0.27.1";
+const BUILD_DATE = "2026-06-07";
 /* CHANGELOG
+   v0.27.1 SPRITE ANIM FIX — the v0.27.0 pass shipped a partial render.js: the
+           idle "bob" was hardcoded to 1 grid-row, so 32×32 sprites bobbed only
+           1/32 of their height (half the old 16×16 feel) and looked stiff. Restore
+           the design's size-scaled bob (Math.round(N/16) -> 2 rows at 32px) so the
+           on-screen bounce matches the original art. render.js now equals the
+           intended renderer (bake loop + bob).
    v0.27.0 SPRITE PASS — all art redone at 32×32 (heroes, full Act I & II
            bestiary, all 40 bosses, gear, status FX, and 8 dungeon biomes).
            Fix: the sprite baker (_bakeSprite in render.js) had the grid size
