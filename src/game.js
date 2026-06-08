@@ -15,9 +15,23 @@ import { openInventory, closeInventory, isInventoryOpen } from './inventory.js';
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
 // ============================================================
-const BUILD = "v0.27.1";
-const BUILD_DATE = "2026-06-07";
+const BUILD = "v0.28.0";
+const BUILD_DATE = "2026-06-08";
 /* CHANGELOG
+   v0.28.0 64×64 ART PASS — bosses, creatures, and dungeon tiles upgraded from
+           32×32 to 64×64. (1) BOSSES: all 40 redrawn as 64×64 two-frame idle
+           loops (src/art/bosses.js); render.js gains multi-frame support
+           (_isMultiFrame/_frameLines) — a sprite may now be either a classic
+           row array or an array of frames, detected via Array.isArray(sprite[0]).
+           (2) CREATURES: new src/art/creatures64.js — 64×64 animated base +
+           elite art for all 14 archetypes, wired into the render atlas (rat,
+           goblin, … and the _v2 elites). Added GFX.tick (a free-running counter
+           advanced beside the 0/1 idle-bob frame) so 3-frame creature loops cycle
+           fully instead of just frames 0/1. (3) TILES: expanded biome tiles
+           (src/art/tiles.js). palette.js S() now also accepts tagged-template
+           calls (S`...`) so the new art modules drop in unchanged. NOTE: chest,
+           merchant, and the player paper-doll stay on the existing 32×32 art for
+           now; 64×64 hero sprites (sprites64.js) are not yet wired.
    v0.27.1 SPRITE ANIM FIX — the v0.27.0 pass shipped a partial render.js: the
            idle "bob" was hardcoded to 1 grid-row, so 32×32 sprites bobbed only
            1/32 of their height (half the old 16×16 feel) and looked stiff. Restore
@@ -1115,7 +1129,7 @@ function updateLegendSprites(){
   }
 }
 // idle-bob + status-icon animation: flip frame ~2/sec while in graphics mode
-setInterval(()=>{ if(GFX.on && G.started && G.running){ GFX.frame=1-GFX.frame; render(); } }, 520);
+setInterval(()=>{ if(GFX.on && G.started && G.running){ GFX.frame=1-GFX.frame; GFX.tick=(GFX.tick+1)%420; render(); } }, 520);
 // ---------- class picker (title screen) ----------
 G.selectedClass = G.selectedClass || "wanderer";
 function selectClass(id){

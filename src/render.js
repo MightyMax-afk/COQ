@@ -5,6 +5,7 @@ import { PAL, COL } from './palette.js';
 import { $ } from './util.js';
 import * as Tiles from './art/tiles.js';
 import * as Creatures from './art/creatures.js';
+import * as C64 from './art/creatures64.js';   // 64×64 animated creature refresh (Bestiary deliverable)
 import * as BossArt from './art/bosses.js';
 import * as ItemsFx from './art/items-fx.js';
 import { biomeFor } from './game.js';
@@ -42,13 +43,14 @@ export const SPRITE_LINES = {
   // Act II biome 8: The Citadel of Stars (obsidian + onyx). 'cit_' prefix to avoid the crypt's 'c_wall'.
   cit_wall:ART.TILE_CIT_WALL, cit_floor:ART.TILE_CIT_FLOOR, cit_crystal:ART.TILE_CIT_CRYSTAL, cit_starfield:ART.TILE_CIT_STARFIELD,
   player:ART.SP_PLAYER, player_v2:ART.SP_PLAYER_V2, player_knight:ART.SP_PLAYER_KNIGHT, player_rogue:ART.SP_PLAYER_ROGUE,
-  rat:ART.SP_RAT, goblin:ART.SP_GOBLIN, archer:ART.SP_ARCHER, orc:ART.SP_ORC, troll:ART.SP_TROLL, mage:ART.SP_MAGE, mimic:ART.SP_MIMIC,
-  // Act II revamped basics (same archetypes, fiercer art). Drop-in art, not wired yet.
-  rat_v2:ART.SP_RAT_V2, goblin_v2:ART.SP_GOBLIN_V2, archer_v2:ART.SP_ARCHER_V2, orc_v2:ART.SP_ORC_V2,
-  troll_v2:ART.SP_TROLL_V2, mage_v2:ART.SP_MAGE_V2, mimic_v2:ART.SP_MIMIC_V2,
-  // Act II new commons
-  wraith:ART.SP_WRAITH, hound:ART.SP_HOUND, spitter:ART.SP_SPITTER, glasshusk:ART.SP_GLASSHUSK,
-  cinderling:ART.SP_CINDERLING, brine:ART.SP_BRINE, boneknight:ART.SP_BONEKNIGHT,
+  // 64×64 animated creature refresh — base archetypes (C64.*.frames = [frame0,frame1,...]).
+  rat:C64.RAT.frames, goblin:C64.GOBLIN.frames, archer:C64.ARCHER.frames, orc:C64.ORC.frames, troll:C64.TROLL.frames, mage:C64.MAGE.frames, mimic:C64.MIMIC.frames,
+  // Act II elite variants — now wired to the 64×64 _ELITE art.
+  rat_v2:C64.RAT_ELITE.frames, goblin_v2:C64.GOBLIN_ELITE.frames, archer_v2:C64.ARCHER_ELITE.frames, orc_v2:C64.ORC_ELITE.frames,
+  troll_v2:C64.TROLL_ELITE.frames, mage_v2:C64.MAGE_ELITE.frames, mimic_v2:C64.MIMIC_ELITE.frames,
+  // Act II new commons — 64×64 refresh
+  wraith:C64.WRAITH.frames, hound:C64.HOUND.frames, spitter:C64.SPITTER.frames, glasshusk:C64.GLASSHUSK.frames,
+  cinderling:C64.CINDERLING.frames, brine:C64.BRINE.frames, boneknight:C64.BONEKNIGHT.frames,
   chest:ART.SP_CHEST, merchant:ART.SP_MERCHANT,
   boss_ratking:ART.SP_BOSS_RATKING, boss_warlord:ART.SP_BOSS_WARLORD, boss_widow:ART.SP_BOSS_WIDOW, boss_dragon:ART.SP_BOSS_DRAGON,
   boss_ogre:ART.SP_BOSS_OGRE, boss_wolf:ART.SP_BOSS_WOLF, boss_hollow:ART.SP_BOSS_HOLLOW, boss_emberlich:ART.SP_BOSS_EMBERLICH,
@@ -96,11 +98,26 @@ const SPRITE_ANIM = {
 };
 
 // ---------- sprite runtime ----------
-export const GFX = { on:true, frame:0 };           // graphics mode on by default
+export const GFX = { on:true, frame:0, tick:0 };    // graphics mode on by default
+// frame: 0/1 toggle driving the legacy 1px idle bob (16×/32× sprites).
+// tick:  free-running counter so multi-frame sprites cycle through ALL their
+//        frames (e.g. 3-frame creatures), not just 0/1.
 const _spriteCache = {};                    // key:`id|bob|px` -> canvas
 
+// A sprite entry is either:
+//   lines       — array of string rows (single-frame, classic)
+//   frames      — array of frame entries, each itself an array of string rows
+// _frameLines() returns the row array for the requested frame.
+function _isMultiFrame(s){ return Array.isArray(s) && Array.isArray(s[0]); }
+function _frameLines(s, frame){
+  if(_isMultiFrame(s)) return s[frame % s.length];
+  return s;
+}
+function _frameCount(s){ return _isMultiFrame(s) ? s.length : 1; }
+
 // render an N×N sprite (N inferred from the art) into an offscreen canvas
-// sized px×px (nearest-neighbor). Supports mixed 16×16 and 32×32 art.
+// sized px×px (nearest-neighbor). Supports mixed 16×16, 32×32, 64×64 art
+// and both single-frame (bob shift) and multi-frame (per-frame pixels) sprites.
 function _bakeSprite(lines, px, bob){
   const N=lines.length;
   const scale=Math.max(1, Math.round(px/N));    // integer scale -> uniform square pixels
@@ -115,11 +132,23 @@ function _bakeSprite(lines, px, bob){
   }
   return c;
 }
-export function spriteCanvas(id, px, bob){
-  const lines=SPRITE_LINES[id]; if(!lines) return null;
-  const key=id+'|'+bob+'|'+px;
-  if(!_spriteCache[key]) _spriteCache[key]=_bakeSprite(lines, px, bob);
+export function spriteCanvas(id, px, bob, frame){
+  const sprite=SPRITE_LINES[id]; if(!sprite) return null;
+  const multi=_isMultiFrame(sprite);
+  // Multi-frame sprites carry their own animation — ignore the legacy 1-px bob.
+  const useBob = multi ? 0 : (bob|0);
+  const useFrame = multi ? ((frame|0) % sprite.length) : 0;
+  const key=id+'|'+useBob+'|'+px+'|f'+useFrame;
+  if(!_spriteCache[key]) _spriteCache[key]=_bakeSprite(_frameLines(sprite, useFrame), px, useBob);
   return _spriteCache[key];
+}
+// expose helpers for callers that need to size things off the raw art
+export function spriteFrameLines(id, frame){
+  const s=SPRITE_LINES[id]; if(!s) return null;
+  return _frameLines(s, frame|0);
+}
+export function spriteFrameCount(id){
+  const s=SPRITE_LINES[id]; return s ? _frameCount(s) : 0;
 }
 
 // ===== end sprite graphics =====
@@ -240,9 +269,12 @@ function glyph(wx,wy,ch,color,glow,spriteId,dim){
   // graphics mode: draw the pixel sprite if one exists for this id
   if(GFX.on && spriteId && SPRITE_LINES[spriteId]){
     const px=CELL*2;                                // bake at 2× for crispness, draw to CELL
-    const N=SPRITE_LINES[spriteId].length;          // 16 or 32 -> scale bob to match
-    const bob=(GFX.frame===1 && SPRITE_ANIM[spriteId]) ? Math.max(1, Math.round(N/16)) : 0;
-    const cnv=spriteCanvas(spriteId, px, bob);
+    const sprite=SPRITE_LINES[spriteId];
+    const multi=Array.isArray(sprite) && Array.isArray(sprite[0]);
+    const N=multi ? sprite[0].length : sprite.length;          // 16/32/64
+    // Multi-frame sprites animate via real frames, not the legacy bob shift.
+    const bob=(!multi && GFX.frame===1 && SPRITE_ANIM[spriteId]) ? Math.max(1, Math.round(N/16)) : 0;
+    const cnv=spriteCanvas(spriteId, px, bob, GFX.tick);
     if(cnv){
       ctx.save();
       if(dim) ctx.globalAlpha=0.45;
