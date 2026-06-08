@@ -90,6 +90,9 @@ export const COL = {
 // inferred from the row count, so both 16x16 (legacy) and 32x32 (hi-detail)
 // art are valid — the renderer scales to whatever N it finds.
 export function S(lines){
+  // Accept both call styles: S(`...`) (plain string) and S`...` (tagged
+  // template — receives the strings array; we use the single cooked string).
+  if(typeof lines !== 'string') lines = lines[0];
   const arr = lines.trim().split('\n').map(s => s.replace(/^\s+/, ''));
   const n = arr.length;
   // hard-validate squareness so a typo can't break the renderer silently
