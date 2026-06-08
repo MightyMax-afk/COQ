@@ -15,8 +15,8 @@ import { effAtk, effDef, gearBonus, gearName, gearEvade, gearThorns, gearRegen, 
 const ART = { ...Tiles, ...Creatures, ...BossArt, ...ItemsFx };
 
 // ---------- view constants ----------
-const VIEW_W = 28, VIEW_H = 18;   // visible window in tiles; the camera follows the player
-const CELL = 22, FONT = 19;       // logical pixels per cell (canvas is scaled to fit)
+const VIEW_W = 20, VIEW_H = 13;   // visible window in tiles; the camera follows the player
+const CELL = 32, FONT = 26;       // logical pixels per cell (canvas is scaled to fit)
 
 // ============================================================
 //  PUBLIC ATLAS  — grouped for layout

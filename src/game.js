@@ -29,9 +29,14 @@ const BUILD_DATE = "2026-06-08";
            advanced beside the 0/1 idle-bob frame) so 3-frame creature loops cycle
            fully instead of just frames 0/1. (3) TILES: expanded biome tiles
            (src/art/tiles.js). palette.js S() now also accepts tagged-template
-           calls (S`...`) so the new art modules drop in unchanged. NOTE: chest,
-           merchant, and the player paper-doll stay on the existing 32×32 art for
-           now; 64×64 hero sprites (sprites64.js) are not yet wired.
+           calls (S`...`) so the new art modules drop in unchanged. (4) CAMERA/
+           RESOLUTION: the old 22px cells downsampled the new 64×64 art (nearest-
+           neighbor dropped ~1/3 of pixels, so detail read as small/sparse). Zoomed
+           the view in — VIEW 28×18 → 20×13, CELL 22 → 32, FONT 19 → 26 — so a sprite
+           bakes and draws at 64px = 1:1 native (no downsampling). Trades some
+           on-screen map area for crisp, full-size sprites. NOTE: chest, merchant,
+           and the player paper-doll stay on the existing 32×32 art for now; 64×64
+           hero sprites (sprites64.js) are not yet wired.
    v0.27.1 SPRITE ANIM FIX — the v0.27.0 pass shipped a partial render.js: the
            idle "bob" was hardcoded to 1 grid-row, so 32×32 sprites bobbed only
            1/32 of their height (half the old 16×16 feel) and looked stiff. Restore
