@@ -15,9 +15,20 @@ import { openInventory, closeInventory, isInventoryOpen } from './inventory.js';
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
 // ============================================================
-const BUILD = "v0.28.0";
+const BUILD = "v0.29.0";
 const BUILD_DATE = "2026-06-08";
 /* CHANGELOG
+   v0.29.0 RESPONSIVE VIEW + 64×64 HEROES. (1) The map now sizes itself to the
+           player's screen: sizeCanvas() picks the tile count so each tile lands
+           near TARGET_CELL (46px) on-screen, and CELL is the canvas backing res
+           fixed at 64px = native sprite size, so 64×64 art bakes/draws 1:1 with
+           no downsampling. A 720p and a 1080p monitor now both show tiles at the
+           same comfortable size (720p ≈ 19 wide, 1080p ≈ 23 wide) instead of a
+           fixed count that looked tiny or huge. Recomputed on window resize.
+           (2) PLAYER/HEROES upgraded to 64×64: new src/art/heroes64.js (wanderer/
+           knight/rogue, v1 + Act II v2) wired into the player/player_v2/
+           player_knight/player_rogue atlas slots. All characters (heroes,
+           creatures, bosses) are now 64×64. Items stay 32×32 (not redrawn yet).
    v0.28.0 64×64 ART PASS — bosses, creatures, and dungeon tiles upgraded from
            32×32 to 64×64. (1) BOSSES: all 40 redrawn as 64×64 two-frame idle
            loops (src/art/bosses.js); render.js gains multi-frame support

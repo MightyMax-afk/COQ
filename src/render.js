@@ -6,6 +6,7 @@ import { $ } from './util.js';
 import * as Tiles from './art/tiles.js';
 import * as Creatures from './art/creatures.js';
 import * as C64 from './art/creatures64.js';   // 64×64 animated creature refresh (Bestiary deliverable)
+import { SPRITES64 as Heroes64 } from './art/heroes64.js';   // 64×64 player/hero sprites
 import * as BossArt from './art/bosses.js';
 import * as ItemsFx from './art/items-fx.js';
 import { biomeFor } from './game.js';
@@ -15,8 +16,17 @@ import { effAtk, effDef, gearBonus, gearName, gearEvade, gearThorns, gearRegen, 
 const ART = { ...Tiles, ...Creatures, ...BossArt, ...ItemsFx };
 
 // ---------- view constants ----------
-const VIEW_W = 20, VIEW_H = 13;   // visible window in tiles; the camera follows the player
-const CELL = 32, FONT = 26;       // logical pixels per cell (canvas is scaled to fit)
+// Visible window + cell metrics. VIEW_W/VIEW_H are RECOMPUTED by sizeCanvas() to
+// fit the player's screen (see below), so the map always shows tiles at roughly
+// the same on-screen size whether you're on a 720p, 1080p or larger monitor.
+// CELL is the canvas BACKING pixels per tile, fixed at 64 = the native sprite
+// resolution, so every 64×64 sprite bakes and draws 1:1 with zero downsampling
+// (the browser then scales the whole canvas down to the on-screen size). Seeded
+// here for the first paint; VIEW_* are refined once layout is known.
+let VIEW_W = 22, VIEW_H = 14;     // visible window in tiles; the camera follows the player
+const CELL = 64, FONT = 50;       // backing px per tile (= native sprite size)
+const TARGET_CELL = 46;           // desired ON-SCREEN px per tile (drives the zoom feel)
+const VIEW_ASPECT = 14 / 9;       // keep the map ~14:9 to match the cabinet layout in index.html
 
 // ============================================================
 //  PUBLIC ATLAS  — grouped for layout
@@ -42,7 +52,9 @@ export const SPRITE_LINES = {
   v_wall:ART.TILE_V_WALL, v_floor:ART.TILE_V_FLOOR, v_corpse:ART.TILE_V_CORPSE, v_fungus:ART.TILE_V_FUNGUS,
   // Act II biome 8: The Citadel of Stars (obsidian + onyx). 'cit_' prefix to avoid the crypt's 'c_wall'.
   cit_wall:ART.TILE_CIT_WALL, cit_floor:ART.TILE_CIT_FLOOR, cit_crystal:ART.TILE_CIT_CRYSTAL, cit_starfield:ART.TILE_CIT_STARFIELD,
-  player:ART.SP_PLAYER, player_v2:ART.SP_PLAYER_V2, player_knight:ART.SP_PLAYER_KNIGHT, player_rogue:ART.SP_PLAYER_ROGUE,
+  // 64×64 hero refresh (Heroes64.*). Wanderer swaps to its v2 look in Act II.
+  player:Heroes64.hero64_wanderer_v1, player_v2:Heroes64.hero64_wanderer_v2,
+  player_knight:Heroes64.hero64_knight_v1, player_rogue:Heroes64.hero64_rogue_v1,
   // 64×64 animated creature refresh — base archetypes (C64.*.frames = [frame0,frame1,...]).
   rat:C64.RAT.frames, goblin:C64.GOBLIN.frames, archer:C64.ARCHER.frames, orc:C64.ORC.frames, troll:C64.TROLL.frames, mage:C64.MAGE.frames, mimic:C64.MIMIC.frames,
   // Act II elite variants — now wired to the 64×64 _ELITE art.
@@ -156,9 +168,21 @@ export function spriteFrameCount(id){
 // ---------- canvas ----------
 export const cv = $("game"), ctx = cv.getContext("2d");
 
-// crisp canvas with devicePixelRatio
+// crisp canvas with devicePixelRatio + responsive tile count
 export function sizeCanvas(){
   const dpr = Math.min(window.devicePixelRatio||1, 2);
+  // How much on-screen width the map gets = its container's content box. The
+  // canvas is width:100% of that box, so dividing by TARGET_CELL gives the tile
+  // count that lands each tile near TARGET_CELL px tall on THIS screen. Bigger
+  // monitors therefore show more of the map at the same comfortable tile size,
+  // smaller ones show less — instead of a fixed count that looks tiny or huge.
+  const host = cv.parentElement;
+  const availW = (host && host.clientWidth) ? host.clientWidth : (VIEW_W*TARGET_CELL);
+  VIEW_W = Math.max(12, Math.min(MAP_W, Math.round(availW / TARGET_CELL)));
+  VIEW_H = Math.max(8,  Math.min(MAP_H, Math.round(VIEW_W / VIEW_ASPECT)));
+  // Backing buffer is VIEW × 64px so sprites render at native res; a small dpr
+  // bump keeps it crisp on hi-density screens. CSS (width:100%) scales the whole
+  // canvas down to the ~TARGET_CELL on-screen size.
   cv.width  = VIEW_W*CELL*dpr;
   cv.height = VIEW_H*CELL*dpr;
   cv.style.aspectRatio = (VIEW_W*CELL)+" / "+(VIEW_H*CELL);
@@ -268,7 +292,7 @@ function glyph(wx,wy,ch,color,glow,spriteId,dim){
   if(sx<0||sx>=VIEW_W||sy<0||sy>=VIEW_H) return;   // outside the camera window
   // graphics mode: draw the pixel sprite if one exists for this id
   if(GFX.on && spriteId && SPRITE_LINES[spriteId]){
-    const px=CELL*2;                                // bake at 2× for crispness, draw to CELL
+    const px=CELL;                                  // CELL=64 = native sprite size → bake 1:1
     const sprite=SPRITE_LINES[spriteId];
     const multi=Array.isArray(sprite) && Array.isArray(sprite[0]);
     const N=multi ? sprite[0].length : sprite.length;          // 16/32/64
