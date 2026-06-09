@@ -55,6 +55,8 @@ export const SPRITE_LINES = {
   // 64×64 hero refresh (Heroes64.*). Wanderer swaps to its v2 look in Act II.
   player:Heroes64.hero64_wanderer_v1, player_v2:Heroes64.hero64_wanderer_v2,
   player_knight:Heroes64.hero64_knight_v1, player_rogue:Heroes64.hero64_rogue_v1,
+  // class Act II upgrades — swapped in once everAct2 is set (mirrors the Wanderer's v2 swap)
+  player_knight_v2:Heroes64.hero64_knight_v2, player_rogue_v2:Heroes64.hero64_rogue_v2,
   // 64×64 animated creature refresh — base archetypes (C64.*.frames = [frame0,frame1,...]).
   rat:C64.RAT.frames, goblin:C64.GOBLIN.frames, archer:C64.ARCHER.frames, orc:C64.ORC.frames, troll:C64.TROLL.frames, mage:C64.MAGE.frames, mimic:C64.MIMIC.frames,
   // Act II elite variants — now wired to the 64×64 _ELITE art.
@@ -95,7 +97,7 @@ for(const [base, src] of [["armor",ART.SP_ARMOR],["helm",ART.SP_HELM],["shield",
 
 // which sprites have the idle bob
 const SPRITE_ANIM = {
-  player:1, player_v2:1, player_knight:1, player_rogue:1, rat:1, goblin:1, archer:1, orc:1, troll:1, mage:1, mimic:1, merchant:1,
+  player:1, player_v2:1, player_knight:1, player_rogue:1, player_knight_v2:1, player_rogue_v2:1, rat:1, goblin:1, archer:1, orc:1, troll:1, mage:1, mimic:1, merchant:1,
   rat_v2:1, goblin_v2:1, archer_v2:1, orc_v2:1, troll_v2:1, mage_v2:1, mimic_v2:1,
   wraith:1, hound:1, spitter:1, glasshusk:1, cinderling:1, brine:1, boneknight:1,
   boss_ratking:1, boss_warlord:1, boss_widow:1, boss_dragon:1,
@@ -354,9 +356,10 @@ export function render(){
   // Player art: a chosen class shows its own look; otherwise the Wanderer uses
   // v2 (geared) once you've ever set foot in Act II and the original cyan @ before.
   // Once swapped, stays swapped — even after NG+ resets you back to Act I.
-  let playerSpr = (G.player && G.player.everAct2) ? "player_v2" : "player";
-  if(G.player && G.player.classId==="knight") playerSpr="player_knight";
-  else if(G.player && G.player.classId==="rogue") playerSpr="player_rogue";
+  const inAct2 = !!(G.player && G.player.everAct2);
+  let playerSpr = inAct2 ? "player_v2" : "player";
+  if(G.player && G.player.classId==="knight") playerSpr = inAct2 ? "player_knight_v2" : "player_knight";
+  else if(G.player && G.player.classId==="rogue") playerSpr = inAct2 ? "player_rogue_v2" : "player_rogue";
   glyph(G.player.x,G.player.y,"@",COL.player,true,playerSpr);
   if(GFX.on) drawStatusIcon(G.player);
 

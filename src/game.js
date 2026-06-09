@@ -15,9 +15,15 @@ import { openInventory, closeInventory, isInventoryOpen } from './inventory.js';
 // ============================================================
 //  BUILD VERSION  —  bump this each time we change something
 // ============================================================
-const BUILD = "v0.29.0";
-const BUILD_DATE = "2026-06-08";
+const BUILD = "v0.29.1";
+const BUILD_DATE = "2026-06-09";
 /* CHANGELOG
+   v0.29.1 BUGFIXES. (1) Manual equip no longer flips the auto-equip toggle OFF —
+           the [auto] button stays in whatever state you set. (2) Knight & Rogue
+           now swap to their Act II v2 hero sprites once you cross into Act II
+           (the v2 art existed but was never wired up — only the Wanderer swapped).
+           (3) Up-stairs removed past depth 10: the descent is one-way down through
+           the back half of Act I and all of Act II (was: also spawned on 22-30).
    v0.29.0 RESPONSIVE VIEW + 64×64 HEROES. (1) The map now sizes itself to the
            player's screen: sizeCanvas() picks the tile count so each tile lands
            near TARGET_CELL (46px) on-screen, and CELL is the canvas backing res
@@ -538,19 +544,9 @@ function equipIndex(i){
   G.equipped[it.kind]=it;     // 'charm' is a valid slot
   reconcileCharmHp();
   log(`You equip the ${gearName(it)}.`,"good");
-  // first manual equip turns OFF auto-equip so it stops overriding your choices
-  if(G.autoEquipOn){
-    G.autoEquipOn=false;
-    if(!G.autoEquipWarned){
-      autoEquializeWarn();
-      G.autoEquipWarned=true;
-    } else log("Auto-equip disabled.","bad");
-  }
+  // Manual equip no longer disables auto-equip — the [auto] toggle stays in whatever
+  // state the player chose. (Was: first manual equip flipped auto-equip OFF.)
   return false; // equipping is free
-}
-function autoEquializeWarn(){
-  log("⚠ Manual equip — auto-equip is now OFF so it won't override you.","bad");
-  log("Toggle it back on with the [auto] button by the Pack.","bad");
 }
 function descend(){
   if(G.map[G.player.y][G.player.x]!==T_STAIRS){ log("No stairs down beneath your feet."); return false; }
@@ -1069,6 +1065,16 @@ window.addEventListener("keydown",e=>{
   // movement and commands. Digits, symbols (>,<,.), and named keys (ArrowUp,
   // Escape) are unaffected by toLowerCase().
   const k=e.key.length===1 ? e.key.toLowerCase() : e.key;
+  // secret debug combo: Ctrl+Shift+D warps onto the down-stairs (for testing)
+  if(e.ctrlKey && e.shiftKey && k==="d"){
+    e.preventDefault();
+    if(G.player.stairX>=0 && G.map[G.player.stairY] && G.map[G.player.stairY][G.player.stairX]===T_STAIRS){
+      G.player.x=G.player.stairX; G.player.y=G.player.stairY;
+      computeFOV(); render();
+      log("⚡ Warped to the down-stairs. (Ctrl+Shift+D)","gold");
+    } else log("No down-stairs on this floor.","bad");
+    return;
+  }
   if(k==="i"){ e.preventDefault(); openInventory(); return; }   // open the full inventory screen
   if(k===" "){ e.preventDefault(); spaceHeld=true; return; }      // hold Space to arm a dash
   if(spaceHeld && MOVES[k]){ e.preventDefault(); turn(()=>dash(...MOVES[k])); return; }

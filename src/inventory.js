@@ -194,22 +194,15 @@ export function closeInventory(){
 }
 
 // ---------- equipping ----------
-// Mirrors equipIndex() in game.js: set the slot, reconcile charm HP, and turn
-// auto-equip off on the first manual choice so it stops overriding the player.
+// Mirrors equipIndex() in game.js: set the slot and reconcile charm HP.
+// Manual equipping leaves the auto-equip toggle untouched.
 function equipFromPack(i){
   const it = G.inv[i];
   if(!it || !isEquippable(it)) return;
   G.equipped[it.kind] = it;
   reconcileCharmHp();
   log(`You equip the ${gearName(it)}.`, 'good');
-  if(G.autoEquipOn){
-    G.autoEquipOn = false;
-    if(!G.autoEquipWarned){
-      log('⚠ Manual equip — auto-equip is now OFF so it won\'t override you.', 'bad');
-      log('Toggle it back on with the [auto] button by the Pack.', 'bad');
-      G.autoEquipWarned = true;
-    } else log('Auto-equip disabled.', 'bad');
-  }
+  // Manual equip no longer disables auto-equip — leave the [auto] toggle alone.
   refreshInventory();
   updateUI();   // keep the side HUD in sync
   render();     // redraw the map (player art can change with gear in Act II)

@@ -71,9 +71,9 @@ export function genLevel(dir){
 
   const first=rooms[0], last=rooms[rooms.length-1];
 
-  // up-stairs only on the *first 10 floors of each act*: depths 2..10 (Act I) and 22..30 (Act II).
-  // The bottom half of each act is one-way down; same rule applied symmetrically across both acts.
-  const upAllowed = (G.depth>1 && G.depth<=10) || (G.depth>=22 && G.depth<=30);
+  // up-stairs only on the first 10 floors (depths 2..10). Past depth 10 the descent is
+  // one-way down — no upstairs in the back half of Act I or anywhere in Act II.
+  const upAllowed = (G.depth>1 && G.depth<=10);
   if(upAllowed){
     G.upX=first.cx(); G.upY=first.cy(); G.map[G.upY][G.upX]=T_STAIRS_UP;
   } else { G.upX=-1; G.upY=-1; }
