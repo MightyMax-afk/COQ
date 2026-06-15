@@ -13,8 +13,10 @@
 //
 //  Usage: node tools/clean-spritesheet.mjs [in.png] [out.png] [threshold]
 // ============================================================
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, readFileSync, existsSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { deflateSync } from 'node:zlib';
+import { createHash } from 'node:crypto';
 import { decodePNG } from './png-decode.mjs';
 import { buildSheetPlan, categoryOf } from '../src/atlas.js';
 
@@ -82,6 +84,17 @@ const stride=w*4, rawBuf=Buffer.alloc((stride+1)*h);
 for(let y=0;y<h;y++){ rawBuf[y*(stride+1)]=0; rgba.copy(rawBuf,y*(stride+1)+1,y*stride,y*stride+stride); }
 const png=Buffer.concat([sig,chunk('IHDR',ihdr),chunk('IDAT',deflateSync(rawBuf,{level:9})),chunk('IEND',Buffer.alloc(0))]);
 writeFileSync(OUT,png);
-console.log(`cleaned ${IN} -> ${OUT}  (${w}x${h})`);
+
+// stamp the manifest with a content hash of the cleaned PNG so the loader's
+// cache-buster picks up the new sheet without a hard refresh.
+const pngVersion = createHash('sha1').update(png).digest('hex').slice(0,12);
+const MANIFEST = join(dirname(OUT), 'atlas-manifest.json');
+if(existsSync(MANIFEST)){
+  const m = JSON.parse(readFileSync(MANIFEST, 'utf8'));
+  m.pngVersion = pngVersion;
+  writeFileSync(MANIFEST, JSON.stringify(m, null, 2));
+}
+
+console.log(`cleaned ${IN} -> ${OUT}  (${w}x${h}, pngVersion ${pngVersion})`);
 console.log(`  cells: ${tileCells} tile(opaque) · ${spriteCells} sprite(trimmed) · ${emptyCells} empty(cleared)`);
 console.log(`  ${cleared} px → transparent (${(100*cleared/(w*h)).toFixed(1)}%)`);
