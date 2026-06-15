@@ -21,6 +21,7 @@ import { writeFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { deflateSync } from 'node:zlib';
+import { createHash } from 'node:crypto';
 import { PAL, frameLines, buildSheetPlan } from '../src/atlas.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -103,11 +104,16 @@ mkdirSync(OUT_DIR, { recursive: true });
 const png = encodePNG(width, height, rgba);
 writeFileSync(join(OUT_DIR, 'spritesheet.png'), png);
 
+// short content hash of the PNG — the loader appends it to the image URL as a
+// cache-buster so a redeployed sheet is picked up without a hard refresh.
+const pngVersion = createHash('sha1').update(png).digest('hex').slice(0,12);
+
 // manifest: keep it small + editor-friendly
 const manifest = {
   cell,
   cols: plan.cols,
   width, height,
+  pngVersion,
   generated: new Date().toISOString().slice(0,10),
   note: 'Each cell is 64x64. frames[] lists the top-left pixel of each animation frame. anim=1 means the in-game renderer idle-bobs single-frame procedural art (PNG frames animate directly).',
   groups: plan.groups,

@@ -94,10 +94,18 @@ function _loadImage(url){
 // game boots fine without a sheet — injection is purely opt-in).
 export async function loadSpritesheet(pngUrl, manifestUrl){
   try {
+    // The manifest is tiny and always fetched fresh; the PNG is large and cached
+    // by the browser. Append the manifest's pngVersion as a query so the image
+    // URL changes whenever the sheet is re-baked/repainted — that busts the cache
+    // exactly on a real change while still caching between changes. Without this,
+    // a freshly deployed sheet keeps showing the old cached PNG until a hard
+    // refresh (GitHub Pages serves assets with a long max-age).
     const res = await fetch(manifestUrl, { cache:'no-cache' });
     if(!res.ok) return 0;
     const manifest = await res.json();
-    const img = await _loadImage(pngUrl);
+    const ver = manifest.pngVersion || manifest.generated;
+    const url = ver ? pngUrl + (pngUrl.includes('?') ? '&' : '?') + 'v=' + encodeURIComponent(ver) : pngUrl;
+    const img = await _loadImage(url);
     registerSheet(img, manifest);
     return Object.keys(manifest.sprites || {}).length;
   } catch(e){
