@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Caves of Qlud — Spritesheet Exporter</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin:0; background:#0c0a0e; color:#e9e0cf; font:14px/1.5 "JetBrains Mono", ui-monospace, monospace; }
+  header { padding:18px 22px; border-bottom:1px solid #2a2520; }
+  h1 { margin:0 0 4px; font-size:18px; color:#e8b75c; }
+  p { margin:4px 0; color:#b6ab95; }
+  .bar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:14px 22px; }
+  button { background:#1c2230; color:#d4dce6; border:1px solid #3a4456; border-radius:6px; padding:8px 14px; cursor:pointer; font:inherit; }
+  button:hover { background:#26303f; }
+  button.primary { background:#3a6b22; border-color:#4f8a30; color:#eafbe0; }
+  code { background:#161320; padding:1px 6px; border-radius:4px; color:#c9bda3; }
+  .wrap { padding:0 22px 40px; }
+  .sheet { background:
+      linear-gradient(45deg,#141118 25%,transparent 25%,transparent 75%,#141118 75%),
+      linear-gradient(45deg,#141118 25%,#0c0a0e 25%,#0c0a0e 75%,#141118 75%);
+    background-size:16px 16px; background-position:0 0, 8px 8px;
+    border:1px solid #2a2520; image-rendering:pixelated; max-width:100%; height:auto; }
+  .muted { color:#7d7361; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Caves of Qlud — Spritesheet Exporter</h1>
+  <p>Bakes every in-game sprite into one 64×64-cell PNG + a JSON manifest, straight from <code>src/atlas.js</code>.</p>
+  <p class="muted">Serve the repo over HTTP (<code>python3 -m http.server</code>) and open this page — ES modules won't load over <code>file://</code>.</p>
+</header>
+<div class="bar">
+  <button class="primary" id="png">⬇ Download spritesheet.png</button>
+  <button id="json">⬇ Download atlas-manifest.json</button>
+  <span class="muted" id="stat">baking…</span>
+</div>
+<div class="wrap">
+  <canvas id="sheet" class="sheet"></canvas>
+</div>
+
+<script type="module">
+import { PAL, frameLines, buildSheetPlan } from './src/atlas.js';
+
+const plan = buildSheetPlan();
+const { cell, width, height } = plan;
+
+// bake the sheet into a canvas (nearest-neighbor, transparent background)
+const cv = document.getElementById('sheet');
+cv.width = width; cv.height = height;
+const ctx = cv.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+
+function putCell(lines, ox, oy){
+  const n = lines.length, scale = Math.max(1, Math.round(cell / n));
+  for(let sy=0; sy<n; sy++){
+    const row = lines[sy];
+    for(let sx=0; sx<n; sx++){
+      const c = PAL[row[sx]];
+      if(!c) continue;
+      ctx.fillStyle = c;
+      ctx.fillRect(ox + sx*scale, oy + sy*scale, scale, scale);
+    }
+  }
+}
+for(const c of plan.cells){
+  const lines = frameLines(c.id, c.frame);
+  if(lines) putCell(lines, c.x, c.y);
+}
+
+document.getElementById('stat').textContent =
+  `${Object.keys(plan.sprites).length} sprites · ${plan.cells.length} frames · ${width}×${height}px`;
+
+// downloads
+function dl(name, blob){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
+document.getElementById('png').onclick = () => cv.toBlob(b => dl('spritesheet.png', b), 'image/png');
+document.getElementById('json').onclick = () => {
+  const manifest = {
+    cell, cols: plan.cols, width, height,
+    generated: new Date().toISOString().slice(0,10),
+    note: 'Each cell is 64x64. frames[] lists the top-left pixel of each animation frame.',
+    groups: plan.groups,
+    sprites: Object.fromEntries(Object.entries(plan.sprites).map(([id,s]) => [id, { frames:s.frames, anim:s.anim }])),
+  };
+  dl('atlas-manifest.json', new Blob([JSON.stringify(manifest, null, 2)], { type:'application/json' }));
+};
+</script>
+</body>
+</html>

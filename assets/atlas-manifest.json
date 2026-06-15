@@ -1,0 +1,1452 @@
+{
+  "cell": 64,
+  "cols": 16,
+  "width": 1024,
+  "height": 1024,
+  "generated": "2026-06-15",
+  "note": "Each cell is 64x64. frames[] lists the top-left pixel of each animation frame. anim=1 means the in-game renderer idle-bobs single-frame procedural art (PNG frames animate directly).",
+  "groups": [
+    {
+      "key": "tiles",
+      "label": "Dungeon Tiles",
+      "row": 0,
+      "rows": 3
+    },
+    {
+      "key": "heroes",
+      "label": "Heroes",
+      "row": 3,
+      "rows": 1
+    },
+    {
+      "key": "creatures",
+      "label": "Creatures",
+      "row": 4,
+      "rows": 3
+    },
+    {
+      "key": "elites",
+      "label": "Elite Variants",
+      "row": 7,
+      "rows": 1
+    },
+    {
+      "key": "npc",
+      "label": "NPCs / Objects",
+      "row": 8,
+      "rows": 1
+    },
+    {
+      "key": "bosses",
+      "label": "Bosses",
+      "row": 9,
+      "rows": 5
+    },
+    {
+      "key": "items",
+      "label": "Items",
+      "row": 14,
+      "rows": 1
+    },
+    {
+      "key": "fx",
+      "label": "Status FX",
+      "row": 15,
+      "rows": 1
+    }
+  ],
+  "sprites": {
+    "wall": {
+      "frames": [
+        {
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "anim": 0
+    },
+    "floor": {
+      "frames": [
+        {
+          "x": 64,
+          "y": 0
+        }
+      ],
+      "anim": 0
+    },
+    "stairs_down": {
+      "frames": [
+        {
+          "x": 128,
+          "y": 0
+        }
+      ],
+      "anim": 0
+    },
+    "stairs_up": {
+      "frames": [
+        {
+          "x": 192,
+          "y": 0
+        }
+      ],
+      "anim": 0
+    },
+    "d_wall": {
+      "frames": [
+        {
+          "x": 256,
+          "y": 0
+        }
+      ],
+      "anim": 0
+    },
+    "d_floor": {
+      "frames": [
+        {
+          "x": 320,
+          "y": 0
+        }
+      ],
+      "anim": 0
+    },
+    "d_stairs_down": {
+      "frames": [
+        {
+          "x": 384,
+          "y": 0
+        }
+      ],
+      "anim": 0
+    },
+    "d_stairs_up": {
+      "frames": [
+        {
+          "x": 448,
+          "y": 0
+        }
+      ],
+      "anim": 0
+    },
+    "c_wall": {
+      "frames": [
+        {
+          "x": 512,
+          "y": 0
+        }
+      ],
+      "anim": 0
+    },
+    "c_floor": {
+      "frames": [
+        {
+          "x": 576,
+          "y": 0
+        }
+      ],
+      "anim": 0
+    },
+    "c_bones": {
+      "frames": [
+        {
+          "x": 640,
+          "y": 0
+        }
+      ],
+      "anim": 0
+    },
+    "k_wall": {
+      "frames": [
+        {
+          "x": 704,
+          "y": 0
+        }
+      ],
+      "anim": 0
+    },
+    "k_floor": {
+      "frames": [
+        {
+          "x": 768,
+          "y": 0
+        }
+      ],
+      "anim": 0
+    },
+    "k_shroom": {
+      "frames": [
+        {
+          "x": 832,
+          "y": 0
+        }
+      ],
+      "anim": 0
+    },
+    "k_rocks": {
+      "frames": [
+        {
+          "x": 896,
+          "y": 0
+        }
+      ],
+      "anim": 0
+    },
+    "h_wall": {
+      "frames": [
+        {
+          "x": 960,
+          "y": 0
+        }
+      ],
+      "anim": 0
+    },
+    "h_floor": {
+      "frames": [
+        {
+          "x": 0,
+          "y": 64
+        }
+      ],
+      "anim": 0
+    },
+    "h_brazier": {
+      "frames": [
+        {
+          "x": 64,
+          "y": 64
+        }
+      ],
+      "anim": 0
+    },
+    "r_wall": {
+      "frames": [
+        {
+          "x": 128,
+          "y": 64
+        }
+      ],
+      "anim": 0
+    },
+    "r_floor": {
+      "frames": [
+        {
+          "x": 192,
+          "y": 64
+        }
+      ],
+      "anim": 0
+    },
+    "r_shrine": {
+      "frames": [
+        {
+          "x": 256,
+          "y": 64
+        }
+      ],
+      "anim": 0
+    },
+    "r_coins": {
+      "frames": [
+        {
+          "x": 320,
+          "y": 64
+        }
+      ],
+      "anim": 0
+    },
+    "a_wall": {
+      "frames": [
+        {
+          "x": 384,
+          "y": 64
+        }
+      ],
+      "anim": 0
+    },
+    "a_floor": {
+      "frames": [
+        {
+          "x": 448,
+          "y": 64
+        }
+      ],
+      "anim": 0
+    },
+    "a_embers": {
+      "frames": [
+        {
+          "x": 512,
+          "y": 64
+        }
+      ],
+      "anim": 0
+    },
+    "a_skull": {
+      "frames": [
+        {
+          "x": 576,
+          "y": 64
+        }
+      ],
+      "anim": 0
+    },
+    "v_wall": {
+      "frames": [
+        {
+          "x": 640,
+          "y": 64
+        }
+      ],
+      "anim": 0
+    },
+    "v_floor": {
+      "frames": [
+        {
+          "x": 704,
+          "y": 64
+        }
+      ],
+      "anim": 0
+    },
+    "v_corpse": {
+      "frames": [
+        {
+          "x": 768,
+          "y": 64
+        }
+      ],
+      "anim": 0
+    },
+    "v_fungus": {
+      "frames": [
+        {
+          "x": 832,
+          "y": 64
+        }
+      ],
+      "anim": 0
+    },
+    "cit_wall": {
+      "frames": [
+        {
+          "x": 896,
+          "y": 64
+        }
+      ],
+      "anim": 0
+    },
+    "cit_floor": {
+      "frames": [
+        {
+          "x": 960,
+          "y": 64
+        }
+      ],
+      "anim": 0
+    },
+    "cit_crystal": {
+      "frames": [
+        {
+          "x": 0,
+          "y": 128
+        }
+      ],
+      "anim": 0
+    },
+    "cit_starfield": {
+      "frames": [
+        {
+          "x": 64,
+          "y": 128
+        }
+      ],
+      "anim": 0
+    },
+    "player": {
+      "frames": [
+        {
+          "x": 0,
+          "y": 192
+        }
+      ],
+      "anim": 1
+    },
+    "player_v2": {
+      "frames": [
+        {
+          "x": 64,
+          "y": 192
+        }
+      ],
+      "anim": 1
+    },
+    "player_knight": {
+      "frames": [
+        {
+          "x": 128,
+          "y": 192
+        }
+      ],
+      "anim": 1
+    },
+    "player_rogue": {
+      "frames": [
+        {
+          "x": 192,
+          "y": 192
+        }
+      ],
+      "anim": 1
+    },
+    "player_knight_v2": {
+      "frames": [
+        {
+          "x": 256,
+          "y": 192
+        }
+      ],
+      "anim": 1
+    },
+    "player_rogue_v2": {
+      "frames": [
+        {
+          "x": 320,
+          "y": 192
+        }
+      ],
+      "anim": 1
+    },
+    "rat": {
+      "frames": [
+        {
+          "x": 0,
+          "y": 256
+        },
+        {
+          "x": 64,
+          "y": 256
+        }
+      ],
+      "anim": 1
+    },
+    "goblin": {
+      "frames": [
+        {
+          "x": 128,
+          "y": 256
+        },
+        {
+          "x": 192,
+          "y": 256
+        }
+      ],
+      "anim": 1
+    },
+    "archer": {
+      "frames": [
+        {
+          "x": 256,
+          "y": 256
+        },
+        {
+          "x": 320,
+          "y": 256
+        }
+      ],
+      "anim": 1
+    },
+    "orc": {
+      "frames": [
+        {
+          "x": 384,
+          "y": 256
+        },
+        {
+          "x": 448,
+          "y": 256
+        }
+      ],
+      "anim": 1
+    },
+    "troll": {
+      "frames": [
+        {
+          "x": 512,
+          "y": 256
+        },
+        {
+          "x": 576,
+          "y": 256
+        },
+        {
+          "x": 640,
+          "y": 256
+        }
+      ],
+      "anim": 1
+    },
+    "mage": {
+      "frames": [
+        {
+          "x": 704,
+          "y": 256
+        },
+        {
+          "x": 768,
+          "y": 256
+        },
+        {
+          "x": 832,
+          "y": 256
+        }
+      ],
+      "anim": 1
+    },
+    "mimic": {
+      "frames": [
+        {
+          "x": 896,
+          "y": 256
+        },
+        {
+          "x": 960,
+          "y": 256
+        }
+      ],
+      "anim": 1
+    },
+    "wraith": {
+      "frames": [
+        {
+          "x": 0,
+          "y": 320
+        },
+        {
+          "x": 64,
+          "y": 320
+        },
+        {
+          "x": 128,
+          "y": 320
+        }
+      ],
+      "anim": 1
+    },
+    "hound": {
+      "frames": [
+        {
+          "x": 192,
+          "y": 320
+        },
+        {
+          "x": 256,
+          "y": 320
+        }
+      ],
+      "anim": 1
+    },
+    "spitter": {
+      "frames": [
+        {
+          "x": 320,
+          "y": 320
+        },
+        {
+          "x": 384,
+          "y": 320
+        }
+      ],
+      "anim": 1
+    },
+    "glasshusk": {
+      "frames": [
+        {
+          "x": 448,
+          "y": 320
+        },
+        {
+          "x": 512,
+          "y": 320
+        },
+        {
+          "x": 576,
+          "y": 320
+        }
+      ],
+      "anim": 1
+    },
+    "cinderling": {
+      "frames": [
+        {
+          "x": 640,
+          "y": 320
+        },
+        {
+          "x": 704,
+          "y": 320
+        },
+        {
+          "x": 768,
+          "y": 320
+        }
+      ],
+      "anim": 1
+    },
+    "brine": {
+      "frames": [
+        {
+          "x": 832,
+          "y": 320
+        },
+        {
+          "x": 896,
+          "y": 320
+        },
+        {
+          "x": 960,
+          "y": 320
+        }
+      ],
+      "anim": 1
+    },
+    "boneknight": {
+      "frames": [
+        {
+          "x": 0,
+          "y": 384
+        },
+        {
+          "x": 64,
+          "y": 384
+        }
+      ],
+      "anim": 1
+    },
+    "rat_v2": {
+      "frames": [
+        {
+          "x": 0,
+          "y": 448
+        },
+        {
+          "x": 64,
+          "y": 448
+        }
+      ],
+      "anim": 1
+    },
+    "goblin_v2": {
+      "frames": [
+        {
+          "x": 128,
+          "y": 448
+        },
+        {
+          "x": 192,
+          "y": 448
+        }
+      ],
+      "anim": 1
+    },
+    "archer_v2": {
+      "frames": [
+        {
+          "x": 256,
+          "y": 448
+        },
+        {
+          "x": 320,
+          "y": 448
+        }
+      ],
+      "anim": 1
+    },
+    "orc_v2": {
+      "frames": [
+        {
+          "x": 384,
+          "y": 448
+        },
+        {
+          "x": 448,
+          "y": 448
+        }
+      ],
+      "anim": 1
+    },
+    "troll_v2": {
+      "frames": [
+        {
+          "x": 512,
+          "y": 448
+        },
+        {
+          "x": 576,
+          "y": 448
+        },
+        {
+          "x": 640,
+          "y": 448
+        }
+      ],
+      "anim": 1
+    },
+    "mage_v2": {
+      "frames": [
+        {
+          "x": 704,
+          "y": 448
+        },
+        {
+          "x": 768,
+          "y": 448
+        },
+        {
+          "x": 832,
+          "y": 448
+        }
+      ],
+      "anim": 1
+    },
+    "mimic_v2": {
+      "frames": [
+        {
+          "x": 896,
+          "y": 448
+        },
+        {
+          "x": 960,
+          "y": 448
+        }
+      ],
+      "anim": 1
+    },
+    "chest": {
+      "frames": [
+        {
+          "x": 0,
+          "y": 512
+        }
+      ],
+      "anim": 0
+    },
+    "merchant": {
+      "frames": [
+        {
+          "x": 64,
+          "y": 512
+        }
+      ],
+      "anim": 1
+    },
+    "boss_ratking": {
+      "frames": [
+        {
+          "x": 0,
+          "y": 576
+        },
+        {
+          "x": 64,
+          "y": 576
+        }
+      ],
+      "anim": 1
+    },
+    "boss_warlord": {
+      "frames": [
+        {
+          "x": 128,
+          "y": 576
+        },
+        {
+          "x": 192,
+          "y": 576
+        }
+      ],
+      "anim": 1
+    },
+    "boss_widow": {
+      "frames": [
+        {
+          "x": 256,
+          "y": 576
+        },
+        {
+          "x": 320,
+          "y": 576
+        }
+      ],
+      "anim": 1
+    },
+    "boss_dragon": {
+      "frames": [
+        {
+          "x": 384,
+          "y": 576
+        },
+        {
+          "x": 448,
+          "y": 576
+        }
+      ],
+      "anim": 1
+    },
+    "boss_ogre": {
+      "frames": [
+        {
+          "x": 512,
+          "y": 576
+        },
+        {
+          "x": 576,
+          "y": 576
+        }
+      ],
+      "anim": 1
+    },
+    "boss_wolf": {
+      "frames": [
+        {
+          "x": 640,
+          "y": 576
+        },
+        {
+          "x": 704,
+          "y": 576
+        }
+      ],
+      "anim": 1
+    },
+    "boss_hollow": {
+      "frames": [
+        {
+          "x": 768,
+          "y": 576
+        },
+        {
+          "x": 832,
+          "y": 576
+        }
+      ],
+      "anim": 1
+    },
+    "boss_emberlich": {
+      "frames": [
+        {
+          "x": 896,
+          "y": 576
+        },
+        {
+          "x": 960,
+          "y": 576
+        }
+      ],
+      "anim": 1
+    },
+    "boss_maw": {
+      "frames": [
+        {
+          "x": 0,
+          "y": 640
+        },
+        {
+          "x": 64,
+          "y": 640
+        }
+      ],
+      "anim": 1
+    },
+    "boss_golem": {
+      "frames": [
+        {
+          "x": 128,
+          "y": 640
+        },
+        {
+          "x": 192,
+          "y": 640
+        }
+      ],
+      "anim": 1
+    },
+    "boss_sythiss": {
+      "frames": [
+        {
+          "x": 256,
+          "y": 640
+        },
+        {
+          "x": 320,
+          "y": 640
+        }
+      ],
+      "anim": 1
+    },
+    "boss_wraith": {
+      "frames": [
+        {
+          "x": 384,
+          "y": 640
+        },
+        {
+          "x": 448,
+          "y": 640
+        }
+      ],
+      "anim": 1
+    },
+    "boss_skarn": {
+      "frames": [
+        {
+          "x": 512,
+          "y": 640
+        },
+        {
+          "x": 576,
+          "y": 640
+        }
+      ],
+      "anim": 1
+    },
+    "boss_devourer": {
+      "frames": [
+        {
+          "x": 640,
+          "y": 640
+        },
+        {
+          "x": 704,
+          "y": 640
+        }
+      ],
+      "anim": 1
+    },
+    "boss_frost": {
+      "frames": [
+        {
+          "x": 768,
+          "y": 640
+        },
+        {
+          "x": 832,
+          "y": 640
+        }
+      ],
+      "anim": 1
+    },
+    "boss_brute": {
+      "frames": [
+        {
+          "x": 896,
+          "y": 640
+        },
+        {
+          "x": 960,
+          "y": 640
+        }
+      ],
+      "anim": 1
+    },
+    "boss_faceless": {
+      "frames": [
+        {
+          "x": 0,
+          "y": 704
+        },
+        {
+          "x": 64,
+          "y": 704
+        }
+      ],
+      "anim": 1
+    },
+    "boss_minotaur": {
+      "frames": [
+        {
+          "x": 128,
+          "y": 704
+        },
+        {
+          "x": 192,
+          "y": 704
+        }
+      ],
+      "anim": 1
+    },
+    "boss_nightmother": {
+      "frames": [
+        {
+          "x": 256,
+          "y": 704
+        },
+        {
+          "x": 320,
+          "y": 704
+        }
+      ],
+      "anim": 1
+    },
+    "boss_warden": {
+      "frames": [
+        {
+          "x": 384,
+          "y": 704
+        },
+        {
+          "x": 448,
+          "y": 704
+        }
+      ],
+      "anim": 1
+    },
+    "boss_vexa": {
+      "frames": [
+        {
+          "x": 512,
+          "y": 704
+        },
+        {
+          "x": 576,
+          "y": 704
+        }
+      ],
+      "anim": 1
+    },
+    "boss_korrun": {
+      "frames": [
+        {
+          "x": 640,
+          "y": 704
+        },
+        {
+          "x": 704,
+          "y": 704
+        }
+      ],
+      "anim": 1
+    },
+    "boss_yshara": {
+      "frames": [
+        {
+          "x": 768,
+          "y": 704
+        },
+        {
+          "x": 832,
+          "y": 704
+        }
+      ],
+      "anim": 1
+    },
+    "boss_helgrim": {
+      "frames": [
+        {
+          "x": 896,
+          "y": 704
+        },
+        {
+          "x": 960,
+          "y": 704
+        }
+      ],
+      "anim": 1
+    },
+    "boss_ozmael": {
+      "frames": [
+        {
+          "x": 0,
+          "y": 768
+        },
+        {
+          "x": 64,
+          "y": 768
+        }
+      ],
+      "anim": 1
+    },
+    "boss_drust": {
+      "frames": [
+        {
+          "x": 128,
+          "y": 768
+        },
+        {
+          "x": 192,
+          "y": 768
+        }
+      ],
+      "anim": 1
+    },
+    "boss_sarn": {
+      "frames": [
+        {
+          "x": 256,
+          "y": 768
+        },
+        {
+          "x": 320,
+          "y": 768
+        }
+      ],
+      "anim": 1
+    },
+    "boss_bairgh": {
+      "frames": [
+        {
+          "x": 384,
+          "y": 768
+        },
+        {
+          "x": 448,
+          "y": 768
+        }
+      ],
+      "anim": 1
+    },
+    "boss_nyssa": {
+      "frames": [
+        {
+          "x": 512,
+          "y": 768
+        },
+        {
+          "x": 576,
+          "y": 768
+        }
+      ],
+      "anim": 1
+    },
+    "boss_verdant": {
+      "frames": [
+        {
+          "x": 640,
+          "y": 768
+        },
+        {
+          "x": 704,
+          "y": 768
+        }
+      ],
+      "anim": 1
+    },
+    "boss_throk": {
+      "frames": [
+        {
+          "x": 768,
+          "y": 768
+        },
+        {
+          "x": 832,
+          "y": 768
+        }
+      ],
+      "anim": 1
+    },
+    "boss_vaelin": {
+      "frames": [
+        {
+          "x": 896,
+          "y": 768
+        },
+        {
+          "x": 960,
+          "y": 768
+        }
+      ],
+      "anim": 1
+    },
+    "boss_mura": {
+      "frames": [
+        {
+          "x": 0,
+          "y": 832
+        },
+        {
+          "x": 64,
+          "y": 832
+        }
+      ],
+      "anim": 1
+    },
+    "boss_iskvar": {
+      "frames": [
+        {
+          "x": 128,
+          "y": 832
+        },
+        {
+          "x": 192,
+          "y": 832
+        }
+      ],
+      "anim": 1
+    },
+    "boss_khaazum": {
+      "frames": [
+        {
+          "x": 256,
+          "y": 832
+        },
+        {
+          "x": 320,
+          "y": 832
+        }
+      ],
+      "anim": 1
+    },
+    "boss_marrow": {
+      "frames": [
+        {
+          "x": 384,
+          "y": 832
+        },
+        {
+          "x": 448,
+          "y": 832
+        }
+      ],
+      "anim": 1
+    },
+    "boss_volthus": {
+      "frames": [
+        {
+          "x": 512,
+          "y": 832
+        },
+        {
+          "x": 576,
+          "y": 832
+        }
+      ],
+      "anim": 1
+    },
+    "boss_erevhal": {
+      "frames": [
+        {
+          "x": 640,
+          "y": 832
+        },
+        {
+          "x": 704,
+          "y": 832
+        }
+      ],
+      "anim": 1
+    },
+    "boss_hollowchoir": {
+      "frames": [
+        {
+          "x": 768,
+          "y": 832
+        },
+        {
+          "x": 832,
+          "y": 832
+        }
+      ],
+      "anim": 1
+    },
+    "boss_zarakhel": {
+      "frames": [
+        {
+          "x": 896,
+          "y": 832
+        },
+        {
+          "x": 960,
+          "y": 832
+        }
+      ],
+      "anim": 1
+    },
+    "potion": {
+      "frames": [
+        {
+          "x": 0,
+          "y": 896
+        }
+      ],
+      "anim": 0
+    },
+    "gold": {
+      "frames": [
+        {
+          "x": 64,
+          "y": 896
+        }
+      ],
+      "anim": 0
+    },
+    "weapon": {
+      "frames": [
+        {
+          "x": 128,
+          "y": 896
+        }
+      ],
+      "anim": 0
+    },
+    "weapon_knight": {
+      "frames": [
+        {
+          "x": 192,
+          "y": 896
+        }
+      ],
+      "anim": 0
+    },
+    "weapon_rogue": {
+      "frames": [
+        {
+          "x": 256,
+          "y": 896
+        }
+      ],
+      "anim": 0
+    },
+    "armor": {
+      "frames": [
+        {
+          "x": 320,
+          "y": 896
+        }
+      ],
+      "anim": 0
+    },
+    "helm": {
+      "frames": [
+        {
+          "x": 384,
+          "y": 896
+        }
+      ],
+      "anim": 0
+    },
+    "shield": {
+      "frames": [
+        {
+          "x": 448,
+          "y": 896
+        }
+      ],
+      "anim": 0
+    },
+    "charm": {
+      "frames": [
+        {
+          "x": 512,
+          "y": 896
+        }
+      ],
+      "anim": 0
+    },
+    "arrow": {
+      "frames": [
+        {
+          "x": 576,
+          "y": 896
+        }
+      ],
+      "anim": 0
+    },
+    "armor_kn": {
+      "frames": [
+        {
+          "x": 640,
+          "y": 896
+        }
+      ],
+      "anim": 0
+    },
+    "armor_rg": {
+      "frames": [
+        {
+          "x": 704,
+          "y": 896
+        }
+      ],
+      "anim": 0
+    },
+    "helm_kn": {
+      "frames": [
+        {
+          "x": 768,
+          "y": 896
+        }
+      ],
+      "anim": 0
+    },
+    "helm_rg": {
+      "frames": [
+        {
+          "x": 832,
+          "y": 896
+        }
+      ],
+      "anim": 0
+    },
+    "shield_kn": {
+      "frames": [
+        {
+          "x": 896,
+          "y": 896
+        }
+      ],
+      "anim": 0
+    },
+    "shield_rg": {
+      "frames": [
+        {
+          "x": 960,
+          "y": 896
+        }
+      ],
+      "anim": 0
+    },
+    "poison": {
+      "frames": [
+        {
+          "x": 0,
+          "y": 960
+        }
+      ],
+      "anim": 1
+    },
+    "burn": {
+      "frames": [
+        {
+          "x": 64,
+          "y": 960
+        }
+      ],
+      "anim": 1
+    },
+    "bleed": {
+      "frames": [
+        {
+          "x": 128,
+          "y": 960
+        }
+      ],
+      "anim": 1
+    },
+    "regen": {
+      "frames": [
+        {
+          "x": 192,
+          "y": 960
+        }
+      ],
+      "anim": 1
+    },
+    "weaken": {
+      "frames": [
+        {
+          "x": 256,
+          "y": 960
+        }
+      ],
+      "anim": 1
+    }
+  }
+}
