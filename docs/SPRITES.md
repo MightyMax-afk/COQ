@@ -29,6 +29,20 @@ Need a fresh template to paint over?
 node tools/make-spritesheet.mjs        # re-bake assets/spritesheet.png + atlas-manifest.json
 ```
 
+### If your sheet has no transparency (flattened on black)
+Export with a **transparent background** if you can — that's the clean path. If
+your editor/exporter flattened the sheet onto solid black (RGB, no alpha), those
+black squares would occlude the floor behind every sprite in-game. Convert it:
+```bash
+node tools/clean-spritesheet.mjs assets/spritesheet-raw.png assets/spritesheet.png 10
+```
+This is **grid-aware**: tile cells stay fully opaque, empty cells are cleared, and
+each sprite cell has only its near-black margin flood-filled to transparent (so
+enclosed dark outlines survive). The last arg is the brightness threshold
+(`max channel ≤ N` counts as background) — raise it if a faint black halo remains,
+lower it if it eats into dark sprites. `assets/spritesheet-raw.png` keeps your
+original upload so you can re-run with a different threshold.
+
 ## How it fits together
 
 | File | Role |
