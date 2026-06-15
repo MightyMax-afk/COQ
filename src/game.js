@@ -1,5 +1,6 @@
 "use strict";
-import { ACT1_END, FINAL_DEPTH, T_WALL, T_FLOOR, T_STAIRS, T_STAIRS_UP } from './config.js';
+import { ACT1_END, FINAL_DEPTH, T_WALL, T_FLOOR, T_STAIRS, T_STAIRS_UP, SPRITESHEET } from './config.js';
+import { loadSpritesheet } from './spritesheet.js';
 import { clamp, ri, log, $ } from './util.js';
 import { G } from './state.js';
 import { COL } from './palette.js';
@@ -440,6 +441,15 @@ export const scaledDepth = () => G.depth + Math.round(G.ngPlus*FINAL_DEPTH*NG_SO
 // ($, cv, ctx, sizeCanvas moved to render.js / util.js)
 sizeCanvas();
 window.addEventListener("resize", ()=>{ sizeCanvas(); if(G.started) render(); });
+
+// Optional: load a hand-painted PNG spritesheet over the procedural art. No-op
+// (and silent on 404) unless SPRITESHEET.enabled is true in config.js. Re-renders
+// once the sheet is in so injected sprites appear without a manual refresh.
+if(SPRITESHEET.enabled){
+  loadSpritesheet(SPRITESHEET.png, SPRITESHEET.manifest).then(n=>{
+    if(n>0){ updateLegendSprites(); if(G.started) render(); }
+  });
+}
 
 // stamp the build version into the UI
 $("verTag").textContent = `build ${BUILD}`;

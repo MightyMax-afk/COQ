@@ -35,6 +35,8 @@ src/
   state.js      G — the single shared mutable run-state object (+ scaledDepth)
   util.js       clamp, ri, log, $ (getElementById)
   palette.js    PAL color map, S() sprite builder, COL render colors
+  atlas.js      sprite id → art map + 64×64 spritesheet layout (DOM-free)
+  spritesheet.js optional PNG-override loader (inject hand-painted sprites)
   art/
     tiles.js      dungeon tile sprites (8 biomes)
     creatures.js  monster sprites (Act I + II, v2 variants)
@@ -63,6 +65,7 @@ src/
 | Player start stats, character classes, level-up perks, XP curve | `player.js` |
 | Hit/damage/crit math, status effects | `combat.js` |
 | Sprites (pixel art) | `src/art/*.js` |
+| Inject hand-painted PNG sprites | `src/atlas.js` + a 64×64 spritesheet — see [`docs/SPRITES.md`](docs/SPRITES.md) |
 | Music | `audio.js` |
 | HUD / drawing | `render.js` |
 
