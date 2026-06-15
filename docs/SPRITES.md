@@ -8,18 +8,26 @@ This doc covers the **64×64 PNG spritesheet pipeline** layered on top of that �
 so you can hand-paint sprites in any image editor and inject them without
 touching the procedural code.
 
-## TL;DR
+## TL;DR — swap the whole sheet
 
+The spritesheet is **on by default** (`SPRITESHEET.enabled` in `config.js`) and
+the shipped `assets/spritesheet.png` is baked from the procedural art, so the game
+looks identical until you replace it. To inject your own art, **overwrite that one
+file**:
+
+```
+assets/spritesheet.png   ← drop your repainted sheet here, reload. Done.
+```
+
+The only rule: keep the **same grid layout** as the template — 16 columns, each
+cell square, categories in the same rows (open the shipped PNG to trace it). The
+loader is resolution-independent, so 1024², 1280², 2048²… all work as long as the
+grid proportions match. Sprites missing from the sheet fall back to procedural art.
+
+Need a fresh template to paint over?
 ```bash
-node tools/make-spritesheet.mjs        # bake assets/spritesheet.png + atlas-manifest.json
-# …repaint cells in your editor (each cell is 64×64)…
+node tools/make-spritesheet.mjs        # re-bake assets/spritesheet.png + atlas-manifest.json
 ```
-Then in `src/config.js`:
-```js
-export const SPRITESHEET = { enabled: true, png: 'assets/spritesheet.png', manifest: 'assets/atlas-manifest.json' };
-```
-Reload the game. Any sprite present in the sheet is drawn from your PNG; anything
-missing falls back to the procedural art. Injection is fully opt-in.
 
 ## How it fits together
 

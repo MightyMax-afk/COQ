@@ -31,29 +31,39 @@ export function clearOverrides(){
 }
 
 // Return a px×px canvas for id/frame from the loaded sheet, or null if this
-// sprite isn't overridden. Cached per (id,frame,px). Nearest-neighbor scaled.
-export function spriteOverride(id, frame, px){
+// sprite isn't overridden. `bob` (optional) shifts the art up by that many
+// 64px-cell pixels for the idle wobble. Cached per (id,frame,px,bob).
+export function spriteOverride(id, frame, px, bob){
   const frames = _sheetFrames[id];
   if(!frames || !frames.length) return null;
   const f = ((frame|0) % frames.length + frames.length) % frames.length;
-  const key = id+'|'+f+'|'+px;
+  bob = bob|0;
+  const key = id+'|'+f+'|'+px+'|b'+bob;
   let c = _drawCache[key];
   if(c) return c;
-  const src = frames[f];
-  if(px === src.width){ _drawCache[key] = src; return src; }
+  const src = frames[f];                       // cell×cell (64) offscreen canvas
+  if(px === src.width && !bob){ _drawCache[key] = src; return src; }
   c = document.createElement('canvas');
   c.width = px; c.height = px;
   const ctx = c.getContext('2d');
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(src, 0, 0, px, px);
+  const dy = bob ? -Math.round(bob * px / src.width) : 0;
+  ctx.drawImage(src, 0, dy, px, px);
   _drawCache[key] = c;
   return c;
 }
 
-// Slice a loaded sheet <img>/<canvas> into per-id frame canvases per `manifest`.
-//   manifest = { cell, sprites: { id: { frames:[{x,y}], ... } } }
+// Slice a loaded sheet <img>/<canvas> into per-id 64×64 frame canvases per
+// `manifest`. Resolution-independent: if the supplied image is a uniformly
+// scaled version of the manifest grid (e.g. a 2048² sheet for a 1024² manifest),
+// the cells are sampled proportionally and downscaled to the native 64px, so any
+// clean re-export of the template drops in without editing the manifest.
+//   manifest = { cell, width, cols, sprites: { id: { frames:[{x,y}] } } }
 export function registerSheet(image, manifest){
   const cell = manifest.cell || 64;
+  const sheetW = image.naturalWidth || image.width;
+  const manifestW = manifest.width || ((manifest.cols||16) * cell);
+  const ratio = sheetW && manifestW ? sheetW / manifestW : 1;   // 1 = exact size
   for(const [id, info] of Object.entries(manifest.sprites || {})){
     const out = [];
     for(const { x, y } of info.frames){
@@ -61,7 +71,8 @@ export function registerSheet(image, manifest){
       c.width = cell; c.height = cell;
       const ctx = c.getContext('2d');
       ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(image, x, y, cell, cell, 0, 0, cell, cell);
+      // source rect scaled by `ratio`, blitted down into a native 64px cell
+      ctx.drawImage(image, x*ratio, y*ratio, cell*ratio, cell*ratio, 0, 0, cell, cell);
       out.push(c);
     }
     if(out.length) _sheetFrames[id] = out;

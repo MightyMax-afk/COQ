@@ -70,11 +70,11 @@ export function spriteCanvas(id, px, bob, frame){
   const useBob = multi ? 0 : (bob|0);
   const useFrame = multi ? ((frame|0) % sprite.length) : 0;
   // PNG spritesheet override: if a sheet is loaded and supplies this sprite, draw
-  // those pixels instead of baking the procedural art. Single-frame procedural
-  // sprites animate idle via `bob`; a PNG sheet animates via its own frames, so
-  // the override resolves to frame `useFrame` (0 for single-frame art) and the
-  // legacy bob shift is skipped.
-  const over=spriteOverride(id, useFrame, px);
+  // those pixels instead of baking the procedural art. Multi-frame sprites animate
+  // via their own frames; single-frame ones keep the idle bob — converted from the
+  // sprite's native rows to 64px-cell units so the override wobbles like the art.
+  const N=multi ? sprite[0].length : sprite.length;
+  const over=spriteOverride(id, useFrame, px, useBob ? Math.round(useBob*64/N) : 0);
   if(over) return over;
   const key=id+'|'+useBob+'|'+px+'|f'+useFrame;
   if(!_spriteCache[key]) _spriteCache[key]=_bakeSprite(_frameLines(sprite, useFrame), px, useBob);
