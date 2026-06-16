@@ -43,18 +43,6 @@ enclosed dark outlines survive). The last arg is the brightness threshold
 lower it if it eats into dark sprites. `assets/spritesheet-raw.png` keeps your
 original upload so you can re-run with a different threshold.
 
-### If your sheet is the wrong size (off-grid, clipping arms/heads)
-The grid is **16 cols × 64px = 1024×1024**. If your sheet comes back at an odd
-size (e.g. 1254×1254 from an AI upscaler), the runtime samples every cell at a
-fractional ratio (1254/1024 = 1.2246) and that non-integer scaling smears/clips
-sprite edges. Snap it back to the native grid:
-```bash
-node tools/resize-spritesheet.mjs assets/spritesheet.png assets/spritesheet.png
-```
-This area-resamples (alpha-weighted, so edges stay clean) to the manifest's exact
-`width`×`height`, so each cell lands on a crisp 64×64 boundary and the loader's
-ratio becomes 1:1. It also restamps the manifest's `pngVersion` cache-buster.
-
 ## How it fits together
 
 | File | Role |
