@@ -18,7 +18,7 @@ import { buildSheetPlan } from '../src/atlas.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT = process.argv[2] || join(__dirname, '..', 'assets', 'spritesheet-guide.png');
-const CELL = parseInt(process.argv[3] || '120', 10);   // guide px per cell (just for legibility)
+const CELL = parseInt(process.argv[3] || '64', 10);    // guide px per cell (64 = 1:1 overlay on the 1024² sheet; pass a bigger value for larger labels)
 
 // ---- tiny 5x7 pixel font (A-Z 0-9 _ space) ----
 const F = {
