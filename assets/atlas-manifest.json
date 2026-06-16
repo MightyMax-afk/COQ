@@ -3,7 +3,8 @@
   "cols": 16,
   "width": 1024,
   "height": 1024,
-  "generated": "2026-06-15",
+  "pngVersion": "029ef46d497d",
+  "generated": "2026-06-16",
   "note": "Each cell is 64x64. frames[] lists the top-left pixel of each animation frame. anim=1 means the in-game renderer idle-bobs single-frame procedural art (PNG frames animate directly).",
   "groups": [
     {
@@ -1448,6 +1449,5 @@
       ],
       "anim": 1
     }
-  },
-  "pngVersion": "c60d02aeb681"
+  }
 }
