@@ -547,6 +547,90 @@ const SPRITES = {
   potion: SP_POTION, gold: SP_GOLD, arrow: SP_ARROW, regen: SP_REGEN,
 };
 
+/* ============================================================
+   INVENTORY PNG SPRITESHEET — optional override layer.
+   Mirrors the main game's src/spritesheet.js, scoped to the
+   inventory's ICON set (paper-doll layers stay procedural). If an
+   inventory sheet + manifest are present, drawSprite() blits those
+   pixels instead of baking the procedural icon; any id missing from
+   the sheet falls back to the procedural art. Bake/guide tools:
+   tools/make-inv-spritesheet.mjs + tools/make-inv-guide.mjs.
+   ============================================================ */
+const INV_SHEET = { enabled: true, png: 'assets/inventory-spritesheet.png', manifest: 'assets/inventory-manifest.json' };
+const _invFrames = {};   // icon id -> [cell canvas] (icons are single-frame)
+function hasInvOverrides(){ return Object.keys(_invFrames).length > 0; }
+function _invOverride(name){ const f = _invFrames[name]; return f ? f[0] : null; }
+
+// id -> category; order here is the row order in the sheet/guide.
+const INV_CATEGORIES = [
+  { key: 'weapons', match: id => id.startsWith('wpn_') },
+  { key: 'armor',   match: id => id.startsWith('arm_') },
+  { key: 'helmets', match: id => id.startsWith('helm_') },
+  { key: 'shields', match: id => id.startsWith('shd_') },
+  { key: 'boots',   match: id => id.startsWith('boots_') },
+  { key: 'charms',  match: id => id.startsWith('charm_') },
+  { key: 'misc',    match: id => ['potion', 'gold', 'arrow', 'regen'].includes(id) },
+];
+function invCategoryOf(id){ for(const c of INV_CATEGORIES) if(c.match(id)) return c.key; return null; }
+// deterministic, category-sorted 64x64 grid for the inventory icons.
+function buildInvPlan(opts){
+  const cols = (opts && opts.cols) || 16, cell = (opts && opts.cell) || 64;
+  const ids = Object.keys(SPRITES).filter(id => !id.startsWith('pd_') && id !== 'hero' && invCategoryOf(id));
+  const buckets = new Map(INV_CATEGORIES.map(c => [c.key, []]));
+  for(const id of ids) buckets.get(invCategoryOf(id)).push(id);
+  const sprites = {}, cells = [], groups = [];
+  let row = 0;
+  for(const cat of INV_CATEGORIES){
+    const list = buckets.get(cat.key); if(!list.length) continue;
+    const startRow = row; let col = 0;
+    for(const id of list){
+      if(col >= cols){ col = 0; row++; }
+      const x = col*cell, y = row*cell;
+      sprites[id] = { frames: [{ x, y }] };
+      cells.push({ id, col, row, x, y });
+      col++;
+    }
+    row++;
+    groups.push({ key: cat.key, label: cat.key, row: startRow, rows: row - startRow });
+  }
+  return { cell, cols, width: cols*cell, height: row*cell, sprites, cells, groups };
+}
+
+function registerInvSheet(image, manifest){
+  const cell = manifest.cell || 64;
+  const sheetW = image.naturalWidth || image.width;
+  const ratio = (sheetW && manifest.width) ? sheetW / manifest.width : 1;   // resolution-independent
+  for(const [id, info] of Object.entries(manifest.sprites || {})){
+    const fr = [];
+    for(const { x, y } of info.frames){
+      const c = document.createElement('canvas'); c.width = cell; c.height = cell;
+      const ctx = c.getContext('2d'); ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(image, x*ratio, y*ratio, cell*ratio, cell*ratio, 0, 0, cell, cell);
+      fr.push(c);
+    }
+    if(fr.length) _invFrames[id] = fr;
+  }
+}
+// fetch manifest + PNG, register overrides; silent no-op on 404 so the game
+// runs fine without a sheet. pngVersion query-busts the cache on a real change.
+function loadInventorySheet(png, manifestUrl){
+  png = png || INV_SHEET.png; manifestUrl = manifestUrl || INV_SHEET.manifest;
+  return fetch(manifestUrl, { cache: 'no-cache' })
+    .then(r => r.ok ? r.json() : null)
+    .then(manifest => {
+      if(!manifest) return 0;
+      const ver = manifest.pngVersion || manifest.generated;
+      const url = ver ? png + (png.includes('?') ? '&' : '?') + 'v=' + encodeURIComponent(ver) : png;
+      return new Promise(res => {
+        const img = new Image();
+        img.onload = () => { registerInvSheet(img, manifest); if(typeof paintAllSprites === 'function') paintAllSprites(); res(Object.keys(manifest.sprites || {}).length); };
+        img.onerror = () => res(0);
+        img.src = url;
+      });
+    })
+    .catch(() => 0);
+}
+
 /* ---------------- renderer ---------------- */
 function drawSprite(canvas, name, scale){
   const lines = SPRITES[name];
@@ -559,6 +643,10 @@ function drawSprite(canvas, name, scale){
   const ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // PNG override: if an inventory sheet supplies this icon, blit it into the
+  // same-sized canvas box instead of baking the procedural pixels.
+  const ov = _invOverride(name);
+  if(ov){ ctx.drawImage(ov, 0, 0, canvas.width, canvas.height); return; }
   for(let y = 0; y < H; y++){
     const row = lines[y];
     for(let x = 0; x < W; x++){
@@ -1365,4 +1453,9 @@ function drawLayeredHero(canvas, eq, scale, baseKey){
   }
 }
 
-window.QLUD = { PAL, SPRITES, drawSprite, drawLayeredHero, paintAllSprites, fitStage };
+window.QLUD = { PAL, SPRITES, drawSprite, drawLayeredHero, paintAllSprites, fitStage,
+  buildInvPlan, loadInventorySheet, hasInvOverrides };
+
+// Auto-load the inventory PNG sheet in the browser (skipped under Node tooling,
+// where `fetch` is absent). Silent fallback to procedural icons if it 404s.
+if(INV_SHEET.enabled && typeof fetch === 'function') loadInventorySheet();

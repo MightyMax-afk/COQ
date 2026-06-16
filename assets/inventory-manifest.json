@@ -1,0 +1,511 @@
+{
+  "cell": 64,
+  "cols": 16,
+  "width": 1024,
+  "height": 448,
+  "pngVersion": "ab91e308ed01",
+  "generated": "2026-06-15",
+  "note": "Inventory icon sheet. Each cell is 64x64; frames[] is the top-left pixel of each frame (icons are single-frame). Paper-doll hero stays procedural.",
+  "groups": [
+    {
+      "key": "weapons",
+      "label": "weapons",
+      "row": 0,
+      "rows": 1
+    },
+    {
+      "key": "armor",
+      "label": "armor",
+      "row": 1,
+      "rows": 1
+    },
+    {
+      "key": "helmets",
+      "label": "helmets",
+      "row": 2,
+      "rows": 1
+    },
+    {
+      "key": "shields",
+      "label": "shields",
+      "row": 3,
+      "rows": 1
+    },
+    {
+      "key": "boots",
+      "label": "boots",
+      "row": 4,
+      "rows": 1
+    },
+    {
+      "key": "charms",
+      "label": "charms",
+      "row": 5,
+      "rows": 1
+    },
+    {
+      "key": "misc",
+      "label": "misc",
+      "row": 6,
+      "rows": 1
+    }
+  ],
+  "sprites": {
+    "wpn_dagger": {
+      "frames": [
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    "wpn_sword": {
+      "frames": [
+        {
+          "x": 64,
+          "y": 0
+        }
+      ]
+    },
+    "wpn_axe": {
+      "frames": [
+        {
+          "x": 128,
+          "y": 0
+        }
+      ]
+    },
+    "wpn_hammer": {
+      "frames": [
+        {
+          "x": 192,
+          "y": 0
+        }
+      ]
+    },
+    "wpn_fire": {
+      "frames": [
+        {
+          "x": 256,
+          "y": 0
+        }
+      ]
+    },
+    "wpn_frost": {
+      "frames": [
+        {
+          "x": 320,
+          "y": 0
+        }
+      ]
+    },
+    "wpn_kn_0": {
+      "frames": [
+        {
+          "x": 384,
+          "y": 0
+        }
+      ]
+    },
+    "wpn_kn_1": {
+      "frames": [
+        {
+          "x": 448,
+          "y": 0
+        }
+      ]
+    },
+    "wpn_kn_2": {
+      "frames": [
+        {
+          "x": 512,
+          "y": 0
+        }
+      ]
+    },
+    "wpn_kn_3": {
+      "frames": [
+        {
+          "x": 576,
+          "y": 0
+        }
+      ]
+    },
+    "wpn_rg_0": {
+      "frames": [
+        {
+          "x": 640,
+          "y": 0
+        }
+      ]
+    },
+    "wpn_rg_1": {
+      "frames": [
+        {
+          "x": 704,
+          "y": 0
+        }
+      ]
+    },
+    "wpn_rg_2": {
+      "frames": [
+        {
+          "x": 768,
+          "y": 0
+        }
+      ]
+    },
+    "wpn_rg_3": {
+      "frames": [
+        {
+          "x": 832,
+          "y": 0
+        }
+      ]
+    },
+    "arm_leather": {
+      "frames": [
+        {
+          "x": 0,
+          "y": 64
+        }
+      ]
+    },
+    "arm_chain": {
+      "frames": [
+        {
+          "x": 64,
+          "y": 64
+        }
+      ]
+    },
+    "arm_plate": {
+      "frames": [
+        {
+          "x": 128,
+          "y": 64
+        }
+      ]
+    },
+    "arm_leather_kn": {
+      "frames": [
+        {
+          "x": 192,
+          "y": 64
+        }
+      ]
+    },
+    "arm_chain_kn": {
+      "frames": [
+        {
+          "x": 256,
+          "y": 64
+        }
+      ]
+    },
+    "arm_plate_kn": {
+      "frames": [
+        {
+          "x": 320,
+          "y": 64
+        }
+      ]
+    },
+    "arm_leather_rg": {
+      "frames": [
+        {
+          "x": 384,
+          "y": 64
+        }
+      ]
+    },
+    "arm_chain_rg": {
+      "frames": [
+        {
+          "x": 448,
+          "y": 64
+        }
+      ]
+    },
+    "arm_plate_rg": {
+      "frames": [
+        {
+          "x": 512,
+          "y": 64
+        }
+      ]
+    },
+    "helm_cap": {
+      "frames": [
+        {
+          "x": 0,
+          "y": 128
+        }
+      ]
+    },
+    "helm_iron": {
+      "frames": [
+        {
+          "x": 64,
+          "y": 128
+        }
+      ]
+    },
+    "helm_great": {
+      "frames": [
+        {
+          "x": 128,
+          "y": 128
+        }
+      ]
+    },
+    "helm_cap_kn": {
+      "frames": [
+        {
+          "x": 192,
+          "y": 128
+        }
+      ]
+    },
+    "helm_iron_kn": {
+      "frames": [
+        {
+          "x": 256,
+          "y": 128
+        }
+      ]
+    },
+    "helm_great_kn": {
+      "frames": [
+        {
+          "x": 320,
+          "y": 128
+        }
+      ]
+    },
+    "helm_cap_rg": {
+      "frames": [
+        {
+          "x": 384,
+          "y": 128
+        }
+      ]
+    },
+    "helm_iron_rg": {
+      "frames": [
+        {
+          "x": 448,
+          "y": 128
+        }
+      ]
+    },
+    "helm_great_rg": {
+      "frames": [
+        {
+          "x": 512,
+          "y": 128
+        }
+      ]
+    },
+    "shd_wood": {
+      "frames": [
+        {
+          "x": 0,
+          "y": 192
+        }
+      ]
+    },
+    "shd_kite": {
+      "frames": [
+        {
+          "x": 64,
+          "y": 192
+        }
+      ]
+    },
+    "shd_tower": {
+      "frames": [
+        {
+          "x": 128,
+          "y": 192
+        }
+      ]
+    },
+    "shd_legend": {
+      "frames": [
+        {
+          "x": 192,
+          "y": 192
+        }
+      ]
+    },
+    "shd_wood_kn": {
+      "frames": [
+        {
+          "x": 256,
+          "y": 192
+        }
+      ]
+    },
+    "shd_kite_kn": {
+      "frames": [
+        {
+          "x": 320,
+          "y": 192
+        }
+      ]
+    },
+    "shd_tower_kn": {
+      "frames": [
+        {
+          "x": 384,
+          "y": 192
+        }
+      ]
+    },
+    "shd_wood_rg": {
+      "frames": [
+        {
+          "x": 448,
+          "y": 192
+        }
+      ]
+    },
+    "shd_kite_rg": {
+      "frames": [
+        {
+          "x": 512,
+          "y": 192
+        }
+      ]
+    },
+    "shd_tower_rg": {
+      "frames": [
+        {
+          "x": 576,
+          "y": 192
+        }
+      ]
+    },
+    "boots_leather": {
+      "frames": [
+        {
+          "x": 0,
+          "y": 256
+        }
+      ]
+    },
+    "boots_iron": {
+      "frames": [
+        {
+          "x": 64,
+          "y": 256
+        }
+      ]
+    },
+    "boots_leather_kn": {
+      "frames": [
+        {
+          "x": 128,
+          "y": 256
+        }
+      ]
+    },
+    "boots_iron_kn": {
+      "frames": [
+        {
+          "x": 192,
+          "y": 256
+        }
+      ]
+    },
+    "boots_leather_rg": {
+      "frames": [
+        {
+          "x": 256,
+          "y": 256
+        }
+      ]
+    },
+    "boots_iron_rg": {
+      "frames": [
+        {
+          "x": 320,
+          "y": 256
+        }
+      ]
+    },
+    "charm_vigor": {
+      "frames": [
+        {
+          "x": 0,
+          "y": 320
+        }
+      ]
+    },
+    "charm_ember": {
+      "frames": [
+        {
+          "x": 64,
+          "y": 320
+        }
+      ]
+    },
+    "charm_savage": {
+      "frames": [
+        {
+          "x": 128,
+          "y": 320
+        }
+      ]
+    },
+    "charm_guard": {
+      "frames": [
+        {
+          "x": 192,
+          "y": 320
+        }
+      ]
+    },
+    "charm_focus": {
+      "frames": [
+        {
+          "x": 256,
+          "y": 320
+        }
+      ]
+    },
+    "potion": {
+      "frames": [
+        {
+          "x": 0,
+          "y": 384
+        }
+      ]
+    },
+    "gold": {
+      "frames": [
+        {
+          "x": 64,
+          "y": 384
+        }
+      ]
+    },
+    "arrow": {
+      "frames": [
+        {
+          "x": 128,
+          "y": 384
+        }
+      ]
+    },
+    "regen": {
+      "frames": [
+        {
+          "x": 192,
+          "y": 384
+        }
+      ]
+    }
+  }
+}

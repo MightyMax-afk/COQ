@@ -110,3 +110,33 @@ exporters follow automatically — the manifest records whatever you choose.
 - **No drift:** because the baker imports `src/atlas.js`, the sheet always matches
   the game's sprite ids. Add a sprite to the atlas → re-bake → it appears in the
   sheet automatically.
+
+## Inventory screen (separate sheet)
+
+The full-screen inventory (`src/inventory.js`) uses its own sprite set in
+`sprites.js` (`window.QLUD`) — tier-specific item icons (dagger/sword/axe/hammer,
+armor/helm/shield/boots tiers, class tints, charms) plus a *procedural* layered
+paper-doll hero. Only the **icons** are PNG-driven; the paper-doll stays
+procedural.
+
+It works exactly like the main sheet, with its own files:
+
+| File | Role |
+|---|---|
+| `assets/inventory-spritesheet.png` | 64×64-cell icon sheet (16 cols, 57 icons). |
+| `assets/inventory-manifest.json` | id → cell map (with `pngVersion` cache-buster). |
+| `assets/inventory-guide.png` | labeled chessboard — what icon goes in each cell. |
+| `tools/make-inv-spritesheet.mjs` | bakes the sheet (reads `sprites.js` via a Node VM). |
+| `tools/make-inv-guide.mjs` | bakes the guide. |
+
+`sprites.js` auto-loads the sheet in the browser (`INV_SHEET.enabled`, default on)
+and `drawSprite()` blits the PNG cell over the procedural icon, falling back per-id
+if it's missing. To inject your art:
+
+```bash
+node tools/make-inv-spritesheet.mjs    # bake the template + manifest
+node tools/make-inv-guide.mjs          # regenerate the labeled guide
+# …repaint cells to match the guide…
+```
+then overwrite `assets/inventory-spritesheet.png` and re-run the baker once (to
+refresh `pngVersion`), or just bump it. Same 16-column grid rules as the main sheet.
