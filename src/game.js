@@ -249,7 +249,7 @@ const BUILD_DATE = "2026-06-09";
    v0.18.0 ESCAPE / PAUSE MENU + persistence. New #escMenu overlay opened with
            Esc (desktop) or a "menu" button in the touch controls (mobile), a
            full-viewport modal with a Close Menu button. It houses Save Game
-           and Load Game (localStorage key "caves_of_qlud_save") and a confirmed
+           and Load Game (localStorage key "caves_of_qlaude_save") and a confirmed
            New Game, plus the relocated config toggles (graphics/auto-equip/
            music/volume) and a new Sound FX toggle that gates combat strike
            SFX. While the menu is open, movement and turn-taking are blocked.
@@ -955,7 +955,7 @@ function sellItem(i){
 // toggles. It can only be opened during live gameplay (not over the level-up
 // or shop modals), and while it's open every gameplay key is swallowed so the
 // player can't move or burn a turn while browsing it.
-const SAVE_KEY = "caves_of_qlud_save";
+const SAVE_KEY = "caves_of_qlaude_save";
 const escMenuOpen   = () => { const m=$("escMenu"); return !!m && !m.classList.contains("hidden"); };
 const openEscMenu   = () => $("escMenu").classList.remove("hidden");
 const closeEscMenu  = () => $("escMenu").classList.add("hidden");
