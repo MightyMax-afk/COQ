@@ -1,4 +1,4 @@
-# Caves of Qlud — Tuning Cheat Sheet
+# Caves of Qlaude — Tuning Cheat Sheet
 ### for build v0.17.0
 
 Every number you'd want to tweak, where it lives, and what it does. Line numbers
@@ -408,5 +408,5 @@ depths 2-10 and 22-30 (first 10 floors of each act)
 
 ---
 
-*Built for Caves of Qlud v0.17.0. If a search string ever fails, the code was
+*Built for Caves of Qlaude v0.17.0. If a search string ever fails, the code was
 edited since — search for a nearby unique word instead.*

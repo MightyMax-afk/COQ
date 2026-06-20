@@ -1,6 +1,6 @@
 "use strict";
 /* ============================================================
-   Caves of Qlud — sprite + palette module
+   Caves of Qlaude — sprite + palette module
    PAL is the game's palette. Item sprites + the detailed hero
    are authored in that palette (16x16, hero is 16x24).
    Rows are auto-padded so the grid is always rectangular.

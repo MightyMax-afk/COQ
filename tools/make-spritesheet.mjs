@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // ============================================================
-//  Caves of Qlud — spritesheet baker (Node, zero dependencies)
+//  Caves of Qlaude — spritesheet baker (Node, zero dependencies)
 //
 //  Bakes every sprite in the atlas into a single 64×64-cell PNG
 //  + a JSON manifest mapping each sprite id (and animation frame)

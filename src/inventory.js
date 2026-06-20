@@ -1,6 +1,6 @@
 "use strict";
 /* ============================================================
-   Caves of Qlud — full-screen Inventory / Equipment overlay.
+   Caves of Qlaude — full-screen Inventory / Equipment overlay.
 
    This is the live-game integration for the standalone design in
    inventory-preview.html. It builds the #invScreen overlay (styled by

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // ============================================================
-//  Caves of Qlud — INVENTORY layout guide generator
+//  Caves of Qlaude — INVENTORY layout guide generator
 //  Black/white chessboard PNG labelling which icon goes in each
 //  cell of the inventory sheet. Same 16-col grid; guide cell
 //  (col,row) == sheet cell (col,row). Reads sprites.js via VM.

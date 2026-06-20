@@ -1,6 +1,6 @@
 "use strict";
 /* ============================================================
-   Caves of Qlud — 64x64 playable-character sprites
+   Caves of Qlaude — 64x64 playable-character sprites
    Same PAL as src/palette.js / sprites.js, same S()-style
    string-grid output, so these drop into the SPRITES atlas
    exactly like the existing 16x24 paper-doll hero.
