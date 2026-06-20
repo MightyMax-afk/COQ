@@ -956,6 +956,15 @@ function sellItem(i){
 // or shop modals), and while it's open every gameplay key is swallowed so the
 // player can't move or burn a turn while browsing it.
 const SAVE_KEY = "caves_of_qlaude_save";
+const OLD_SAVE_KEY = "caves_of_qlud_save";
+// Migrate save data from old key on first load
+try {
+  const old = localStorage.getItem(OLD_SAVE_KEY);
+  if (old && !localStorage.getItem(SAVE_KEY)) {
+    localStorage.setItem(SAVE_KEY, old);
+    localStorage.removeItem(OLD_SAVE_KEY);
+  }
+} catch(e) {}
 const escMenuOpen   = () => { const m=$("escMenu"); return !!m && !m.classList.contains("hidden"); };
 const openEscMenu   = () => $("escMenu").classList.remove("hidden");
 const closeEscMenu  = () => $("escMenu").classList.add("hidden");
