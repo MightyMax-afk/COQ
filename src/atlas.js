@@ -1,6 +1,6 @@
 "use strict";
 // ============================================================
-//  Caves of Qlud — SPRITE ATLAS (DOM-free)
+//  Caves of Qlaude — SPRITE ATLAS (DOM-free)
 //  Single source of truth for "sprite id -> pixel art" plus a
 //  deterministic, category-sorted layout used to bake a 64×64
 //  PNG spritesheet (see tools/make-spritesheet.mjs and

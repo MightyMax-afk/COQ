@@ -1,4 +1,4 @@
-# Caves of Qlud
+# Caves of Qlaude
 
 A self-contained browser roguelike — 40 floors, two acts, procedural pixel-art
 sprites, and a procedural Web Audio soundtrack. No frameworks, no build step.

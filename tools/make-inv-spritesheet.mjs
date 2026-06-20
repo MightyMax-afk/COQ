@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // ============================================================
-//  Caves of Qlud — INVENTORY spritesheet baker (zero deps)
+//  Caves of Qlaude — INVENTORY spritesheet baker (zero deps)
 //  Bakes the inventory icon set (sprites.js) into a 64×64-cell
 //  PNG + manifest. sprites.js is a classic browser script, so we
 //  run it in a Node VM with a minimal window/document shim and

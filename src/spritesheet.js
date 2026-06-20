@@ -1,6 +1,6 @@
 "use strict";
 // ============================================================
-//  Caves of Qlud — PNG SPRITESHEET runtime (browser)
+//  Caves of Qlaude — PNG SPRITESHEET runtime (browser)
 //  Optional override layer: if a 64×64 PNG spritesheet + manifest
 //  is loaded, the renderer draws those pixels instead of baking
 //  the procedural string-art. Any sprite NOT present in the sheet

@@ -1,4 +1,4 @@
-# Caves of Qlud — Adjustments Batch (2026-06-02)
+# Caves of Qlaude — Adjustments Batch (2026-06-02)
 
 A batch of bug fixes, balance reworks, and two new features (Dash, redesigned
 Merchant) plus a custom AI for the final boss.

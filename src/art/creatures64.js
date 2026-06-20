@@ -1,5 +1,5 @@
 // ============================================================
-//  Caves of Qlud — 64x64 creature sprites (idle-animated)
+//  Caves of Qlaude — 64x64 creature sprites (idle-animated)
 //  Base + Elite variants. Generated from the Bestiary refresh.
 //
 //  Drop-in module for src/art/creatures.js. Each export is:

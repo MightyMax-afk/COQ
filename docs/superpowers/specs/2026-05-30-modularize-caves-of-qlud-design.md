@@ -1,4 +1,4 @@
-# Modularizing Caves of Qlud — Design
+# Modularizing Caves of Qlaude — Design
 
 **Date:** 2026-05-30
 **Status:** Approved (design), pending implementation plan

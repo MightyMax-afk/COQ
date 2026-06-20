@@ -1,6 +1,6 @@
 # Sprites — atlas, spritesheet & injection
 
-Caves of Qlud draws its pixel art procedurally: every sprite is an array of
+Caves of Qlaude draws its pixel art procedurally: every sprite is an array of
 palette-coded strings (`src/art/*.js`) baked to a canvas at runtime. That keeps
 the game a zero-build, zero-asset browser app.
 

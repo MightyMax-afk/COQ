@@ -845,7 +845,7 @@ function newGame(){
   closeEscMenu();
   const ng=$("ngBtn"); if(ng) ng.style.display="none";
   genLevel("new"); computeFOV();
-  log("You enter the Caves of Qlud. A draft of cold rot greets you.");
+  log("You enter the Caves of Qlaude. A draft of cold rot greets you.");
   G.running=true; G.started=true;
   $("overlay").classList.add("hidden");
   MUSIC.play(musicTrackForDepth(G.depth));   // floor 1 = Halls

@@ -1,5 +1,5 @@
 /* ============================================================
-   Caves of Qlud — full-screen Inventory / Equipment overlay.
+   Caves of Qlaude — full-screen Inventory / Equipment overlay.
    Everything is scoped under #invScreen and uses iv- prefixed
    class names so it never collides with the game's own HUD CSS
    (.panel / .card / .slot / .row / .cell / .grid / .bar / .stat).
