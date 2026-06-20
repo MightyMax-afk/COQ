@@ -107,7 +107,7 @@ function build(){
   <div class="iv-frame" id="ivFrame">
     <span class="iv-corner tl"></span><span class="iv-corner tr"></span><span class="iv-corner bl"></span><span class="iv-corner br"></span>
     <header class="iv-header">
-      <div class="iv-title-wrap"><h1 class="iv-h1">INVENTORY</h1><span class="iv-crumb">CAVES OF <b>QLUD</b> · equipment</span></div>
+      <div class="iv-title-wrap"><h1 class="iv-h1">INVENTORY</h1><span class="iv-crumb">CAVES OF <b>QLAUDE</b> · equipment</span></div>
       <div class="iv-hud">
         <div class="iv-chip"><canvas data-spr="gold" data-scale="3"></canvas><div><div class="iv-k">Gold</div><div class="iv-v" id="ivGold">0</div></div></div>
         <div class="iv-chip"><canvas data-spr="potion" data-scale="3"></canvas><div><div class="iv-k">Potions</div><div class="iv-v" id="ivPotions">0</div></div></div>
