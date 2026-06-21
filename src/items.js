@@ -17,11 +17,19 @@ export const ARMOR_TIERS = {
   shield: [{name:"wooden shield", def:1}, {name:"kite shield",def:3}, {name:"tower shield",def:5}],
   boots:  [{name:"leather boots", def:1}, {name:"chain sabatons", def:2}, {name:"plate greaves", def:3}],
 };
-export const GEAR_GLYPH = { weapon:")", armor:"[", helmet:"^", shield:"0", boots:"L" };
-export const GEAR_COL   = { weapon:"#9ad0ff", armor:"#c0a060", helmet:"#d0b48a", shield:"#a8b0c0", boots:"#8a6020" };
+// Scout: quiver slot (replaces shield) — adds to ranged attack
+export const QUIVER_TIERS = [
+  {name:"leather quiver", atk:1}, {name:"iron-tipped quiver", atk:3}, {name:"broadhead quiver", atk:6},
+];
+// Spellblade: wand slot (replaces shield) — adds to spell burst damage
+export const WAND_TIERS = [
+  {name:"apprentice wand", atk:2}, {name:"battle wand", atk:5}, {name:"arcane wand", atk:9},
+];
+export const GEAR_GLYPH = { weapon:")", armor:"[", helmet:"^", shield:"0", boots:"L", quiver:"]", wand:"/\\" };
+export const GEAR_COL   = { weapon:"#9ad0ff", armor:"#c0a060", helmet:"#d0b48a", shield:"#a8b0c0", boots:"#8a6020", quiver:"#c8e87a", wand:"#c77dff" };
 export const ARMOR_KINDS = ["armor","helmet","shield","boots"];
-export const ALL_SLOTS   = ["weapon","armor","helmet","shield","boots","charm"];
-export const GEAR_SLOTS  = ["weapon","armor","helmet","shield","boots"];   // mergeable tiered gear (excludes charms)
+export const ALL_SLOTS   = ["weapon","armor","helmet","shield","quiver","wand","boots","charm"];
+export const GEAR_SLOTS  = ["weapon","armor","helmet","shield","boots"];   // standard mergeable slots (excludes charms/quiver/wand)
 
 // ---------- charms (5th equipment slot: passive trinkets) ----------
 // found in chests / dropped by bosses / sold by merchants. Each grants a passive.
@@ -142,34 +150,43 @@ export function rollLoot(x,y,d){
 // pre-enchanted: the further past the tier ceiling, the more +levels baked in.
 // This is what makes loot keep getting better all the way down to floor 40.
 export function makeGear(x,y,d){
-  const kind = GEAR_SLOTS[ri(0,GEAR_SLOTS.length-1)];
+  // Ranged classes get class-appropriate slots (Scout→quiver, Spellblade→wand instead of shield)
+  const cls=G.player&&G.player.classId;
+  let slotPool;
+  if(cls==="scout")      slotPool=["weapon","armor","helmet","quiver","boots"];
+  else if(cls==="spellblade") slotPool=["weapon","armor","helmet","wand","boots"];
+  else                   slotPool=GEAR_SLOTS;
+  const kind = slotPool[ri(0,slotPool.length-1)];
   const tbl=tierTable(kind);
   const maxTier = tbl.length-1;
-  const tier=Math.min(maxTier, ri(0, (kind==="weapon"?1:0)+(d/3|0)));
-  // depth beyond the point the ladder tops out grants baked-in enchant levels.
-  // ~+1 every 3 floors past depth 6, with a little variance; never negative.
+  const tier=Math.min(maxTier, ri(0, (kind==="weapon"||kind==="quiver"||kind==="wand"?1:0)+(d/3|0)));
   let ench=0;
   if(tier>=maxTier && d>6){
     const baked = Math.floor((d-6)/3);
     ench = Math.max(0, baked + ri(-1,1));
   }
-  // Scavenger: a chance for any found gear to arrive pre-enchanted by +1.
   if(G.player && G.player.scavenger && Math.random()<0.20) ench+=1;
-  return {x,y,kind,glyph:GEAR_GLYPH[kind],col:GEAR_COL[kind],tier,ench};
+  return {x,y,kind,glyph:GEAR_GLYPH[kind]||")",col:GEAR_COL[kind]||"#9ad0ff",tier,ench};
 }
 
 // ---------- stats / gear helpers ----------
-export function tierTable(kind){ return kind==="weapon" ? WEAPONS : ARMOR_TIERS[kind]; }
+export function tierTable(kind){
+  if(kind==="quiver") return QUIVER_TIERS;
+  if(kind==="wand")   return WAND_TIERS;
+  return kind==="weapon" ? WEAPONS : ARMOR_TIERS[kind];
+}
 export function gearBonus(it){
-  if(it.kind==="charm") return 0;          // charms have no tier bonus
+  if(it.kind==="charm") return 0;
   if(it.legendary) return it.fixedBonus;
   const tbl=tierTable(it.kind);
-  const base = it.kind==="weapon" ? tbl[it.tier].atk : tbl[it.tier].def;
-  return base + it.ench*(it.kind==="weapon"?3:2);
+  if(it.kind==="weapon"||it.kind==="quiver"||it.kind==="wand") return tbl[it.tier].atk + it.ench*3;
+  return tbl[it.tier].def + it.ench*2;
 }
 export function gearName(it){
   if(it.kind==="charm") return it.name;
   if(it.legendary) return it.fixedName;
+  if(it.kind==="quiver"){ const base=QUIVER_TIERS[it.tier].name; return it.ench>0?`${base} +${it.ench}`:base; }
+  if(it.kind==="wand")  { const base=WAND_TIERS[it.tier].name;   return it.ench>0?`${base} +${it.ench}`:base; }
   const cls = G.player && G.player.classId;
   if(it.kind==="weapon"){
     const names = CLASS_WEAPON_NAMES[cls];
@@ -183,38 +200,69 @@ export function gearName(it){
 }
 // Same gear tiers/stats, re-flavored per class (Wanderer keeps the default
 // tables). Knight: heavy steel-and-gold arms. Rogue: light blades + stealth kit.
+// Ranged classes: Scout/Arcanist/Pyromancer/Spellblade get theme-appropriate names.
 const CLASS_WEAPON_NAMES = {
-  knight: ["arming sword", "longsword",  "flanged mace", "greatsword"],
-  rogue:  ["shiv",         "dirk",       "rapier",       "assassin's blade"],
+  knight:      ["arming sword",  "longsword",      "flanged mace",    "greatsword"],
+  rogue:       ["shiv",          "dirk",            "rapier",          "assassin's blade"],
+  scout:       ["shortbow",      "longbow",         "war bow",         "elven longbow"],
+  arcanist:    ["wand",          "arcane focus",    "void scepter",    "null scepter"],
+  pyromancer:  ["ember rod",     "fire staff",      "inferno brand",   "pyroclast brand"],
+  spellblade:  ["runed sword",   "spell-etched blade","arcane greatsword","runic greatblade"],
 };
 const CLASS_GEAR_NAMES = {
   knight: {
-    armor:  ["brigandine",      "scale mail",      "knight's plate"],
-    helmet: ["iron coif",       "barbute",         "great helm"],
-    shield: ["round shield",    "kite shield",     "tower shield"],
-    boots:  ["leather greaves", "chain sabatons",  "plate greaves"],
+    armor:  ["brigandine",        "scale mail",          "knight's plate"],
+    helmet: ["iron coif",         "barbute",             "great helm"],
+    shield: ["round shield",      "kite shield",         "tower shield"],
+    boots:  ["leather greaves",   "chain sabatons",      "plate greaves"],
   },
   rogue: {
-    armor:  ["leather jerkin",  "studded leather", "shadow cloak"],
-    helmet: ["leather hood",    "studded hood",    "shadow cowl"],
-    shield: ["buckler",         "reinforced buckler", "spiked buckler"],
-    boots:  ["soft boots",      "leather treads",  "shadow striders"],
+    armor:  ["leather jerkin",    "studded leather",     "shadow cloak"],
+    helmet: ["leather hood",      "studded hood",        "shadow cowl"],
+    shield: ["buckler",           "reinforced buckler",  "spiked buckler"],
+    boots:  ["soft boots",        "leather treads",      "shadow striders"],
+  },
+  scout: {
+    armor:  ["ranger wraps",      "hunter's vest",       "shadow weave"],
+    helmet: ["hunter's cap",      "ranger's hood",       "shadow cowl"],
+    boots:  ["soft boots",        "stalker's boots",     "shadow striders"],
+  },
+  arcanist: {
+    armor:  ["cloth robe",        "spellweave robe",     "void mantle"],
+    helmet: ["apprentice cap",    "arcanist's cowl",     "void hood"],
+    shield: ["focus orb",         "null barrier",        "void ward"],
+    boots:  ["soft shoes",        "spell-sewn boots",    "void treads"],
+  },
+  pyromancer: {
+    armor:  ["singed robes",      "fire-treated leather","ashen vestments"],
+    helmet: ["singed hood",       "fire-treated hood",   "ashen cowl"],
+    shield: ["ember buckler",     "fire-ward shield",    "ashen barrier"],
+    boots:  ["singed boots",      "fire-treated boots",  "ashen striders"],
+  },
+  spellblade: {
+    armor:  ["battlemage leathers","runewoven mail",     "arcane plate"],
+    helmet: ["battlemage visor",  "runewoven hood",      "arcane helm"],
+    boots:  ["battlemage boots",  "runewoven sabatons",  "arcane greaves"],
   },
 };
-export const isGear = it => GEAR_SLOTS.includes(it.kind);          // mergeable tiered gear
+export const isGear = it => GEAR_SLOTS.includes(it.kind)||it.kind==="quiver"||it.kind==="wand";
 export const isEquippable = it => ALL_SLOTS.includes(it.kind);     // gear or charm
 export function bestOf(kind){ let b=null; for(const it of G.inv) if(it.kind===kind && (!b||gearBonus(it)>gearBonus(b))) b=it; return b; }
+// Returns the active equipment slots for the current class.
+export function classSlots(){
+  const cls=G.player&&G.player.classId;
+  if(cls==="scout")      return ["weapon","armor","helmet","quiver","boots"];
+  if(cls==="spellblade") return ["weapon","armor","helmet","wand","boots"];
+  return GEAR_SLOTS;
+}
 export function autoEquip(){
-  for(const slot of GEAR_SLOTS){
+  for(const slot of classSlots()){
     if(G.autoEquipOn){
-      // upgrade to the strongest available in this slot
       const best=bestOf(slot);
       if(best && (!G.equipped[slot] || gearBonus(best)>gearBonus(G.equipped[slot]))) G.equipped[slot]=best;
     } else {
-      // toggle off: only fill an empty slot, never override a manual choice
       if(!G.equipped[slot]){ const best=bestOf(slot); if(best) G.equipped[slot]=best; }
     }
-    // if the equipped item left the pack (sold/merged away), fall back to best available
     if(G.equipped[slot] && !G.inv.includes(G.equipped[slot])) G.equipped[slot]=bestOf(slot)||null;
   }
   if(!G.equipped.charm){ const c=G.inv.find(it=>it.kind==="charm"); if(c) G.equipped.charm=c; }
@@ -276,6 +324,9 @@ export function charmStat(key){ const c=G.equipped.charm; const d=c&&charmDef(c)
   if(G.player&&G.player.catalyst) v*=2;   // Catalyst: doubles the equipped charm's stat value
   return v; }
 export function effAtk(){ const w=G.equipped.weapon; let a=G.player.baseAtk+(w?gearBonus(w):0)+charmStat("atk")-statusAtkMod(G.player);
+  // Scout: quiver bonus adds to ranged attack. Spellblade: wand bonus adds to spell damage.
+  if(G.equipped.quiver) a+=gearBonus(G.equipped.quiver);
+  if(G.equipped.wand)   a+=gearBonus(G.equipped.wand);
   if(G.player.secondWind && G.player.hp < G.player.maxhp*0.25) a+=5;   // Second Wind: desperate strength
   return a; }
 export function effDef(){

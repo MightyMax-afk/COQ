@@ -94,6 +94,8 @@ export function attack(att,def,ranged){
   const a = att.isPlayer ? effAtk() : att.atk;
   let d = def.isPlayer ? effDef() : def.def;
   if(att.isPlayer && G.player.armorPen) d=Math.max(0, d-G.player.armorPen);   // Sunder ignores some defense
+  // Arcanist: magic missiles pierce 50% of enemy armor on ranged shots
+  if(att.isPlayer && ranged && G.player.magicPierce) d=Math.round(d*(1-G.player.magicPierce));
   let dmg = Math.max(1, a - d + ri(-1,2));
   // Giant Slayer: bonus damage scaling with the target's max HP (great vs tanks/bosses).
   if(att.isPlayer && G.player.giantSlayer) dmg += Math.floor(def.maxhp*G.player.giantSlayer);

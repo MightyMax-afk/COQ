@@ -61,6 +61,23 @@ export const CLASSES = [
    blurb:"A glass dagger: +2 Attack, +10% Crit, +8% Dodge and an innate Dash — fast and lethal, but frail (−6 max HP).",
    apply(p){ p.baseAtk+=2; p.critBonus+=0.10; p.evasion+=0.08; p.maxhp=Math.max(1,p.maxhp-6); p.hp=p.maxhp;
              p.innateDash=1; p.dashCharges=1; }},   // the nimble class always has at least one dash (even on tier-0 boots)
+  // ── Ranged classes ──
+  {id:"scout", name:"Scout",
+   blurb:"Glass cannon: fires an arrow at the nearest visible enemy every 3 moves. Frail (−12 HP, −2 Def) but hits hard from afar — the quiver slot replaces your shield.",
+   apply(p){ p.maxhp=Math.max(1,p.maxhp-12); p.hp=p.maxhp; p.baseDef=Math.max(0,p.baseDef-2); p.baseAtk+=1;
+             p.rangedClass=true; p.rangedCooldown=3; p.rangedRange=3; }},
+  {id:"arcanist", name:"Arcanist",
+   blurb:"Precision caster: fires a magic missile every 2 moves that ignores 50% of enemy armor. Slightly frail (−6 HP, −1 Def) but spells bypass heavy armor completely.",
+   apply(p){ p.maxhp=Math.max(1,p.maxhp-6); p.hp=p.maxhp; p.baseDef=Math.max(0,p.baseDef-1); p.baseAtk+=3;
+             p.rangedClass=true; p.rangedCooldown=2; p.rangedRange=2; p.magicPierce=0.5; }},
+  {id:"pyromancer", name:"Pyromancer",
+   blurb:"Area denier: hurls fire at the nearest adjacent enemy every move, leaving a burning tile for 5 turns. Warning — your own fire deals half damage to you.",
+   apply(p){ p.maxhp=Math.max(1,p.maxhp-4); p.hp=p.maxhp; p.baseAtk+=1;
+             p.rangedClass=true; p.rangedCooldown=1; p.rangedRange=1; p.pyroClass=true; }},
+  {id:"spellblade", name:"Spellblade",
+   blurb:"Burst caster: every move banks a spell charge (max 3). When an enemy enters range, releases all stored charges in a single volley. Carry a sword AND a wand.",
+   apply(p){ p.maxhp=Math.max(1,p.maxhp-2); p.hp=p.maxhp; p.baseDef+=1; p.baseAtk+=2;
+             p.rangedClass=true; p.rangedRange=3; p.spellbladeClass=true; }},
 ];
 export function classById(id){ return CLASSES.find(c=>c.id===id) || CLASSES[0]; }
 
@@ -73,6 +90,9 @@ export function makePlayer(classId){
         giantSlayer:0,secondWind:false,searingBlades:0,antidote:false,deflect:0,
         closeQuarters:0,scavenger:false,luckyFind:0,catalyst:false,retribution:false,
         dashCharges:0,dashRegen:0,innateDash:0,   // innateDash: class-granted dash, on top of boots/charm
+        // ranged class properties (Scout/Arcanist/Pyromancer/Spellblade)
+        rangedClass:false,rangedCooldown:0,rangedRange:0,rangedMoveCt:0,
+        magicPierce:0,pyroClass:false,spellbladeClass:false,spellCharges:0,
         status:[],alive:true,isPlayer:true,stairX:-1,stairY:-1};
   const cls=classById(classId);
   cls.apply(p);
