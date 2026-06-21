@@ -18,7 +18,7 @@ import { log } from './util.js';
 import { PERKS } from './player.js';
 import {
   effAtk, effDef, gearBonus, gearName, gearEvade, gearThorns, gearRegen,
-  totalAcc, totalCrit, totalHitLeech, charmDef, isEquippable, reconcileCharmHp,
+  totalAcc, totalCrit, totalHitLeech, charmDef, isEquippable, reconcileCharmHp, classSlots,
 } from './items.js';
 import { render, updateUI } from './render.js';
 
@@ -32,6 +32,9 @@ const ARM_VAR  = ['leather', 'chain', 'plate'];                 // armor  tier 0
 const HELM_VAR = ['cap', 'iron', 'great'];                      // helmet tier 0-2
 const SHD_VAR  = ['wood', 'kite', 'tower'];                     // shield tier 0-2
 const BOOTS_VAR = ['leather', 'iron', 'iron'];                  // boots  tier 0-2 (only 2 icons exist)
+// quiver reuses weapon-slot icons; wand reuses the frost/fire legendary weapon icons
+const QUIVER_VAR = ['dagger', 'sword', 'axe'];                  // quiver tier 0-2 (closest available)
+const WAND_VAR   = ['wpn_frost', 'wpn_frost', 'wpn_fire'];      // wand tier 0-2
 // only 5 charm icons exist in sprites.js — map the 11 game charms onto the closest.
 const CHARM_ICON = {
   vigor: 'charm_vigor', ember: 'charm_ember', savage: 'charm_savage', guard: 'charm_guard',
@@ -59,6 +62,10 @@ function iconId(it){
     case 'shield': return it.legendary ? 'shd_legend' : cls('shd_' + (SHD_VAR[it.tier] || 'wood'),   false);
     case 'boots':  return cls('boots_' + (it.legendary ? 'iron' : (BOOTS_VAR[it.tier] || 'leather')), it.legendary);
     case 'charm':  return CHARM_ICON[it.charmId] || 'charm_focus';
+    // Scout quiver: reuse weapon-tier icons (closest visual match)
+    case 'quiver': return 'wpn_' + (QUIVER_VAR[it.tier] || 'dagger');
+    // Spellblade wand: use frost/fire legendary weapon art
+    case 'wand':   return WAND_VAR[it.tier] || 'wpn_frost';
     default: return 'gold';
   }
 }
@@ -73,7 +80,7 @@ function rarityOf(it){
 }
 function bonusText(it){
   if(!it) return '';
-  if(it.kind === 'weapon') return '+' + gearBonus(it) + ' ATK';
+  if(it.kind === 'weapon' || it.kind === 'quiver' || it.kind === 'wand') return '+' + gearBonus(it) + ' ATK';
   if(it.kind === 'charm'){ const d = charmDef(it); return d ? d.desc : 'passive'; }
   return '+' + gearBonus(it) + ' DEF';
 }
@@ -81,9 +88,15 @@ const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(
 
 // ---------- equipment slot layout ----------
 const LEFT  = ['weapon', 'armor', 'charm'];
-const RIGHT = ['helmet', 'shield', 'boots'];
-const ROLE  = { weapon: 'Main Hand', armor: 'Torso', charm: 'Charm', helmet: 'Head', shield: 'Off Hand', boots: 'Feet' };
-const EMPTY_LABEL = { weapon: 'bare fists', armor: 'unarmored', charm: 'no charm', helmet: 'bare head', shield: 'no shield', boots: 'barefoot' };
+// RIGHT column is class-aware: Scout uses quiver, Spellblade uses wand, others use shield
+function rightSlots(){ const cls=G.player&&G.player.classId;
+  if(cls==='scout')      return ['helmet','quiver','boots'];
+  if(cls==='spellblade') return ['helmet','wand','boots'];
+  return ['helmet','shield','boots']; }
+const ROLE  = { weapon:'Main Hand', armor:'Torso', charm:'Charm', helmet:'Head',
+                shield:'Off Hand', boots:'Feet', quiver:'Quiver', wand:'Wand' };
+const EMPTY_LABEL = { weapon:'bare fists', armor:'unarmored', charm:'no charm', helmet:'bare head',
+                      shield:'no shield', boots:'barefoot', quiver:'no quiver', wand:'no wand' };
 
 // boolean Act II perks: flag on G.player -> the PERKS entry that grants it.
 const FLAG_PERKS = [
@@ -299,21 +312,22 @@ function slotMarkup(slot){
 }
 function renderSlots(){
   $iv('ivSlotsLeft').innerHTML  = LEFT.map(slotMarkup).join('');
-  $iv('ivSlotsRight').innerHTML = RIGHT.map(slotMarkup).join('');
-  const n = ['weapon', 'armor', 'helmet', 'shield', 'boots', 'charm'].filter(s => G.equipped[s]).length;
+  $iv('ivSlotsRight').innerHTML = rightSlots().map(slotMarkup).join('');
+  const slots=[...LEFT,...rightSlots()];
+  const n=slots.filter(s=>G.equipped[s]).length;
   $iv('ivEquipCount').textContent = `${n} / 6 equipped`;
   QL().paintAllSprites();
 }
 
 const FILTER_FN = {
   all:    () => true,
-  weapon: it => it.kind === 'weapon',
+  weapon: it => it.kind === 'weapon' || it.kind === 'quiver' || it.kind === 'wand',
   armor:  it => it.kind === 'armor' || it.kind === 'helmet' || it.kind === 'shield' || it.kind === 'boots',
   charm:  it => it.kind === 'charm',
 };
 function renderPack(){
   const grid = $iv('ivGrid');
-  const isEq = it => ['weapon', 'armor', 'helmet', 'shield', 'boots', 'charm'].some(s => G.equipped[s] === it);
+  const isEq = it => [...LEFT,...rightSlots(),'charm'].some(s => G.equipped[s] === it);
   const pass = FILTER_FN[filter] || FILTER_FN.all;
   let html = '';
   let shown = 0;
@@ -333,7 +347,7 @@ function renderPack(){
 
 function renderHero(){
   const eq = {};
-  for(const slot of ['weapon', 'armor', 'helmet', 'shield', 'boots']){
+  for(const slot of ['weapon', 'armor', 'helmet', 'shield', 'quiver', 'wand', 'boots']){
     const k = pdId(G.equipped[slot]); if(k) eq[slot] = k;
   }
   const cid = G.player && G.player.classId;

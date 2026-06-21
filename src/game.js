@@ -4,7 +4,7 @@ import { loadSpritesheet } from './spritesheet.js';
 import { clamp, ri, log, $ } from './util.js';
 import { G } from './state.js';
 import { COL } from './palette.js';
-import { makeGear, rollLoot, chestLoot, makeCharm, makeLegendary, resetLegendPool, autoEquip, tryMerge, gearBonus, gearName, gearRegen, isEquippable, reconcileCharmHp, ALL_SLOTS, dashMax, effAtk, effDef, charmDef } from './items.js';
+import { makeGear, rollLoot, chestLoot, makeCharm, makeLegendary, resetLegendPool, autoEquip, tryMerge, gearBonus, gearName, gearRegen, isEquippable, reconcileCharmHp, ALL_SLOTS, dashMax, effAtk, effDef, charmDef, classSlots } from './items.js';
 import { PERKS, gainXp, makePlayer, CLASSES, classById } from './player.js';
 import { tickStatus, attack } from './combat.js';
 import { makeMonster, monsterAt } from './monsters.js';
@@ -463,6 +463,66 @@ $("verTag").textContent = `build ${BUILD}`;
 // ---------- player actions ----------
 const blocked=(x,y)=>!inB(x,y)||G.map[y][x]===T_WALL||(G.feats&&G.feats[y][x]);
 
+// ---------- ranged auto-attack (Scout / Arcanist / Pyromancer / Spellblade) ----------
+function nearestVisibleEnemy(range){
+  let best=null, bestDist=Infinity;
+  for(const e of G.ents){
+    if(!e.alive||e.isPlayer) continue;
+    const dx=e.x-G.player.x, dy=e.y-G.player.y;
+    const dist=Math.max(Math.abs(dx),Math.abs(dy));
+    if(dist<=range&&dist>0&&G.visible[e.y]&&G.visible[e.y][e.x]&&los(G.player.x,G.player.y,e.x,e.y)){
+      if(dist<bestDist){ bestDist=dist; best=e; }
+    }
+  }
+  return best;
+}
+
+function placeFire(x,y){
+  if(!G.fireTiles) G.fireTiles=[];
+  const ex=G.fireTiles.find(f=>f.x===x&&f.y===y);
+  if(ex){ ex.turns=5; return; }   // refresh duration if already burning
+  G.fireTiles.push({x,y,turns:5});
+}
+
+function playerRangedFire(target,count){
+  const col=G.player.pyroClass?"#ff6a00":"#6fe4ff";
+  for(let i=0;i<count;i++){
+    if(!target.alive) break;
+    traceShot(G.player.x,G.player.y,target.x,target.y,col);
+    attack(G.player,target,true);
+  }
+  // Pyromancer: the impact leaves a burning tile on the target square
+  if(G.player.pyroClass&&target.alive!==false&&target.hp>0) placeFire(target.x,target.y);
+}
+
+function tryRangedAutoAttack(){
+  const p=G.player;
+  if(!p.rangedClass) return;
+
+  if(p.spellbladeClass){
+    // Bank 1 charge per move, max 3
+    if(p.spellCharges<3) p.spellCharges++;
+    const target=nearestVisibleEnemy(p.rangedRange);
+    if(target&&p.spellCharges>0){
+      const n=p.spellCharges; p.spellCharges=0;
+      log(`You release ${n} spell${n>1?"s":""} at the ${target.name}!`,"good");
+      playerRangedFire(target,n);
+    }
+    return;
+  }
+
+  p.rangedMoveCt=(p.rangedMoveCt||0)+1;
+  if(p.rangedMoveCt>=p.rangedCooldown){
+    p.rangedMoveCt=0;
+    const target=nearestVisibleEnemy(p.rangedRange);
+    if(target){
+      const verb=p.pyroClass?"hurl fire at":p.classId==="arcanist"?"fire a missile at":"shoot";
+      log(`You ${verb} the ${target.name}!`,"good");
+      playerRangedFire(target,1);
+    }
+  }
+}
+
 function playerMove(dx,dy){
   const nx=G.player.x+dx, ny=G.player.y+dy;
   if(G.merchant && nx===G.merchant.x && ny===G.merchant.y){ openShop(); return false; }
@@ -471,7 +531,10 @@ function playerMove(dx,dy){
   if(blocked(nx,ny)) return false;
   const m=monsterAt(nx,ny);
   if(m){ attack(G.player,m); return true; }
-  G.player.x=nx; G.player.y=ny; return true;
+  G.player.x=nx; G.player.y=ny;
+  // Ranged classes auto-shoot after moving (Scout every 3 moves, Arcanist 2, Pyromancer 1, Spellblade on charge)
+  tryRangedAutoAttack();
+  return true;
 }
 
 // Dash: leap up to 2 tiles in a direction. Pure movement — stops at walls,
@@ -709,6 +772,30 @@ function turn(actionFn){
   if(!G.player.alive){ render(); endGame(false); return; }
   if(tookTurn){
     monstersTurn();
+    // Fire tiles (Pyromancer): burn any entity standing on them, then count down.
+    if(G.fireTiles&&G.fireTiles.length){
+      for(const f of G.fireTiles){
+        for(const e of G.ents){
+          if(!e.alive||e.isPlayer) continue;
+          if(e.x===f.x&&e.y===f.y){
+            e.hp-=4;
+            log(`The ${e.name} burns in the fire for 4!`,"good");
+            if(e.hp<=0&&e.alive!==false){
+              e.alive=false; G.score+=e.maxhp*2; gainXp(e.xp);
+              log(`The ${e.name} is consumed by fire!`,"good");
+            }
+          }
+        }
+        // Player standing on their own fire takes half damage
+        if(G.player.alive&&G.player.x===f.x&&G.player.y===f.y&&!G.godMode){
+          G.player.hp-=2;
+          log("Your own fire scorches you for 2!","bad");
+          if(G.player.hp<=0) G.player.alive=false;
+        }
+        f.turns--;
+      }
+      G.fireTiles=G.fireTiles.filter(f=>f.turns>0);
+    }
     // test gauntlet: once Varmathrax falls, open the sealed gate to Zarakhel
     if(G.testGate && !G.testGate.opened && (!G.testGate.act1 || !G.testGate.act1.alive)){
       G.map[G.testGate.y][G.testGate.x]=T_FLOOR;
@@ -833,7 +920,8 @@ function startNgPlus(){
 
 function newGame(){
   G.depth=1; G.gold=0; G.score=0; G.potions=2; G.ngPlus=0; G.maxDepthReached=1; G.godMode=false;
-  G.equipped={weapon:null,armor:null,helmet:null,shield:null,boots:null,charm:null}; G.inv=[]; G.logLines=[];
+  G.equipped={weapon:null,armor:null,helmet:null,shield:null,quiver:null,wand:null,boots:null,charm:null};
+  G.inv=[]; G.logLines=[]; G.fireTiles=[];
   G.choosing=false; G.pendingLevelUps=0; G.currentPerks=[]; G.bossEnt=null;
   G.levels={}; G.upX=-1; G.upY=-1; G.merchant=null; G.shopping=false; G.chests=[]; G.dashArmed=false; G.testGate=null;
   G.autoEquipOn=true; G.autoEquipWarned=false;
@@ -963,6 +1051,7 @@ const toggleEscMenu = () => escMenuOpen() ? closeEscMenu() : openEscMenu();
 
 function saveGame(){
   G.shots = [];                                  // transient projectile trails — never persist them
+  if(!G.fireTiles) G.fireTiles=[];
   try{
     localStorage.setItem(SAVE_KEY, JSON.stringify(G));
     log("Game saved successfully.","gold");
@@ -993,6 +1082,10 @@ function loadGame(){
   if(Array.isArray(G.ents) && G.ents.length) G.ents[0] = G.player;
   G.bossEnt = (Array.isArray(G.ents) ? G.ents.find(e=>e && e.boss) : null) || null;
   G.shots = [];
+  if(!G.fireTiles) G.fireTiles=[];   // guard for saves from older builds
+  if(!G.equipped) G.equipped={};
+  // guard new slots for saves from older builds
+  ['quiver','wand'].forEach(s=>{ if(G.equipped[s]===undefined) G.equipped[s]=null; });
 
   // Rebuild derived/engine state from the restored data.
   computeFOV();                                  // visibility from the loaded position

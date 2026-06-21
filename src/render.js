@@ -276,6 +276,8 @@ export function render(){
     glyph(m.x,m.y,m.glyph,m.col,true,entSpriteId(m));
     if(GFX.on) drawStatusIcon(m);
   } }
+  // Persistent fire tiles (Pyromancer) — drawn before shots so projectiles render on top
+  if(G.fireTiles){ for(const f of G.fireTiles){ if(G.visible[f.y]&&G.visible[f.y][f.x]) glyph(f.x,f.y,"▲","#ff6a00",true,"burn"); } }
   for(const s of G.shots){ if(G.visible[s.y]&&G.visible[s.y][s.x]) glyph(s.x,s.y,"•",s.col,true,s.sprite||"arrow"); }
   // Player art: a chosen class shows its own look; otherwise the Wanderer uses
   // v2 (geared) once you've ever set foot in Act II and the original cyan @ before.
